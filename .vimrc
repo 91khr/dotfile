@@ -51,9 +51,11 @@ let s:is_vimrc_executed=1
     " ==================================================================================================================
     set nocp
     filetype off                  " required
-    set rtp+=$VIM/.vim/bundle/vim-plug
-    let $HOME=$VIM
-    call plug#begin($VIM . '/.vim/bundle/')
+    "set rtp+=$VIM/.vim/bundle/vim-plug
+    set rtp+=~/.vim/bundle/vim-plug
+    "let $HOME=$VIM
+    "call plug#begin($VIM . '/.vim/bundle/')
+    call plug#begin()
     Plug 'junegunn/vim-plug'
     " Powerful status line
     Plug 'vim-airline/vim-airline'
@@ -64,10 +66,14 @@ let s:is_vimrc_executed=1
     Plug 'scrooloose/nerdtree', { 'on' : 'NERDTreeToggle' }
     " Run commands async
     Plug 'skywind3000/asyncrun.vim', { 'on' : 'AsyncRun' }
+    " Input method support
+    Plug 'vim-scripts/fcitx.vim'
     " Markdown support
     Plug 'godlygeek/tabular', { 'for' : 'markdown' }
     Plug 'plasticboy/vim-markdown', { 'for' : 'markdown' }
-    Plug 'iamcco/markdown-preview.vim', { 'for' : 'markdown' }
+    Plug 'iamcco/markdown-preview.vim', { 'for' : 'markdown', 'on' : 'MarkdownPreview' }
+    " LaTeX support
+    Plug 'lervag/vimtex', { 'for' : 'tex' }
     call plug#end()
 
     " ==================================================================================================================
@@ -97,6 +103,16 @@ let s:is_vimrc_executed=1
     set noshowmode  | " The mode will be shown in status line
     "AirlineTheme solarized  | " make sure the status line theme is the same as editor
     let g:airline_solarized_bg = 'dark'
+
+    " ==================================================================================================================
+    " Vimtex settings
+    " ==================================================================================================================
+    let g:vimtex_compiler_progname = 'latexmk'
+    let g:vimtex_compiler_latexmk = {
+                \   'options' : [
+                \     '-xelatex',
+                \   ],
+                \ }
 
     " ==================================================================================================================
     " Settings
@@ -181,7 +197,7 @@ let s:is_vimrc_executed=1
     if has("gui_running")
         set background=light
         set guifont=Aix
-        " set vb  | " Ban the annoying bell(cant be seen in gui)
+        set vb  | " Ban the annoying bell(cant be seen in gui)
     else  | " GUI ^^^ Term vvv
         set background=dark
     endif
