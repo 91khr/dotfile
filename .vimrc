@@ -1,6 +1,9 @@
 " ======================================================================================================================
 " Note: You are suggested to use a wide(>120 chars) client to view or edit this file
 " TODO: Sort the commands by a cleaner key
+" Author: Isaac Delton
+"
+" My VIm configuration. Supports Windows and Linux(Only tested on Arch Linux, may not be the newest)
 version 8.0
 
 " Dont execute this if already executed
@@ -24,14 +27,15 @@ let s:is_vimrc_executed=1
     unlet s:cpo_save
     " }}} End setting cpo
     " Set encodings
-    set fileencodings=ucs-bom,utf-8,default,latin1
+    set encoding=utf-8
+    set termencoding=utf-8
+    set fileencodings=ucs-bom,utf-8,default,latin1,cp936
     " Set language of help document
     set helplang=cn
     " Highlight search result
     set hlsearch
     " Disables mouse in insert mode
     set mouse=nvcr
-    set termencoding=utf-8
 
     nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(expand((exists("g:netrw_gx")? g:netrw_gx : '<cfile>'))
                 \,netrw#CheckIfRemote())
@@ -51,12 +55,15 @@ let s:is_vimrc_executed=1
     " ==================================================================================================================
     set nocp
     filetype off                  " required
-    "set rtp+=$VIM/.vim/bundle/vim-plug
-    set rtp+=~/.vim/bundle/vim-plug
-    "let $HOME=$VIM
-    "call plug#begin($VIM . '/.vim/bundle/')
-    call plug#begin()
-    Plug 'junegunn/vim-plug'
+    if has("win32")
+        set rtp+=$VIM/.vim/bundle/vim-plug
+        let $HOME=$VIM
+        call plug#begin($VIM . '/.vim/bundle/')
+    else  | " has("win32")
+        set rtp+=~/.vim/bundle/vim-plug
+        call plug#begin()
+    endif  | " has("win32")
+    Plug 'junegunn/vim-plug'  | " Let vim-plug manage vim-plug
     " Powerful status line
     Plug 'vim-airline/vim-airline'
     Plug 'vim-airline/vim-airline-themes'
@@ -66,35 +73,19 @@ let s:is_vimrc_executed=1
     Plug 'scrooloose/nerdtree', { 'on' : 'NERDTreeToggle' }
     " Run commands async
     Plug 'skywind3000/asyncrun.vim', { 'on' : 'AsyncRun' }
-    " Input method support
-    Plug 'vim-scripts/fcitx.vim'
+    " Input method support(Linux only)
+    if !has("win32")
+        Plug 'vim-scripts/fcitx.vim'
+    endif
     " Markdown support
     Plug 'godlygeek/tabular', { 'for' : 'markdown' }
     Plug 'plasticboy/vim-markdown', { 'for' : 'markdown' }
     Plug 'iamcco/markdown-preview.vim', { 'for' : 'markdown', 'on' : 'MarkdownPreview' }
     " LaTeX support
     Plug 'lervag/vimtex', { 'for' : 'tex' }
+    " Completer
+    Plug 'Valloric/YouCompleteMe', { 'on' : 'YcmRestartServer', 'do' : 'python ./install.py' }
     call plug#end()
-
-    " ==================================================================================================================
-    " YouCompleteMe settings
-    " ==================================================================================================================
-    if exists(":YcmCompleter")  | " I may not always install YCM
-        let g:ycm_global_ycm_extra_conf='~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
-        let g:ycm_confirm_extra_conf=0
-        let g:ycm_collect_identifiers_from_tag_files = 1
-        let g:ycm_warning_symbol = '>!' | " I never see warnings
-        let g:ycm_error_symbol = '>>'
-        set completeopt-=preview  | " No preview window
-        autocmd User YcmQuickFixOpened q | " No QuickFix window
-        " Quick command for complete
-        nnoremap <silent><leader>; :YcmCompleter FixIt<CR>
-        nnoremap <silent><leader>? :YcmShowDetailedDiagnostic<CR>
-        inoremap <expr><CR> pumvisible()?"<C-N><C-Y>":"<CR>"
-        " Use <C-J> et <C-K> to view the complete list
-        inoremap <expr><C-J> pumvisible()?"<C-N>":"<C-J>"
-        inoremap <expr><C-K> pumvisible()?"<C-P>":"<C-K>"
-    endif
 
     " ==================================================================================================================
     " Airline settings
@@ -105,9 +96,16 @@ let s:is_vimrc_executed=1
     let g:airline_solarized_bg = 'dark'
 
     " ==================================================================================================================
+    " AsyncRun settings
+    " ==================================================================================================================
+    if has("win32")
+        let g:asyncrun_encs='cp936'
+    endif
+
+    " ==================================================================================================================
     " Vimtex settings
     " ==================================================================================================================
-    let g:vimtex_compiler_progname = 'latexmk'
+    let g:vimtex_fold_enabled=1
     let g:vimtex_compiler_latexmk = {
                 \   'options' : [
                 \     '-xelatex',
@@ -141,12 +139,12 @@ let s:is_vimrc_executed=1
     set foldmethod=syntax
     " I dont need the .viminfo
     set viminfo='0,f0,<0,:0,@0,/0
-    " Enable pretty tab pages on gui
-    set go=e
+    " Fuck the gui
+    set go=''
     " 120 chars at most
     set textwidth=120
     " Why not use zsh?
-    "set shell=/bin/zsh
+    set shell=/bin/zsh
 
     " ==================================================================================================================
     " Mappings
@@ -165,25 +163,16 @@ let s:is_vimrc_executed=1
     cnoremap <C-F> <Right>
     cnoremap <M-B> <C-Left>
     cnoremap <M-F> <C-Right>
-    " Line scrolling
-    nnoremap <C-J> <C-E>
-    nnoremap <C-K> <C-Y>
-    " Screen scrolling
-    nnoremap <expr><C-N> "Lzz2jzz"
-    nnoremap <expr><C-P> "Hzz2kzz"
     " Run shell commands 
     nnoremap <leader>; :!
-    " Switch tabpages
-    inoremap <C-Tab> <C-O>gt
-    nnoremap <C-Tab> gt
-    inoremap <C-S-Tab> <C-O>gT
-    nnoremap <C-S-Tab> gt
 
     " ==================================================================================================================
     " Terminal settings
     " ==================================================================================================================
-    " tnoremap <Esc> <C-W>N  | " Dont be different
-    "autocmd BufWinEnter * if &buftype == 'terminal' | setlocal bufhidden=hide nonu | endif 
+    if !has("win32")  | " There is not terminal on Windows
+        tnoremap <Esc> <C-W>N  | " Dont be different
+        "autocmd BufWinEnter * if &buftype == 'terminal' | setlocal bufhidden=hide nonu | endif
+    endif
 
     " ==================================================================================================================
     " NERD Tree and Netrw settings
@@ -196,17 +185,33 @@ let s:is_vimrc_executed=1
     " ==================================================================================================================
     if has("gui_running")
         set background=light
-        set guifont=Aix
         set vb  | " Ban the annoying bell(cant be seen in gui)
     else  | " GUI ^^^ Term vvv
         set background=dark
     endif
 
     " ==================================================================================================================
+    " Windows settings(I would always use gui on Windows)
+    " ==================================================================================================================
+    if has("win32")
+        set guifont=Source\ Code\ Variable
+        set novb
+        set shell=C:\\WINDOWS\\system32\\cmd.exe
+    endif
+
+    " ==================================================================================================================
+    " Helper functions
+    " ==================================================================================================================
+
+    " ==================================================================================================================
     " Language settings: Cpp
     " ==================================================================================================================
     function! s:CppLanguageSettings()
-        nnoremap <buffer><leader>cc :w<CR>:!g++ -c -std=c++17 -Wall -Wextra %<CR>
+        if has("win32")
+            nnoremap <buffer><leader>cc :w<CR>:AsyncRun msbuild<CR>
+        else  | " Linux
+            nnoremap <buffer><leader>cc :w | AsyncRun g++ -c -std=c++17 -Wall -Wextra %<CR>
+        endif
     endfunction
 
     " ==================================================================================================================
