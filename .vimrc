@@ -4,6 +4,7 @@
 " Author: Isaac Delton
 "
 " My VIm configuration. Supports Windows and Linux(Only tested on Arch Linux, may not be the newest)
+" Note that this file should not be directly used as your .vimrc.
 version 8.0
 
 " Dont execute this if already executed
@@ -55,14 +56,7 @@ let s:is_vimrc_executed=1
     " ==================================================================================================================
     set nocp
     filetype off                  " required
-    if has("win32")
-        set rtp+=$VIM/.vim/bundle/vim-plug
-        let $HOME=$VIM
-        call plug#begin($VIM . '/.vim/bundle/')
-    else  | " has("win32")
-        set rtp+=~/.vim/bundle/vim-plug
-        call plug#begin()
-    endif  | " has("win32")
+    call plug#begin($VIM . '/.vim/plugged')
     Plug 'junegunn/vim-plug'  | " Let vim-plug manage vim-plug
     " Powerful status line
     Plug 'vim-airline/vim-airline'
@@ -83,16 +77,24 @@ let s:is_vimrc_executed=1
     Plug 'iamcco/markdown-preview.vim', { 'for' : 'markdown', 'on' : 'MarkdownPreview' }
     " LaTeX support
     Plug 'lervag/vimtex', { 'for' : 'tex' }
-    " Completer
-    Plug 'Valloric/YouCompleteMe', { 'on' : 'YcmRestartServer', 'do' : 'python ./install.py' }
+    " Completer(only used on linux)
+    if !has("win32")
+        Plug 'Valloric/YouCompleteMe', { 'dir' : '~/YouCompleteMe',
+                    \'on' : 'YcmRestartServer', 'do' : 'python ./install.py' }
+    endif
     call plug#end()
+
+    " ==================================================================================================================
+    " YouCompleteMe settings
+    " ==================================================================================================================
+    let g:ycm_warning_symbol = '!'
 
     " ==================================================================================================================
     " Airline settings
     " ==================================================================================================================
     set laststatus=2  | " Ensure that status line is shown
     set noshowmode  | " The mode will be shown in status line
-    "AirlineTheme solarized  | " make sure the status line theme is the same as editor
+    let g:airline_theme = 'solarized'
     let g:airline_solarized_bg = 'dark'
 
     " ==================================================================================================================
@@ -118,7 +120,6 @@ let s:is_vimrc_executed=1
     " Open the syntax highlight
     syntax enable
     syntax on
-    colo solarized
     " Highlight corrent line
     set cursorline
     " Open the line number
@@ -139,8 +140,6 @@ let s:is_vimrc_executed=1
     set foldmethod=syntax
     " I dont need the .viminfo
     set viminfo='0,f0,<0,:0,@0,/0
-    " Fuck the gui
-    set go=''
     " 120 chars at most
     set textwidth=120
     " Why not use zsh?
@@ -165,6 +164,7 @@ let s:is_vimrc_executed=1
     cnoremap <M-F> <C-Right>
     " Run shell commands 
     nnoremap <leader>; :!
+    nnoremap <leader>: :AsyncRun
 
     " ==================================================================================================================
     " Terminal settings
@@ -181,22 +181,28 @@ let s:is_vimrc_executed=1
     let g:netrw_liststyle=3
 
     " ==================================================================================================================
-    " Gui and term settings
+    " Gui settings
     " ==================================================================================================================
     if has("gui_running")
+        " Color scheme
+        colo solarized
         set background=light
-        set vb  | " Ban the annoying bell(cant be seen in gui)
+        " Font
+        set guifont=Source\ Code\ Pro
+        " Ban the annoying bell(cant be seen on Linux gui)
+        set vb
+        " I dont need the controls
+        set go=''
+        " Win32 settings
+        if has("win32")
+            set guifont=Consolas
+            set novb
+            set shell=C:\\WINDOWS\\system32\\cmd.exe
+        endif
     else  | " GUI ^^^ Term vvv
+        " Color scheme
+        colo desert
         set background=dark
-    endif
-
-    " ==================================================================================================================
-    " Windows settings(I would always use gui on Windows)
-    " ==================================================================================================================
-    if has("win32")
-        set guifont=Source\ Code\ Variable
-        set novb
-        set shell=C:\\WINDOWS\\system32\\cmd.exe
     endif
 
     " ==================================================================================================================
@@ -209,8 +215,8 @@ let s:is_vimrc_executed=1
     function! s:CppLanguageSettings()
         if has("win32")
             nnoremap <buffer><leader>cc :w<CR>:AsyncRun msbuild<CR>
-        else  | " Linux
-            nnoremap <buffer><leader>cc :w | AsyncRun g++ -c -std=c++17 -Wall -Wextra %<CR>
+        else
+            nnoremap <buffer><leader>cc :w<CR>:AsyncRun g++ -c -std=c++17 -Wall -Wextra %<CR>
         endif
     endfunction
 
