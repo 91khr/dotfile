@@ -7,12 +7,14 @@
 " Note that this file should not be directly used as your .vimrc.
 version 8.0
 
-" Dont execute this if already executed
+" {{{ Guard
 if !exists("s:is_vimrc_executed")
 let s:is_vimrc_executed=1
+" }}} Guard
 
+    " {{{ Auto-generated
     " ==================================================================================================================
-    " Clear Old keymaps if need to run again
+    " Clear Old settings
     " ==================================================================================================================
     mapclear
     autocmd!
@@ -50,38 +52,49 @@ let s:is_vimrc_executed=1
     set ttimeout
     set ttimeoutlen=100
     set wildmenu
+    " }}} End auto-generated
 
+    " {{{ Plugins
     " ==================================================================================================================
-    " Vundle and plugin settings
+    " Vim-plug and plugin settings
     " ==================================================================================================================
     set nocp
     filetype off                  " required
     call plug#begin($VIM . '/.vim/plugged')
     Plug 'junegunn/vim-plug'  | " Let vim-plug manage vim-plug
+
     " Powerful status line
     Plug 'vim-airline/vim-airline'
     Plug 'vim-airline/vim-airline-themes'
     " Color theme
     Plug 'altercation/vim-colors-solarized'
+
     " File explorer
     Plug 'scrooloose/nerdtree', { 'on' : 'NERDTreeToggle' }
     " Run commands async
     Plug 'skywind3000/asyncrun.vim', { 'on' : 'AsyncRun' }
-    " Input method support(Linux only)
-    if !has("win32")
-        Plug 'vim-scripts/fcitx.vim'
-    endif
+
     " Markdown support
     Plug 'godlygeek/tabular', { 'for' : 'markdown' }
     Plug 'plasticboy/vim-markdown', { 'for' : 'markdown' }
     Plug 'iamcco/markdown-preview.vim', { 'for' : 'markdown', 'on' : 'MarkdownPreview' }
     " LaTeX support
     Plug 'lervag/vimtex', { 'for' : 'tex' }
-    " Completer(only used on linux)
+    " Lua support
+
+    " Linux-only plugins
     if !has("win32")
+        " Input method support
+        Plug 'vim-scripts/fcitx.vim'
+        " Completer(Not worked well on Windows)
         Plug 'Valloric/YouCompleteMe', { 'dir' : '~/YouCompleteMe',
                     \'on' : 'YcmRestartServer', 'do' : 'python ./install.py' }
     endif
+
+    " OI plugin
+    Plug '91khr/VImOI'
+    "Plug 'file:///C:/Users/Isaac/Documents/projects/VimOI'
+
     call plug#end()
 
     " ==================================================================================================================
@@ -90,12 +103,17 @@ let s:is_vimrc_executed=1
     let g:ycm_warning_symbol = '!'
 
     " ==================================================================================================================
+    " VimOI settings
+    " ==================================================================================================================
+    let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc' ]
+
+    " ==================================================================================================================
     " Airline settings
     " ==================================================================================================================
     set laststatus=2  | " Ensure that status line is shown
     set noshowmode  | " The mode will be shown in status line
-    let g:airline_theme = 'solarized'
-    let g:airline_solarized_bg = 'dark'
+    let g:airline#extensions#tabline#enabled = 1  | " Display buffers
+    let g:airline#extensions#tabline#formatter = 'default'  | " Display file path in default way
 
     " ==================================================================================================================
     " AsyncRun settings
@@ -115,6 +133,14 @@ let s:is_vimrc_executed=1
                 \ }
 
     " ==================================================================================================================
+    " NERD Tree and Netrw settings
+    " ==================================================================================================================
+    let NERDTreeHijackNetrw=0  | " Use netrw as default directory viewer
+    let g:netrw_liststyle=3
+    " }}} End plugins
+
+    " {{{ Vim options
+    " ==================================================================================================================
     " Settings
     " ==================================================================================================================
     " Open the syntax highlight
@@ -130,10 +156,6 @@ let s:is_vimrc_executed=1
     set shiftwidth=4
     set tabstop=4
     set expandtab
-    " Set C-style indent and options
-    set cindent
-    set cinoptions+=L0.5s:0g0N-s
-    "set cinoptions+=(0
     " Let backspace available
     set bs=2
     " Open code folding
@@ -142,8 +164,8 @@ let s:is_vimrc_executed=1
     set viminfo='0,f0,<0,:0,@0,/0
     " 120 chars at most
     set textwidth=120
-    " Why not use zsh?
-    set shell=/bin/zsh
+    " Use system clipboard
+    set clipboard=unnamed
 
     " ==================================================================================================================
     " Mappings
@@ -164,7 +186,7 @@ let s:is_vimrc_executed=1
     cnoremap <M-F> <C-Right>
     " Run shell commands 
     nnoremap <leader>; :!
-    nnoremap <leader>: :AsyncRun
+    nnoremap <leader>: :AsyncRun<space>
 
     " ==================================================================================================================
     " Terminal settings
@@ -173,13 +195,9 @@ let s:is_vimrc_executed=1
         tnoremap <Esc> <C-W>N  | " Dont be different
         "autocmd BufWinEnter * if &buftype == 'terminal' | setlocal bufhidden=hide nonu | endif
     endif
+    " }}} End vim options
 
-    " ==================================================================================================================
-    " NERD Tree and Netrw settings
-    " ==================================================================================================================
-    let NERDTreeHijackNetrw=0  | " Use netrw as default directory viewer
-    let g:netrw_liststyle=3
-
+    " {{{ GUI and System settings
     " ==================================================================================================================
     " Gui settings
     " ==================================================================================================================
@@ -187,37 +205,57 @@ let s:is_vimrc_executed=1
         " Color scheme
         colo solarized
         set background=light
+        " Status line theme
+        let g:airline_theme = 'solarized'
+        let g:airline_solarized_bg = 'dark'
         " Font
         set guifont=Source\ Code\ Pro
         " Ban the annoying bell(cant be seen on Linux gui)
         set vb
         " I dont need the controls
         set go=''
-        " Win32 settings
-        if has("win32")
-            set guifont=Consolas
-            set novb
-            set shell=C:\\WINDOWS\\system32\\cmd.exe
-        endif
     else  | " GUI ^^^ Term vvv
         " Color scheme
         colo desert
         set background=dark
+        " Status line theme
+        let g:airline_theme = 'deus'
     endif
 
     " ==================================================================================================================
-    " Helper functions
+    " System settings
     " ==================================================================================================================
+    if has("win32")  | " Windows
+        set guifont=Consolas
+        set novb
+        set shell=C:\\WINDOWS\\system32\\cmd.exe
+    else  | " Linux
+        " Why not use zsh?
+        set shell=/bin/zsh
+    endif
+    " }}} System settings
+
+    " {{{ Language-specified
+    " ==================================================================================================================
+    " Helpers
+    " ==================================================================================================================
+    " Quick-compile mapping
+    function! s:OutputUnableToCompile()
+        echohl Error
+        echom "找不到编译方法, 不能编译"
+        echohl Normal
+    endfunction
+    nnoremap <silent><leader>cc :Compile<CR>
+    command! -nargs=1 Compile call <SID>OutputUnableToCompile()
 
     " ==================================================================================================================
     " Language settings: Cpp
     " ==================================================================================================================
     function! s:CppLanguageSettings()
-        if has("win32")
-            nnoremap <buffer><leader>cc :w<CR>:AsyncRun msbuild<CR>
-        else
-            nnoremap <buffer><leader>cc :w<CR>:AsyncRun g++ -c -std=c++17 -Wall -Wextra %<CR>
-        endif
+        command! -buffer -nargs=* Compile CppCompile % <args>
+        " Set C-style indent and options
+        set cindent
+        set cinoptions+=L0.5s:0g0N-s
     endfunction
 
     " ==================================================================================================================
@@ -226,17 +264,47 @@ let s:is_vimrc_executed=1
     function! s:HTMLLanguageSettings()
         setlocal foldmethod=indent
     endfunction
+
+    " ==================================================================================================================
+    " Language settings: VimScript
+    " ==================================================================================================================
+    function! s:VimLanguageSettings()
+        setlocal foldmethod=marker
+    endfunction
+
+    " ==================================================================================================================
+    " Language settings: Markdown
+    " ==================================================================================================================
+    function! s:MarkdownLanguageSettings()
+        function! s:CompileMarkdown(...)
+            " Process options
+            let options = ''
+            for item in a:000
+                let options .= ' ' . item
+            endfor
+            " Process output name
+            let outname = expand('%:r') . '.html'
+            " Compile...
+            execute ":AsyncRun pandoc % -o " . outname . ' ' . options
+        endfunction
+        command! -buffer -nargs=* Compile call <SID>CompileMarkdown(<f-args>)
+    endfunction
     
     " ==================================================================================================================
     " Execute language settings
     " ==================================================================================================================
     autocmd FileType html,htm,xml call s:HTMLLanguageSettings()
     autocmd FileType cpp,cxx,c,h,hpp,hxx call s:CppLanguageSettings()
+    autocmd FileType vim call s:VimLanguageSettings()
+    autocmd FileType md,markdown call s:MarkdownLanguageSettings()
+    " }}} End language-specified
 
+" {{{ Guard
 else | " New content goes here
     echohl WarningMsg
     echom "Vimrc had been executed, passing..."
     echohl None | " Just a prompt, can be ignored
 endif | " End checking
+" }}} End guard
 
 " vim: set ft=vim :
