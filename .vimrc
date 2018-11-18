@@ -9,14 +9,16 @@ version 8.0
 
 " {{{ Guard
 if !exists('g:execute_vimrc') || g:execute_vimrc
-    let g:execute_vimrc = 0
 
     " ==================================================================================================================
     " Clean up
     " ==================================================================================================================
-    mapclear
-    autocmd!
-    set all&
+    if !exists('g:execute_vimrc') || g:execute_vimrc != 2
+        mapclear
+        autocmd!
+        set all&
+    endif
+    let g:execute_vimrc = 0
     " }}} End guard
 
     " {{{ Auto-generated
@@ -135,7 +137,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
                 \ }
     let g:echodoc#enable_at_startup = 1
     let g:echodoc#enable_force_overwrite = 1
-    set completeopt=menu,menuone
+    set completeopt-=preview
 
     " ==================================================================================================================
     " VimOI settings
@@ -155,7 +157,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     " AsyncRun settings
     " ==================================================================================================================
     if has("win32")
-        let g:asyncrun_encs='cp936'
+        let g:asyncrun_encs = 'cp936'
     endif
 
     " ==================================================================================================================
@@ -215,7 +217,8 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     " Turn on exrc on current directory, and auto run .vimrc on current file
     set exrc
     set secure
-    au BufRead * if filereadable('.vimrc') | so .vimrc | endif  | "Not safe
+    au DirChanged * if filereadable('.vimrc') | so .vimrc | endif  | "Not safe
+    au BufWrite .vimrc if filereadable('.vimrc') | so .vimrc | endif
 
     " ==================================================================================================================
     " Mappings
@@ -357,6 +360,6 @@ else
     echo "If you want to execute vimrc again, set g:execute_vimrc to 1"
     echohl None
 endif
-    " }}} End guard
+" }}} End guard
 
-    " vim: set ft=vim :
+" vim: set ft=vim :
