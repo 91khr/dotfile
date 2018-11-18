@@ -103,6 +103,15 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         call packager#add('junegunn/goyo.vim', {'type': 'opt'})
     endfunction
 
+    " Dynamic load plugin filetype
+    function! s:AddPlugFT(filetype,plug)
+        let ft = type(a:filetype) == type([]) ? join(a:filetype, ",") : a:filetype
+        let plglist = type(a:plug) == type([]) ? join(a:plug, " | packadd ") : a:plug
+        execute "autocmd FileType " . ft . " packadd " . plglist
+                    \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft"
+    endfunction
+    call s:AddPlugFT('md,markdown', ['tabular', 'vim-markdown'])
+
     " Dynamic load plugin command
     function! s:AddPlugCmd(cmdname, exec, args)
         if has_key(a:args, 'cond') ? eval(a:args.cond) : !has(':' . a:cmdname)
