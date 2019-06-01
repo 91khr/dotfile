@@ -68,19 +68,20 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         packadd vim-packager
         call packager#init()
         call packager#add('kristijanhusak/vim-packager', {'type': 'opt'})
-
         " Status line
         call packager#add('vim-airline/vim-airline')
         call packager#add('vim-airline/vim-airline-themes')
         " Color theme
         call packager#add('altercation/vim-colors-solarized')
+        " Rainbow quote
+        call packager#add('luochen1990/rainbow')
 
         " File explorer
         call packager#add('scrooloose/nerdtree', {'type': 'opt'})
         " Run shell command async
         call packager#add('skywind3000/asyncrun.vim', {'type': 'opt'})
         " Completer
-        call packager#add('Valloric/YouCompleteMe', {'do': 'python ./install.py --clang-completer', 'type': 'opt'})
+        call packager#add('Valloric/YouCompleteMe', {'type': 'opt', 'do': 'python install.py --clang-completer'})
         call packager#add('Shougo/echodoc.vim', {'type': 'opt'})
 
         " Markdown support
@@ -88,13 +89,14 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         call packager#add('plasticboy/vim-markdown', {'type': 'opt'})
         " call packager#add('iamcco/markdown-preview.vim')  " I seldom use this plugin
         " Latex support
-        " call packager#add('larvag/vimtex')  " I seldom use this plugin
+        call packager#add('lervag/vimtex', {'type': 'opt'})
+        call packager#add('xuhdev/vim-latex-live-preview', {'type': 'opt'})
 
         "System-specified plugins
         if has('win32')
         else
             " Input method support on linux
-            call packager#add('vim-scripts/fcitx.vim', {'type': 'opt'})
+            call packager#add('vim-scripts/fcitx.vim')
         endif
 
         " OI plugin
@@ -111,6 +113,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
                     \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft"
     endfunction
     call s:AddPlugFT('md,markdown', ['tabular', 'vim-markdown'])
+    call s:AddPlugFT('tex', 'vimtex')
 
     " Dynamic load plugin command
     function! s:AddPlugCmd(cmdname, exec, args)
@@ -119,19 +122,20 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
             execute "command! " . cmdargs . a:cmdname . ' delcommand ' . a:cmdname . '|' . a:exec
         endif
     endfunction
+    call s:AddPlugCmd('LLPStartPreview', 'packadd vim-latex-live-preview', {})
     call s:AddPlugCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
     call s:AddPlugCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
     call s:AddPlugCmd('YcmOn', 'packadd YouCompleteMe | packadd echodoc.vim', {'cond': "!has(':YcmCompleter')"})
     call s:AddPlugCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 
     " Plugin commands
-    command! PackUpdate call PackInit() | call packager#update('', {'do': 'call packager#status()'})
+    command! PackUpdate call PackInit() | call packager#update()
     command! PackClean call PackInit() | call packager#clean()
     command! PackStatus call PackInit() | call packager#status()
     command! PackInstall call PackInit() | call packager#install()
 
     " ==================================================================================================================
-    " YouCompleteMe and Echodoc settings
+    " Language Server and Echodoc settings
     " ==================================================================================================================
     if has('win32')
         let g:ycm_global_ycm_extra_conf = '~/vimfiles/ycm_extra_conf.py'
@@ -144,14 +148,19 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
                 \ 'c,cpp,python,java,go,erlang,perl': ['.', '->', '::', 're!\w{2}'],
                 \ 'cs,lua,javascript': ['.', 're!\w{2}'],
                 \ }
+    let g:ycm_warning_symbol = '->'
     let g:echodoc#enable_at_startup = 1
     let g:echodoc#enable_force_overwrite = 1
-    set completeopt-=preview
+    set completeopt=menuone,noselect
 
     " ==================================================================================================================
     " VimOI settings
     " ==================================================================================================================
-    let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
+    if has('win32')
+        let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
+    else
+        let g:VimOI_CompileArgs = [ '-Wall', '-Wextra' ]
+    endif
 
     " ==================================================================================================================
     " Airline settings
@@ -172,14 +181,19 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     " ==================================================================================================================
     " Vimtex settings
     " ==================================================================================================================
-    let g:vimtex_fold_enabled=1
+    let g:vimtex_enabled = 1
+    let g:vimtex_fold_enabled = 1
     let g:vimtex_compiler_latexmk = {
                 \   'options' : [
                 \     '-xelatex',
                 \   ],
                 \ }
+    let g:livepreview_engine = 'xelatex'
+    set updatetime=400
     if has("win32")
-        let g:vimtex_view_general_viewer = 'texworks'
+        let g:livepreview_previewer = 'texworks'
+    else
+        let g:livepreview_previewer = 'zathura'
     endif
 
     " ==================================================================================================================
@@ -227,7 +241,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     set exrc
     set secure
     au DirChanged * if filereadable('.vimrc') | so .vimrc | endif  | "Not safe
-    au BufWrite .vimrc if filereadable('.vimrc') | so .vimrc | endif
+    au BufWritePost .vimrc if filereadable('.vimrc') | so .vimrc | endif
 
     " ==================================================================================================================
     " Mappings
@@ -297,7 +311,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         " Why not use zsh?
         set shell=/bin/zsh
         " Font
-        set guifont=Source\ Code\ Pro
+        set guifont=Monaco
     endif
     " }}} System settings
 
@@ -321,8 +335,19 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     function! s:CppLanguageSettings()
         command! -buffer -nargs=* Compile CppCompile % <args>
         " Set C-style indent and options
-        set cindent
-        set cinoptions+=L0.5s:0g0N-s
+        function! CppIndent()
+            let l:prevline = prevnonblank(line('.') - 1)
+            let l:prevctnt = getline(l:prevline)
+            let l:indent = cindent('.')
+            if l:prevctnt =~# '^\s*template'
+                let l:indent -= shiftwidth()
+            elseif l:prevctnt =~# '^\s*class.*:.*'
+                let l:indent = indent(l:prevline)
+            endif
+            return l:indent > 0 ? l:indent : 0
+        endfunction
+        set cinoptions+=L0.5s:0g0N-sj1
+        set indentexpr=CppIndent()
     endfunction
     autocmd FileType cpp,cxx,c,h,hpp,hxx call s:CppLanguageSettings()
 
@@ -344,6 +369,14 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     autocmd FileType vim call s:VimLanguageSettings()
 
     " ==================================================================================================================
+    " Language settings: Python
+    " ==================================================================================================================
+    function! s:PythonLanguageSettings()
+        command! -buffer Compile !python %
+    endfunction
+    autocmd FileType python call s:PythonLanguageSettings()
+
+    " ==================================================================================================================
     " Language settings: Markdown
     " ==================================================================================================================
     function! s:MarkdownLanguageSettings()
@@ -354,7 +387,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
                 let options .= ' ' . item
             endfor
             " Process output name
-            let outname = expand('%:r') . '.html'
+            let outname = expand('%:t:r') . '.html'
             " Compile...
             execute ":AsyncRun pandoc % -o " . outname . ' ' . options
         endfunction
