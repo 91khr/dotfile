@@ -37,7 +37,6 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         packadd vim-packager
         call packager#init()
         call packager#add('kristijanhusak/vim-packager', {'type': 'opt'})
-
         " Status line
         call packager#add('vim-airline/vim-airline')
         call packager#add('vim-airline/vim-airline-themes')
@@ -45,29 +44,30 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         call packager#add('altercation/vim-colors-solarized')
         " Snippet :)
         call packager#add('sirver/ultisnips')
+        " Rainbow quote
+        call packager#add('luochen1990/rainbow')
 
         " File explorer
         call packager#add('scrooloose/nerdtree', {'type': 'opt'})
         " Run shell command async
         call packager#add('skywind3000/asyncrun.vim', {'type': 'opt'})
         " Completer
-        call packager#add('Valloric/YouCompleteMe', {'do': 'python ./install.py --clang-completer', 'type': 'opt'})
+        " Switch to LSP when possible
+        call packager#add('Valloric/YouCompleteMe', {'type': 'opt', 'do': 'python install.py --clang-completer'})
         call packager#add('Shougo/echodoc.vim', {'type': 'opt'})
-        " Lisp :)
-        call packager#add('luochen1990/rainbow')
 
         " Markdown support
         call packager#add('godlygeek/tabular', {'type': 'opt'})
         call packager#add('plasticboy/vim-markdown', {'type': 'opt'})
         " Latex support
-        call packager#add('lervag/vimtex', {'type': 'opt'})  " I seldom use this plugin
+        call packager#add('lervag/vimtex', {'type': 'opt'})
         call packager#add('xuhdev/vim-latex-live-preview', {'type': 'opt'})
 
         "System-specified plugins
         if has('win32')
         else
             " Input method support on linux
-            call packager#add('vim-scripts/fcitx.vim', {'type': 'opt'})
+            call packager#add('vim-scripts/fcitx.vim')
         endif
 
         " OI plugin
@@ -106,7 +106,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     command! PackInstall call PackInit() | call packager#install()
 
     " ==================================================================================================================
-    " YouCompleteMe and Echodoc settings
+    " Language Server and Echodoc settings
     " ==================================================================================================================
     if has('win32')
         let g:ycm_global_ycm_extra_conf = '~/vimfiles/ycm_extra_conf.py'
@@ -122,13 +122,17 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     let g:ycm_warning_symbol = '->'
     let g:echodoc#enable_at_startup = 1
     let g:echodoc#enable_force_overwrite = 1
-    set completeopt-=preview
+    set completeopt=menuone,noselect
 
     " ==================================================================================================================
     " VimOI settings
     " ==================================================================================================================
-    let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
     let g:rainbow_active = 1
+    if has('win32')
+        let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
+    else
+        let g:VimOI_CompileArgs = [ '-Wall', '-Wextra' ]
+    endif
 
     " ==================================================================================================================
     " Airline settings
@@ -143,10 +147,18 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     " Vimtex settings
     " ==================================================================================================================
     let g:vimtex_enabled = 1
-    if has('win32')
+    let g:vimtex_fold_enabled = 1
+    let g:vimtex_compiler_latexmk = {
+                \   'options' : [
+                \     '-xelatex',
+                \   ],
+                \ }
+    let g:livepreview_engine = 'xelatex'
+    if has("win32")
         let g:livepreview_previewer = 'start'
-        let g:livepreview_engine = 'xelatex'
     else
+        let g:livepreview_previewer = 'zathura'
+        set updatetime=400
     endif
 
     " ==================================================================================================================
@@ -186,11 +198,13 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         command! -buffer -nargs=* Compile CppCompile % <args>
         " Set C-style indent and options
         function! CppIndent()
-            let l:prevl = prevnonblank(line('.') - 1)
-            let l:prevctnt = getline(l:prevl)
+            let l:prevline = prevnonblank(line('.') - 1)
+            let l:prevctnt = getline(l:prevline)
             let l:indent = cindent('.')
             if l:prevctnt =~# '\m^\s*template<'
-                let l:indent = cindent(l:prevl)
+                let l:indent = cindent(l:prevline)
+            elseif l:prevctnt =~# '^\s*class.*:.*'
+                let l:indent = indent(l:prevline)
             endif
             return l:indent
         endfunction
@@ -220,7 +234,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     " Language settings: Python
     " ==================================================================================================================
     function! s:PythonLanguageSettings()
-        command! -buffer Compile py3f %
+        command! -buffer Compile !python %
     endfunction
     autocmd FileType python call s:PythonLanguageSettings()
 
@@ -235,7 +249,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
                 let options .= ' ' . item
             endfor
             " Process output name
-            let outname = expand('%:r') . '.html'
+            let outname = expand('%:t:r') . '.html'
             " Compile...
             execute ":AsyncRun pandoc % -o " . outname . ' ' . options
         endfunction
