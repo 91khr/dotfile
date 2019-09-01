@@ -10,7 +10,8 @@ local homedir = os.getenv('HOME')
 
 -- {{{ Main
 local theme = {}
-theme.wallpaper = homedir .. '/Pictures/wallpaper/chtholly.png'
+--theme.wallpaper = homedir .. '/Pictures/wallpaper/chtholly.png'
+theme.wallpaper = homedir .. '/Pictures/wallpaper/Bilibili.png'
 -- }}}
 
 -- {{{ Styles

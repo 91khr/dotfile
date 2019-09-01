@@ -8,7 +8,7 @@
 version 8.0
 
 " {{{ Guard
-if !exists('g:execute_vimrc') || g:execute_vimrc
+"if !exists('g:execute_vimrc') || g:execute_vimrc
 
     " ==================================================================================================================
     " Clean up
@@ -109,11 +109,11 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     function! s:AddPlugFT(filetype,plug)
         let ft = type(a:filetype) == type([]) ? join(a:filetype, ",") : a:filetype
         let plglist = type(a:plug) == type([]) ? join(a:plug, " | packadd ") : a:plug
-        execute "autocmd FileType " . ft . " packadd " . plglist
-                    \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft"
+            execute "autocmd FileType " . ft . " packadd " . plglist
+                        \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft | e %"
     endfunction
     call s:AddPlugFT('md,markdown', ['tabular', 'vim-markdown'])
-    call s:AddPlugFT('tex', 'vimtex')
+    call s:AddPlugFT('tex,plaintex', 'vimtex')
 
     " Dynamic load plugin command
     function! s:AddPlugCmd(cmdname, exec, args)
@@ -325,7 +325,9 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
             echom "找不到编译方法, 不能编译"
             echohl Normal
         endfunction
-        command! -buffer Compile call <SID>OutputUnableToCompile()
+        if !exists(":Compile")
+            command! -buffer Compile call <SID>OutputUnableToCompile()
+        endif
     endfunction
     autocmd FileType * call s:DefaultLanguageSettings()
 
@@ -394,14 +396,22 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         command! -buffer -nargs=* Compile call <SID>CompileMarkdown(<f-args>)
     endfunction
     autocmd FileType md,markdown call s:MarkdownLanguageSettings()
+
+    " ==================================================================================================================
+    " Language settings: Racket
+    " ==================================================================================================================
+    function! s:RacketLanguageSettings()
+        command! -buffer -nargs=* Compile !racket %
+    endfunction
+    autocmd FileType scheme call s:RacketLanguageSettings()
     " }}} End language-specified
 
     " {{{ Guard
-else
-    echohl TODO
-    echo "If you want to execute vimrc again, set g:execute_vimrc to 1"
-    echohl None
-endif
+"else
+"    echohl TODO
+"    echo "If you want to execute vimrc again, set g:execute_vimrc to 1"
+"    echohl None
+"endif
 " }}} End guard
 
 " vim: set ft=vim :
