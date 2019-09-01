@@ -7,8 +7,8 @@
 " Note that this file should not be directly used as your .vimrc.
 version 8.0
 
-" {{{ Guard
-"if !exists('g:execute_vimrc') || g:execute_vimrc
+" {{{ Guard and prepare
+if !exists('g:execute_vimrc') || g:execute_vimrc
 
     " ==================================================================================================================
     " Clean up
@@ -21,48 +21,17 @@ version 8.0
     let g:execute_vimrc = 0
     " }}} End guard
 
-    " {{{ Auto-generated
-    " ==================================================================================================================
-    " Auto-generated content
-    " ==================================================================================================================
-    if &cp | set nocp | endif  | " No compitiable mode
-    " Setting cpo {{{
-    let s:cpo_save=&cpo
-    set cpo&vim
-    let &cpo=s:cpo_save
-    unlet s:cpo_save
-    " }}} End setting cpo
-    " Set encodings
-    set encoding=utf-8
-    set termencoding=utf-8
-    set fileencodings=ucs-bom,utf-8,default,latin1,cp936
-    " Set language of help document
-    set helplang=cn
-    " Highlight search result
-    set hlsearch
-    " Disables mouse in insert mode
-    set mouse=nvcr
+    " {{{ Helper functions and commands
+    command! -nargs=1 -complete=file SoFile execute 'so ' . expand('<sfile>:h') . '/' . <q-args>
+    " }}} End helper functions and commands
 
-    nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(expand((exists("g:netrw_gx")? g:netrw_gx : '<cfile>'))
-                \,netrw#CheckIfRemote())
-    vnoremap <silent> <Plug>NetrwBrowseXVis :call netrw#BrowseXVis()
-    set display=truncate
-    set incsearch
-    set langnoremap
-    set nolangremap
-    set nrformats=bin,hex
-    set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc,.png,.jpg
-    set ttimeout
-    set ttimeoutlen=100
-    set wildmenu
-    " }}} End auto-generated
+    " Set the options
+    SoFile .vim/options.vim
 
     " {{{ Plugins
     " ==================================================================================================================
     " Vim-plug and plugin settings
     " ==================================================================================================================
-    set nocp
-    filetype plugin indent on
     packadd vim-packager
     function! PackInit() abort
         packadd vim-packager
@@ -73,6 +42,8 @@ version 8.0
         call packager#add('vim-airline/vim-airline-themes')
         " Color theme
         call packager#add('altercation/vim-colors-solarized')
+        " Snippet :)
+        call packager#add('sirver/ultisnips')
         " Rainbow quote
         call packager#add('luochen1990/rainbow')
 
@@ -81,13 +52,13 @@ version 8.0
         " Run shell command async
         call packager#add('skywind3000/asyncrun.vim', {'type': 'opt'})
         " Completer
+        " Switch to LSP when possible
         call packager#add('Valloric/YouCompleteMe', {'type': 'opt', 'do': 'python install.py --clang-completer'})
         call packager#add('Shougo/echodoc.vim', {'type': 'opt'})
 
         " Markdown support
         call packager#add('godlygeek/tabular', {'type': 'opt'})
         call packager#add('plasticboy/vim-markdown', {'type': 'opt'})
-        " call packager#add('iamcco/markdown-preview.vim')  " I seldom use this plugin
         " Latex support
         call packager#add('lervag/vimtex', {'type': 'opt'})
         call packager#add('xuhdev/vim-latex-live-preview', {'type': 'opt'})
@@ -109,8 +80,8 @@ version 8.0
     function! s:AddPlugFT(filetype,plug)
         let ft = type(a:filetype) == type([]) ? join(a:filetype, ",") : a:filetype
         let plglist = type(a:plug) == type([]) ? join(a:plug, " | packadd ") : a:plug
-            execute "autocmd FileType " . ft . " packadd " . plglist
-                        \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft | e %"
+        execute "autocmd FileType " . ft . " packadd " . plglist
+                    \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft | e %"
     endfunction
     call s:AddPlugFT('md,markdown', ['tabular', 'vim-markdown'])
     call s:AddPlugFT('tex,plaintex', 'vimtex')
@@ -122,11 +93,11 @@ version 8.0
             execute "command! " . cmdargs . a:cmdname . ' delcommand ' . a:cmdname . '|' . a:exec
         endif
     endfunction
-    call s:AddPlugCmd('LLPStartPreview', 'packadd vim-latex-live-preview', {})
     call s:AddPlugCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
     call s:AddPlugCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
     call s:AddPlugCmd('YcmOn', 'packadd YouCompleteMe | packadd echodoc.vim', {'cond': "!has(':YcmCompleter')"})
     call s:AddPlugCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
+    call s:AddPlugCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
 
     " Plugin commands
     command! PackUpdate call PackInit() | call packager#update()
@@ -156,10 +127,11 @@ version 8.0
     " ==================================================================================================================
     " VimOI settings
     " ==================================================================================================================
+    let g:rainbow_active = 1
     if has('win32')
         let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
     else
-        let g:VimOI_CompileArgs = [ '-Wall', '-Wextra' ]
+        let g:VimOI_CompileArgs = [ '-Wall', '-Wextra', '-DDEBUG' ]
     endif
 
     " ==================================================================================================================
@@ -172,13 +144,6 @@ version 8.0
     let g:airline#extensions#wordcount#formatter = 'cnfmt'
 
     " ==================================================================================================================
-    " AsyncRun settings
-    " ==================================================================================================================
-    if has("win32")
-        let g:asyncrun_encs = 'cp936'
-    endif
-
-    " ==================================================================================================================
     " Vimtex settings
     " ==================================================================================================================
     let g:vimtex_enabled = 1
@@ -189,11 +154,11 @@ version 8.0
                 \   ],
                 \ }
     let g:livepreview_engine = 'xelatex'
-    set updatetime=400
     if has("win32")
-        let g:livepreview_previewer = 'texworks'
+        let g:livepreview_previewer = 'start'
     else
         let g:livepreview_previewer = 'zathura'
+        set updatetime=400
     endif
 
     " ==================================================================================================================
@@ -209,111 +174,6 @@ version 8.0
     let g:goyo_height = '95%'
     let g:goyo_linenr = 1
     " }}} End plugins
-
-    " {{{ Vim options
-    " ==================================================================================================================
-    " Settings
-    " ==================================================================================================================
-    " Open the syntax highlight
-    syntax enable
-    syntax on
-    " Highlight corrent line
-    set cursorline
-    " Open the line number
-    set number
-    " Show entered commands
-    set showcmd
-    " Set the width of indent and tab
-    set shiftwidth=4
-    set tabstop=4
-    set expandtab
-    " Let backspace available
-    set bs=2
-    " Open code folding
-    set foldmethod=syntax
-    " I dont need the .viminfo
-    set viminfo='0,f0,<0,:0,@0,/0
-    " 120 chars at most
-    set textwidth=120
-    " Use system clipboard
-    set clipboard=unnamed
-    " Turn on exrc on current directory, and auto run .vimrc on current file
-    set exrc
-    set secure
-    au DirChanged * if filereadable('.vimrc') | so .vimrc | endif  | "Not safe
-    au BufWritePost .vimrc if filereadable('.vimrc') | so .vimrc | endif
-
-    " ==================================================================================================================
-    " Mappings
-    " ==================================================================================================================
-    " Reset the leader
-    let mapleader=' '
-    " Fast fold code
-    map <leader><space> za
-    " Clear search
-    nnoremap <silent><leader>/ :let @/=''<CR>
-    " Make cursor move in the virtual lines
-    noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
-    noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
-    " Emacs style motion in cmdline mode(q: may be better)
-    cnoremap <C-B> <Left>
-    cnoremap <C-F> <Right>
-    cnoremap <M-B> <C-Left>
-    cnoremap <M-F> <C-Right>
-    " Run shell commands
-    nnoremap <leader>; :!
-    nnoremap <leader>: :AsyncRun<space>
-    " Quick compile
-    nnoremap <silent><leader>cc :Compile<CR>
-    " Quick diagnostic powered by YCM
-    nnoremap <silent><leader>f :YcmCompleter FixIt<CR>
-
-    " ==================================================================================================================
-    " Terminal settings
-    " ==================================================================================================================
-    if !has("win32")  | " There is not terminal on Windows
-        tnoremap <Esc> <C-W>N  | " Dont be different
-        "autocmd BufWinEnter * if &buftype == 'terminal' | setlocal bufhidden=hide nonu | endif
-    endif
-    " }}} End vim options
-
-    " {{{ GUI and System settings
-    " ==================================================================================================================
-    " Gui settings
-    " ==================================================================================================================
-    if has("gui_running")
-        " Color scheme
-        colo solarized
-        set background=light
-        " Status line theme
-        let g:airline_theme = 'solarized'
-        let g:airline_solarized_bg = 'dark'
-        " Ban the annoying bell(cant be seen on Linux gui)
-        set vb
-        " I dont need the controls
-        set go=''
-    else  | " GUI ^^^ Term vvv
-        " Color scheme
-        colo desert
-        set background=dark
-        " Status line theme
-        let g:airline_theme = 'deus'
-    endif
-
-    " ==================================================================================================================
-    " System settings
-    " ==================================================================================================================
-    if has("win32")  | " Windows
-        set guifont=Consolas
-        set novb
-        set shell=C:\\WINDOWS\\system32\\cmd.exe
-    else  | " Linux
-        " Why not use zsh?
-        set shell=/bin/zsh
-        " Font
-        set guifont=Monaco
-    endif
-    " }}} System settings
 
     " {{{ Language-specified
     " ==================================================================================================================
@@ -341,15 +201,15 @@ version 8.0
             let l:prevline = prevnonblank(line('.') - 1)
             let l:prevctnt = getline(l:prevline)
             let l:indent = cindent('.')
-            if l:prevctnt =~# '^\s*template'
-                let l:indent -= shiftwidth()
+            if l:prevctnt =~# '\m^\s*template<'
+                let l:indent = cindent(l:prevline)
             elseif l:prevctnt =~# '^\s*class.*:.*'
                 let l:indent = indent(l:prevline)
             endif
-            return l:indent > 0 ? l:indent : 0
+            return l:indent
         endfunction
-        set cinoptions+=L0.5s:0g0N-sj1
-        set indentexpr=CppIndent()
+        setlocal indentexpr=CppIndent()
+        setlocal cinoptions+=L0.5s:0g0N-sj1
     endfunction
     autocmd FileType cpp,cxx,c,h,hpp,hxx call s:CppLanguageSettings()
 
@@ -406,12 +266,14 @@ version 8.0
     autocmd FileType scheme call s:RacketLanguageSettings()
     " }}} End language-specified
 
-    " {{{ Guard
-"else
-"    echohl TODO
-"    echo "If you want to execute vimrc again, set g:execute_vimrc to 1"
-"    echohl None
-"endif
+    " {{{ Guard and cleanup
+    " Del helper commands
+    delcommand SoFile
+else
+    echohl TODO
+    echo "If you want to execute vimrc again, set g:execute_vimrc to 1"
+    echohl None
+endif
 " }}} End guard
 
 " vim: set ft=vim :
