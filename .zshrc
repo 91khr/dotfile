@@ -4,11 +4,14 @@ HISTSIZE=500
 SAVEHIST=500
 bindkey -e
 zstyle :compinstall filename '/home/isaac/.zshrc'
+setopt correct
 autoload -Uz compinit
 compinit
 
 # Syntax highlighting
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# Enable comments
+setopt interactivecomments
 
 # Prompt
 setopt PROMPT_SUBST

@@ -23,14 +23,20 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
 
     " {{{ Helper functions and commands
     command! -nargs=1 -complete=file SoFile execute 'so ' . expand('<sfile>:h') . '/' . <q-args>
+    function! IsExec(name)  " Like executable(), but fallback to wsl on Windows
+        if executable(a:name) | return v:true  | " This is always correct
+        elseif has('win32') && executable("bash")
+            silent call system("wsl which " . a:name)
+            return v:shell_error == 0
+        else | return v:false
+        endif
+    endfunction
     " }}} End helper functions and commands
 
-    " Set the options
-    SoFile .vim/options.vim
-
     " {{{ Plugins
+    " {{{ Plugin list and setup options
     " ==================================================================================================================
-    " Vim-plug and plugin settings
+    " Vim-packager and plugin settings
     " ==================================================================================================================
     packadd vim-packager
     function! PackInit() abort
@@ -46,19 +52,28 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         call packager#add('sirver/ultisnips')
         " Rainbow quote
         call packager#add('luochen1990/rainbow')
+        " Show marks
+        call packager#add('kshenoy/vim-signature')
 
         " File explorer
         call packager#add('scrooloose/nerdtree', {'type': 'opt'})
         " Run shell command async
         call packager#add('skywind3000/asyncrun.vim', {'type': 'opt'})
-        " Completer
-        " Switch to LSP when possible
-        call packager#add('Valloric/YouCompleteMe', {'type': 'opt', 'do': 'python install.py --clang-completer'})
+
+        " Language server
+        call packager#add('prabirshrestha/async.vim', {'type': 'opt'})
+        call packager#add('prabirshrestha/vim-lsp', {'type': 'opt'})
+        call packager#add('prabirshrestha/asyncomplete.vim', {'type': 'opt'})
+        call packager#add('prabirshrestha/asyncomplete-lsp.vim', {'type': 'opt'})
+        " Document support
         call packager#add('Shougo/echodoc.vim', {'type': 'opt'})
 
         " Markdown support
         call packager#add('godlygeek/tabular', {'type': 'opt'})
         call packager#add('plasticboy/vim-markdown', {'type': 'opt'})
+        " Markdown preview
+        call packager#add('iamcco/markdown-preview.nvim',
+                    \ {'type': 'opt', 'do': {->mkdp#util#install()}})
         " Latex support
         call packager#add('lervag/vimtex', {'type': 'opt'})
         call packager#add('xuhdev/vim-latex-live-preview', {'type': 'opt'})
@@ -95,9 +110,15 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     endfunction
     call s:AddPlugCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
     call s:AddPlugCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
-    call s:AddPlugCmd('YcmOn', 'packadd YouCompleteMe | packadd echodoc.vim', {'cond': "!has(':YcmCompleter')"})
     call s:AddPlugCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
     call s:AddPlugCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
+    call s:AddPlugCmd('LspOn', 'packadd async.vim | packadd vim-lsp |' .
+                \ 'doautocmd User lsp_setup | call lsp#enable()', {})
+    call s:AddPlugCmd('CompleteOn', 'packadd async.vim | packadd vim-lsp | ' .
+                \ 'packadd asyncomplete.vim | packadd asyncomplete-lsp.vim |' .
+                \ 'doautocmd User lsp_setup | call lsp#enable() | e', {})
+    call s:AddPlugCmd('MarkdownPreview', 'packadd markdown-preview.nvim | e | MarkdownPreview', {})
+    " }}} End plugin list and setup
 
     " Plugin commands
     command! PackUpdate call PackInit() | call packager#update()
@@ -105,24 +126,41 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     command! PackStatus call PackInit() | call packager#status()
     command! PackInstall call PackInit() | call packager#install()
 
+    " {{{ Plugin options
     " ==================================================================================================================
     " Language Server and Echodoc settings
     " ==================================================================================================================
-    if has('win32')
-        let g:ycm_global_ycm_extra_conf = '~/vimfiles/ycm_extra_conf.py'
-    else
-        let g:ycm_global_ycm_extra_conf = '~/.vim/ycm_extra_conf.py'
-    endif
-    let g:ycm_add_preview_to_completeopt = 0
-    let g:ycm_server_log_level = 'info'
-    let g:ycm_semantic_triggers = {
-                \ 'c,cpp,python,java,go,erlang,perl': ['.', '->', '::', 're!\w{2}'],
-                \ 'cs,lua,javascript': ['.', 're!\w{2}'],
-                \ }
-    let g:ycm_warning_symbol = '->'
+    " Register lsp when it enables
+    " TODO: find way to enable autocomplete without re-registering server
+    function s:RegisterLsp()
+        let l:Getvar = { name -> exists(name) ? eval(name) : v:null }
+        " if !l:Getvar("s:CppServerAvailable") && IsExec('clangd')
+        if IsExec('clangd')
+            let l:clangopt = {
+                        \ 'name': 'clangd',
+                        \ 'cmd': {_->["wsl", "clangd", "--background-index"]},
+                        \ 'whitelist': ['c', 'cpp'],
+                        \ }
+            call lsp#register_server(l:clangopt)
+            let s:CppServerAvailable = v:true
+        endif
+        if IsExec('lua-lsp')
+            call lsp#register_server({
+                        \ 'name': 'lua-lsp',
+                        \ 'cmd': {_->["wsl", "lua-lsp"]},
+                        \ 'whitelist': ['lua'],
+                        \ })
+            let s:LuaServerAvailable = v:true
+        endif
+    endfunction
+    autocmd User lsp_setup call s:RegisterLsp()
+    " Well, it's exactly the same as autosetting,
+    " but who knows if it will change one day?
+    let g:asyncomplete_auto_completeopt = 0
+    set completeopt=menuone,popup,noinsert,noselect
+    " Enable echodoc
     let g:echodoc#enable_at_startup = 1
     let g:echodoc#enable_force_overwrite = 1
-    set completeopt=menuone,noselect
 
     " ==================================================================================================================
     " VimOI settings
@@ -135,16 +173,17 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     endif
 
     " ==================================================================================================================
-    " Airline settings
+    " Theme settings(Airline and solarized
     " ==================================================================================================================
     set laststatus=2  | " Ensure that status line is shown
     set noshowmode  | " The mode will be shown in status line
+    let g:solarized_menu = 0  | " I don't use it, which would cause error
     let g:airline#extensions#tabline#enabled = 1  | " Display buffers
     let g:airline#extensions#tabline#formatter = 'default'  | " Display file path in default way
     let g:airline#extensions#wordcount#formatter = 'cnfmt'
 
     " ==================================================================================================================
-    " Vimtex settings
+    " Vimtex, preview and markdown settings
     " ==================================================================================================================
     let g:vimtex_enabled = 1
     let g:vimtex_fold_enabled = 1
@@ -160,6 +199,20 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         let g:livepreview_previewer = 'zathura'
         set updatetime=400
     endif
+    " Markdown options
+    let g:vim_markdown_frontmatter = 1
+    let g:vim_markdown_strikethrough = 1
+    " Markdown preview
+    let g:mkdp_refresh_slow = 1
+    let g:mkdp_auto_close = 0
+    let g:mkdp_browser = 'firefox'
+
+    " ==================================================================================================================
+    " Snippet settings
+    " ==================================================================================================================
+    " Never overwrite **MY** settings!
+    let g:UltiSnipsExpandTrigger = '<C-S-M-Del>'
+    let g:UltiSnipsListSnippets = '<C-S-M-Del>'
 
     " ==================================================================================================================
     " NERD Tree and Netrw settings
@@ -173,7 +226,11 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     let g:goyo_width = '80%'
     let g:goyo_height = '95%'
     let g:goyo_linenr = 1
+    " }}} End plugin options
     " }}} End plugins
+
+    " Set the options
+    SoFile .vim/options.vim
 
     " {{{ Language-specified
     " ==================================================================================================================
@@ -210,6 +267,9 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         endfunction
         setlocal indentexpr=CppIndent()
         setlocal cinoptions+=L0.5s:0g0N-sj1
+        if exists("s:CppServerAvailable") && s:CppServerAvailable
+            setlocal omnifunc=lsp#complete
+        endif
     endfunction
     autocmd FileType cpp,cxx,c,h,hpp,hxx call s:CppLanguageSettings()
 
@@ -234,9 +294,31 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     " Language settings: Python
     " ==================================================================================================================
     function! s:PythonLanguageSettings()
-        command! -buffer Compile !python %
+        command! -buffer Compile py3file %
     endfunction
     autocmd FileType python call s:PythonLanguageSettings()
+
+    " ==================================================================================================================
+    " Language settings: Racket
+    " ==================================================================================================================
+    function! s:RacketLanguageSettings()
+        command! -buffer Compile !racket %
+        if exists("s:RacketServerAvailable") && s:RacketServerAvailable
+            setlocal omnifunc=lsp#complete
+        endif
+    endfunction
+    autocmd FileType scheme call s:RacketLanguageSettings()
+
+    " ==================================================================================================================
+    " Language settings: Lua
+    " ==================================================================================================================
+    function! s:LuaLanguageSettings()
+        command! -buffer Compile luafile %
+        if exists("s:LuaServerAvailable") && s:LuaServerAvailable
+            setlocal omnifunc=lsp#complete
+        endif
+    endfunction
+    autocmd FileType lua call s:LuaLanguageSettings()
 
     " ==================================================================================================================
     " Language settings: Markdown

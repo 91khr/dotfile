@@ -40,7 +40,7 @@ set wildmenu
 filetype plugin indent on
 " }}} End auto-generated
 
-" {{{ Defined by me
+" {{{ Settings
 " ======================================================================================================================
 " Settings
 " ======================================================================================================================
@@ -71,9 +71,17 @@ set fileformat=unix
 set fileformats=unix,dos
 " Turn on exrc on current directory, and auto run .vimrc on current file
 set exrc secure
-au DirChanged * if filereadable('.vimrc') | confirm so .vimrc | endif
-au BufWritePost .vimrc if filereadable('.vimrc') | so .vimrc | endif
+autocmd DirChanged * if filereadable('.vimrc') | confirm so .vimrc | endif
+autocmd BufWritePost .vimrc if filereadable('.vimrc') | so .vimrc | endif
 
+" ======================================================================================================================
+" Terminal settings
+" ======================================================================================================================
+" There's no difference between terminal and ordinary buffer(just like Emacs):)
+tnoremap <Esc> <C-W>N
+" }}} End settings
+
+" {{{ Mappings and autocmds
 " ======================================================================================================================
 " Mappings
 " ======================================================================================================================
@@ -96,17 +104,10 @@ nnoremap <leader>; :!
 nnoremap <leader>: :AsyncRun<space>
 " Quick compile
 nnoremap <silent><leader>cc :Compile<CR>
-" Quick diagnostic powered by YCM
-nnoremap <silent><leader>f :YcmCompleter FixIt<CR>
-
-" ======================================================================================================================
-" Terminal settings
-" ======================================================================================================================
-if !has("win32")  | " There is not terminal on Windows
-    tnoremap <Esc> <C-W>N  | " Dont be different
-    "autocmd BufWinEnter * if &buftype == 'terminal' | setlocal bufhidden=hide nonu | endif
-endif
-" }}} End options defined by me
+" Autoselect suggest in completion
+inoremap <silent><expr> <Tab> pumvisible() ? '<C-N>' : '<Tab>'
+inoremap <silent><expr> <CR> (pumvisible() ? '<C-X>' : '') . '<CR>'
+" }}} End settings and autocmds
 
 " {{{ GUI and System settings
 " ======================================================================================================================
@@ -123,6 +124,8 @@ if has("gui_running")
     set vb
     " I dont need the controls
     set go=''
+    " Make error easier to see
+    hi Error gui=undercurl
 else  | " GUI ^^^ Term vvv
     " Color scheme
     colo desert
