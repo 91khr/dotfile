@@ -120,12 +120,12 @@ menubar.utils.editor = editor
 -- }}}
 
 -- Keyboard map indicator and switcher
-mykeyboardlayout = awful.widget.keyboardlayout()
+local mykeyboardlayout = awful.widget.keyboardlayout()
 
 -- {{{ Wibar
 -- Create a textclock widget and its calendar
-mytextclock = wibox.widget.textclock()
-mycalendar = awful.widget.calendar_popup.month()
+local mytextclock = wibox.widget.textclock()
+local mycalendar = awful.widget.calendar_popup.month()
 mycalendar:attach(mytextclock, 'tr')
 
 -- Create a wibox for each screen and add it
@@ -241,15 +241,20 @@ root.buttons(gears.table.join(
 -- }}}
 
 -- {{{ Key bindings
+function swapclient(idx) awful.client.focus.byidx(idx) end
 globalkeys = gears.table.join(
     awful.key({ modkey,           }, "s", hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
+    awful.key({ modkey,           }, "h", function () notify_info(client.focus and client.focus.class or "null focus") end,
+              {description="Show window class", group="client"}),
 
     -- Layout manipulation
-    awful.key({ modkey,           }, "Tab", function () awful.client.focus.byidx( 1) end,
-        {description = "focus next by index", group = "client"}),
-    awful.key({ modkey, "Shift"   }, "Tab", function () awful.client.focus.byidx(-1) end,
-        {description = "focus previous by index", group = "client"}),
+    awful.key({ modkey,           }, "Tab", function () swapclient( 1) while client.focus and     client.focus.ontop do swapclient( 1) end end,
+        {description = "focus next not on top by index", group = "client"}),
+    awful.key({ modkey, "Control" }, "Tab", function () swapclient( 1) while client.focus and not client.focus.ontop do swapclient( 1) end end,
+        {description = "focus next on top by index", group = "client"}),
+    awful.key({ modkey, "Shift"   }, "Tab", function () swapclient(-1) while client.focus and     client.focus.ontop do swapclient(-1) end end,
+        {description = "focus previous not on top by index", group = "client"}),
     awful.key({ modkey,           }, "u",   awful.client.urgent.jumpto,
               {description = "jump to urgent client", group = "client"}),
 
@@ -455,6 +460,13 @@ awful.rules.rules = {
       callback = function(c)
           c.x = awful.screen.focused().geometry.width - c.width;
           c.y = awful.screen.focused().geometry.height - c.height - 30 end, },
+    -- Pdf
+    { rule = { class = "Zathura" },
+      properties = { ontop = true, floating = true,
+                     width = function() return 0.35 * awful.screen.focused().workarea.width end },
+      callback = function(c)
+          c.x = awful.screen.focused().geometry.width - c.width;
+          c.y = tasklist_buttons.height end, },
 }
 -- }}}
 

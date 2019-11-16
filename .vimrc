@@ -96,7 +96,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         let ft = type(a:filetype) == type([]) ? join(a:filetype, ",") : a:filetype
         let plglist = type(a:plug) == type([]) ? join(a:plug, " | packadd ") : a:plug
         execute "autocmd FileType " . ft . " packadd " . plglist
-                    \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft"
+                    \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft | e %"
     endfunction
     call s:AddPlugFT('md,markdown', ['tabular', 'vim-markdown'])
     call s:AddPlugFT('tex,plaintex', 'vimtex')
@@ -169,7 +169,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     if has('win32')
         let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
     else
-        let g:VimOI_CompileArgs = [ '-Wall', '-Wextra' ]
+        let g:VimOI_CompileArgs = [ '-Wall', '-Wextra', '-DDEBUG' ]
     endif
 
     " ==================================================================================================================
@@ -242,7 +242,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
             echom "找不到编译方法, 不能编译"
             echohl Normal
         endfunction
-        if !exists(':Compile')
+        if !exists(":Compile")
             command! -buffer Compile call <SID>OutputUnableToCompile()
         endif
     endfunction
@@ -338,6 +338,14 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
         command! -buffer -nargs=* Compile call <SID>CompileMarkdown(<f-args>)
     endfunction
     autocmd FileType md,markdown call s:MarkdownLanguageSettings()
+
+    " ==================================================================================================================
+    " Language settings: Racket
+    " ==================================================================================================================
+    function! s:RacketLanguageSettings()
+        command! -buffer -nargs=* Compile !racket %
+    endfunction
+    autocmd FileType scheme call s:RacketLanguageSettings()
     " }}} End language-specified
 
     " {{{ Guard and cleanup
