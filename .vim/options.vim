@@ -1,6 +1,6 @@
 " ======================================================================================================================
 " Note: You are suggested to use a wide(>120 chars) client to view or edit this file
-" Author: Isaac Delton
+" Author: Virginia Senioria
 " My VIm configuration: options
 
 " {{{ Auto-generated
@@ -99,9 +99,8 @@ cnoremap <C-B> <Left>
 cnoremap <C-F> <Right>
 cnoremap <M-B> <C-Left>
 cnoremap <M-F> <C-Right>
-" Run shell commands
-nnoremap <leader>; :!
-nnoremap <leader>: :AsyncRun<space>
+" Run shell commands -- :! is considered not useful
+nnoremap <leader>; :AsyncRun<space>
 " Quick compile
 nnoremap <silent><leader>cc :Compile<CR>
 " Autoselect suggest in completion

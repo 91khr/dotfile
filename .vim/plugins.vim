@@ -1,6 +1,6 @@
 " ======================================================================================================================
 " Note: You are suggested to use a wide(>120 chars) client to view or edit this file
-" Author: Isaac Delton
+" Author: Virginia Senioria
 " My VIm configuration: plugins, with some utilties
 
 let s:pack_inited = v:False

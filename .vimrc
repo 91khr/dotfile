@@ -1,7 +1,7 @@
 " ======================================================================================================================
 " Note: You are suggested to use a wide(>120 chars) client to view or edit this file
 " TODO: Sort the commands by a cleaner key
-" Author: Isaac Delton
+" Author: Virginia Senioria
 "
 " My VIm configuration. Supports Windows and Linux(Only tested on Arch Linux, may not be the newest)
 " Note that this file should not be directly used as your .vimrc.
@@ -41,7 +41,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     packadd vim-packager
     function! PackInit() abort
         packadd vim-packager
-        call packager#init()
+        call packager#init({ 'dir': "~/.vim/pack/packager" })
         call packager#add('kristijanhusak/vim-packager', {'type': 'opt'})
         " Status line
         call packager#add('vim-airline/vim-airline')
@@ -76,7 +76,7 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
                     \ {'type': 'opt', 'do': {->mkdp#util#install()}})
         " Latex support
         call packager#add('lervag/vimtex', {'type': 'opt'})
-        call packager#add('xuhdev/vim-latex-live-preview', {'type': 'opt'})
+        call packager#add('91khr/vim-latex-live-preview', {'type': 'opt'})
 
         "System-specified plugins
         if has('win32')
@@ -134,20 +134,21 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     " TODO: find way to enable autocomplete without re-registering server
     function s:RegisterLsp()
         let l:Getvar = { name -> exists(name) ? eval(name) : v:null }
-        " if !l:Getvar("s:CppServerAvailable") && IsExec('clangd')
         if IsExec('clangd')
+            let l:cmdlst = (has('win32') ? ["wsl"] : []) + ["clangd", "-background-index"]
             let l:clangopt = {
                         \ 'name': 'clangd',
-                        \ 'cmd': {_->["wsl", "clangd", "--background-index"]},
+                        \ 'cmd': {_->l:cmdlst},
                         \ 'whitelist': ['c', 'cpp'],
                         \ }
             call lsp#register_server(l:clangopt)
             let s:CppServerAvailable = v:true
         endif
         if IsExec('lua-lsp')
+            let l:cmdlst = (has('win32') ? ["wsl"] : []) + ["lua-lsp"]
             call lsp#register_server({
                         \ 'name': 'lua-lsp',
-                        \ 'cmd': {_->["wsl", "lua-lsp"]},
+                        \ 'cmd': {_->l:cmdlst},
                         \ 'whitelist': ['lua'],
                         \ })
             let s:LuaServerAvailable = v:true
@@ -180,6 +181,8 @@ if !exists('g:execute_vimrc') || g:execute_vimrc
     let g:solarized_menu = 0  | " I don't use it, which would cause error
     let g:airline#extensions#tabline#enabled = 1  | " Display buffers
     let g:airline#extensions#tabline#formatter = 'default'  | " Display file path in default way
+    let g:airline#extensions#wordcount#enabled = 1
+    let g:airline#extensions#wordcount#filetypes = ['markdown', 'md', 'help', 'tex', 'plaintex', 'text']
     let g:airline#extensions#wordcount#formatter = 'cnfmt'
 
     " ==================================================================================================================
