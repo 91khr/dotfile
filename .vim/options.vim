@@ -144,7 +144,7 @@ else  | " Linux
     " Why not use zsh?
     set shell=/bin/zsh
     " Font
-    set guifont=Monaco:h10
+    set guifont=Monaco
 endif
 " }}} System settings
 

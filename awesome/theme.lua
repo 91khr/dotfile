@@ -10,8 +10,16 @@ local homedir = os.getenv('HOME')
 
 -- {{{ Main
 local theme = {}
---theme.wallpaper = homedir .. '/Pictures/wallpaper/chtholly.png'
-theme.wallpaper = homedir .. '/Pictures/wallpaper/Bilibili.png'
+-- Auto find wallpaper with specified suffixes
+theme.wallpaper = (function()
+    basedir = homedir .. '/Pictures'
+    cmd_base = "find " .. basedir .. " -regex '" .. basedir .. "/wallpaper\\.\\("
+    for _, i in pairs({ 'jpg', 'png' }) do
+        cmd_base = cmd_base .. i .. "\\|"
+    end
+    cmd_base = cmd_base:sub(1, -2) .. ")' | head -n 1"
+    return io.popen(cmd_base, 'r'):read()
+end)()
 -- }}}
 
 -- {{{ Styles

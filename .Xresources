@@ -1,0 +1,17 @@
+! Foundamental
+XTerm.termName: xterm-256color
+XTerm.vt100.locale: true
+XTerm.vt100.metaSendsEscape: true
+XTerm.vt100.backarrowKey: false
+XTerm.ttyModes: erase ^?
+
+! Fonts
+XTerm.vt100.faceName: Monaco
+XTerm.vt100.faceNameDoublesize: WenQuanYi Zen Hei Sharp
+XTerm.vt100.faceSize: 8
+
+! Copy & Paste
+xterm.vt100.translations: #override \
+                 Ctrl Shift <Key>V:    insert-selection(CLIPBOARD) \n\
+                 Ctrl Shift <Key>C:    copy-selection(CLIPBOARD)
+

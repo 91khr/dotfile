@@ -64,10 +64,10 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(os.getenv('HOME') .. '/dotfile/awesome/theme.lua')
+beautiful.init(... .. '/awesome/theme.lua')
 
 -- This is used later as the default terminal and editor to run.
-terminal = "konsole"
+terminal = "xterm"
 editor = os.getenv("EDITOR") or "gvim"
 --editor_cmd = terminal .. " -e " .. editor
 editor_cmd = editor
@@ -245,8 +245,6 @@ function swapclient(idx) awful.client.focus.byidx(idx) end
 globalkeys = gears.table.join(
     awful.key({ modkey,           }, "s", hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
-    awful.key({ modkey,           }, "h", function () notify_info(client.focus and client.focus.class or "null focus") end,
-              {description="Show window class", group="client"}),
 
     -- Layout manipulation
     awful.key({ modkey,           }, "Tab", function () swapclient( 1) while client.focus and     client.focus.ontop do swapclient( 1) end end,
