@@ -22,10 +22,11 @@ theme.wallpaper = (function()
 end)()
 -- }}}
 
--- {{{ Styles
 theme.font      = "Monaco 8"
 
--- {{{ Colors
+-- {{{ Color scheme
+
+-- {{{ Window colors
 theme.fg_normal  = "#DCDCCC"
 theme.fg_focus   = "#F0DFAF"
 theme.fg_urgent  = "#CC9393"
@@ -58,7 +59,7 @@ theme.titlebar_bg_normal = "#3F3F3F"
 --theme.taglist_bg_focus = "#CC9393"
 -- }}}
 
--- {{{ Widgets
+-- {{{ Variables
 -- You can add as many variables as
 -- you wish and access them by using
 -- beautiful.variable in your rc.lua

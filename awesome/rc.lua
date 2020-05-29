@@ -64,7 +64,7 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(... .. '/awesome/theme.lua')
+beautiful.init(loadfile(... .. '/awesome/theme.lua')(...))
 
 -- This is used later as the default terminal and editor to run.
 terminal = "xterm"
@@ -540,7 +540,7 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 
 -- {{{ Post tasks
 -- Start some programs
-os.execute("compton --blur-background &") -- Transparency
+os.execute("picom --blur-background &") -- Transparency
 os.execute("fcitx &")  -- Input method
 -- }}}
 

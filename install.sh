@@ -5,7 +5,7 @@
 dotdir=$(realpath $(dirname $0))
 
 # Install essential packages
-pacman -S - <<EOF
+sudo pacman -S -noconfirm - <<EOF
 wqy-zenhei
 ttf-monaco
 base-devel
@@ -24,6 +24,10 @@ netease-cloud-music
 xorg-server
 awesome
 xorg-xrdb
+yay
+EOF
+yay -S -noconfirm - <<EOF
+transset-df
 EOF
 
 # zsh
@@ -50,12 +54,12 @@ echo "
 #include \"${dotdir}/Solarizedxterm/.Xdefaults\"" >> ~/.Xresources
 
 # Enable lightdm
-systemctl enable lightdm.service
+sudo systemctl enable lightdm.service
 
 # Unmute alsa
-pacman -S alsa-utils
+sudo pacman -S alsa-utils
 amixer sset Master unmute
 amixer sset Speaker unmute
 amixer sset Headphone unmute
-pacman -Rs alsa-utils
+sudo pacman -Rs alsa-utils
 

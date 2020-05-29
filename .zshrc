@@ -21,4 +21,8 @@ export PROMPT='%F{3}[%d]%f %(?.%F{2}%?%f.%F{1}%?%f)
 # Define commands and variables
 alias ls="ls --color=auto"
 export EDITOR=vim
+export PATH=${PATH}:~/bin
+
+# XTerm transparency
+[ -n "$XTERM_VERSION" ] && transset-df --id "$WINDOWID" >/dev/null
 
