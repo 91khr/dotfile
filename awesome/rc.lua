@@ -15,6 +15,7 @@ local hotkeys_popup = require("awful.hotkeys_popup").widget
 -- Enable hotkeys help widget for VIM and other apps
 -- when client with a matching name is opened:
 --require("awful.hotkeys_popup.keys")
+local dotpath = ...
 -- }}}
 
 -- {{{ Error handling
@@ -64,7 +65,7 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(loadfile(... .. '/awesome/theme.lua')(...))
+beautiful.init(loadfile(dotpath .. '/awesome/theme.lua')(dotpath))
 
 -- This is used later as the default terminal and editor to run.
 terminal = "xterm"
@@ -542,6 +543,7 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- Start some programs
 os.execute("picom --blur-background &") -- Transparency
 os.execute("fcitx &")  -- Input method
+os.execute("xmodmap " .. dotpath .. "/.Xmodmap")  -- Key binding
 -- }}}
 
 -- vim: fdm=marker

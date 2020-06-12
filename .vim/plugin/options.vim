@@ -28,7 +28,7 @@ set mouse=nvcr
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(expand((exists("g:netrw_gx")? g:netrw_gx : '<cfile>'))
             \,netrw#CheckIfRemote())
 vnoremap <silent> <Plug>NetrwBrowseXVis :call netrw#BrowseXVis()
-set display=truncate
+set display=truncate,uhex
 set incsearch
 set langnoremap
 set nolangremap
@@ -58,7 +58,7 @@ set shiftwidth=4
 set tabstop=4
 set expandtab
 " Let backspace available
-set bs=2
+set bs=3
 " Open code folding
 set foldmethod=syntax
 " I dont need the .viminfo

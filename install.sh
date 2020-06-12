@@ -1,5 +1,18 @@
 #!/bin/sh
-# A tiny util to deploy the dotfiles into a computer
+
+if which python > /dev/null; then; else
+    sudo pacman -S --noconfirm python
+fi
+
+if [ $? -eq 0 ]; then
+    nowpath=$(dirname $0)
+    cd nowpath
+    ./install.py $(realpath nowpath)
+else
+    echo '>< Failed to install python...'
+fi
+
+exit
 
 # Constants
 dotdir=$(realpath $(dirname $0))
@@ -25,6 +38,7 @@ xorg-server
 awesome
 xorg-xrdb
 yay
+xorg-xmodmap
 EOF
 yay -S -noconfirm - <<EOF
 transset-df
@@ -35,7 +49,11 @@ echo "source ${dotdir}/.zshrc" >> ~/.zshrc
 
 # vim
 echo "set rtp+=${dotdir}/.vim
-source ${dotdir}/.vimrc" >> ~/.vimrc
+source ${dotdir}/.vim/vimrc" >> ~/.vimrc
+
+# emacs
+test -d ~/.emacs.d || mkdir ~/.emacs.d
+echo "(load-file \"${dotdir}/.emacs.d/init.el\")" >> ~/.emacs.d/init.el
 
 # awesome
 echo "os = require('os');

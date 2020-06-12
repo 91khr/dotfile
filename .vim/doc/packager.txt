@@ -1,0 +1,172 @@
+*packager.txt*  A simple package manager and loader
+
+The *packager* is intergrated into the configuration.
+
+===============================================================================
+								 *packager-api*
+APIS ~
+
+-------------------------------------------------------------------------------
+							 *packager-api-options*
+Advanced options ~
+
+Many of the APIS have a common argument: opt,
+which takes some options for current call.
+Some of the options are common, so they are introduced here.
+
+silent						       *packager-option-silent*
+	If is true, start without an info window and never output status.
+	(always, the info window can still be opened
+	though |packager#info#show()|)
+
+-------------------------------------------------------------------------------
+					  *packager#manager* *packager-manager*
+Packager manager ~
+
+The package manager API.
+
+								*packager-E114*
+All operations except init are not allowed to perform before init.
+Init is also required after reloading the script file.
+
+packager#manager#init(				      *packager#manager#init()*
+		opt?: {force=false: bool, silent=false: bool})
+	Init the packager manager.
+	If force is true, refresh all init info and reload the config.
+	There's no silent option, since the operation is already silent.
+
+packager#manager#sync(				      *packager#manager#sync()*
+		opt?: {silent=false: bool})
+	Sync the packages, i.e. check for packages' state
+	and install/update them.
+	Returns whether the sync succeed.
+	See: |packager-api-silent|.
+
+packager#manager#clean(				     *packager#manager#clean()*
+		opt?: {silent=false: bool, confirm=true: bool})
+	Clean all packages not listed in |g:packager_config.packs|
+	but appear in |g:packager_config.path|.
+	If confirm is true, ask for user per package to confirm the deletion.
+	Note that if silent is true there will not be confirmation.
+
+packager#manager#status(			    *packager#manager#status()*
+		opt?: {silent=false: bool})
+	Get the status of packages.
+
+-------------------------------------------------------------------------------
+						*packager#info* *packager-info*
+Packager info ~
+
+The info window related API.
+
+NOTE that there's only one info window:
+when opened another info window, the previous one would no longer
+be accessible.
+
+Also note that info buffer would be destroyed after they're closed,
+so it's impossible to access the buffer after closing it,
+but its content still exists, until vim exits, or another info window is
+created.
+
+The info window looks like this:
+>
+	Status: (current)/(total)
+	[===========>----------------]
+
+	(task name): (current subtask)/(total subtask)
+	  - (subtask name): (subtask output)
+	  - (subtask name): (subtask output)
+
+	(task name): (output)
+<
+If the info window is not shown, the output of a task would be printed
+in the following format, with the same highlight as subtask output:
+>
+	(task name).(subtask name): (subtask output)
+<
+And when done, output:
+>
+	Done!
+<
+
+				*package-subtask-status-type* *SubtaskStatus_t*
+There's a type for all subtask status:
+>
+	type SubtaskStatus_t: {
+		status: enum(pending, running, finished),
+		code?: int,
+		output: [str]
+	}
+<
+Where code is effective only when status is finished.
+
+							 *package-subtask-note*
+NOTE that we assume the status would increase only.
+Another restriction is that it's not allowed to add tasks dynamically ---
+tasks can only be added during init, this restriction includes tasks and
+subtasks.
+
+packager#info#init(					 *packager#info#init()*
+		tasks?: map(name: str, subtasks:
+		  map(name: str, |SubtaskStatus_t|)))
+	Init an info window by given tasks.
+	The code and output field of a subtask can be omitted.
+	The default value for output is [].
+	If tasks is not specified, init an empty info window.
+
+packager#info#show()					 *packager#info#show()*
+	Show current info window.
+
+packager#info#hide()					 *packager#info#hide()*
+	Hide current info window.
+
+packager#info#update(				       *packager#info#update()*
+		name: str, info: map(subtask: str, |SubtaskStatus_t|))
+	Update the info of a given subtask.
+	The output can either be [str] or str,
+	and will be appended to the output list.
+	The status field would be set automatically
+
+	Some notes: |package-subtask-note|			*packager-E233*
+
+===============================================================================
+				   *packager-configuration* *g:packager_config*
+Packager configuration ~
+
+The configuration of the packager.
+All options are in the variable |g:packager_config|.
+
+- *g:packager_config.packs* is a list of packs be manager by the packager.
+  Each package listed here has the following type:
+>
+	type PackageInfo_t: path: str | {
+		name: str,  // The name of the package, used to generate path
+			    // Must present
+		config: str,  // The path of configuration of the package,
+			      // used for lazy loading,
+			      // Not set defaultly
+		hook: str | [str] | func() | [func()],
+			// Post install/update hook of the package
+			// Can be shell command or vim function
+			// Will be executed sequently
+			// Not set defaultly
+		location: 'opt' | 'start'
+			// The location for the package.
+			// Default: opt
+	}
+<
+  The entry must exist in g:packager_config			*packager-E514*
+
+- *g:packager_config.max_job* specify how many jobs packager can emit
+  at the same time, default: 8.
+
+- *g:packager_config.packpath* specify the path to store packages,
+  default: $home/.vim/pack/packager/
+
+-------------------------------------------------------------------------------
+
+Some keys for completing.
+
+*packager-E* *packager-subtask-*
+
+ vim:tw=80:isk=!-~,^*,^\|,^\":ts=8:noet:ft=help:norl:fdm=manual:
