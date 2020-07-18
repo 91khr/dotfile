@@ -67,6 +67,7 @@ let g:packager_config = #{
             \         'skywind3000/asyncrun.vim',
             \
             "\        Language server
+            \         #{ name: 'neoclide/coc.nvim', branch: 'release' },
             "\         'prabirshrestha/async.vim',
             "\         'prabirshrestha/vim-lsp',
             "\         'prabirshrestha/asyncomplete.vim',
@@ -120,6 +121,7 @@ call s:AddPlugCmd('CompleteOn', 'packadd async.vim | packadd vim-lsp | ' .
             \ 'packadd asyncomplete.vim | packadd asyncomplete-lsp.vim |' .
             \ 'doautocmd User lsp_setup | call lsp#enable() | e', {})
 call s:AddPlugCmd('MarkdownPreview', 'packadd markdown-preview.nvim | e | MarkdownPreview', {})
+call s:AddPlugCmd('Coc', 'packadd coc.nvim | CocStart', {})
 " }}} End plugin list and setup
 
 " Plugin commands
@@ -197,12 +199,27 @@ function! s:LLFileName()
     let l:relpath = fnamemodify(expand('%'), ':.')
     return s:IsWide() ? l:relpath : substitute(l:relpath, '\v([^/])([^/]*)\/', '\1/', 'g')
 endfunction
+function! s:LLCocStatus()
+    if !exists(":CocInfo") || !s:IsWide() | return '' | endif
+    return coc#status()
+endfunction
 let g:lightline = #{
             \     colorscheme: 'solarized',
             \     component_function: #{
+            \         cocstatus: s:func('LLCocStatus'),
             \         filename: s:func('LLFileName'),
             \         fileformat: s:func('LLFileFormat'),
             \         filetype: s:func('LLFileType'),
+            \     },
+            \     active: #{
+		    \         left: [ [ 'mode', 'paste' ],
+		    \                 [ 'readonly', 'filename', 'modified' ],
+            \                 [ 'cocstatus' ],
+            \         ],
+		    \         right: [ [ 'lineinfo' ],
+		    \                  [ 'percent' ],
+		    \                  [ 'fileformat', 'fileencoding', 'filetype' ],
+            \         ],
             \     },
             \ }
 

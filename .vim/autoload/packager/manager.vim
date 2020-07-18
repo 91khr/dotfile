@@ -72,8 +72,13 @@ function! packager#manager#init(opt = {})
         elseif l:nowpack.name =~# '\v^\w+\@[^:/]+\:'
             let l:info.url = l:nowpack.name
         endif
+        " Resolve pack path
         let l:info.dirname = matchstr(l:nowpack.name, '\v\/\zs[^/]+$')
         let l:info.fullpath = s:conf.path . '/' . l:nowpack.location . '/' . l:info.dirname
+        " Resolve other info of pack
+        if l:nowpack->has_key('branch')
+            let l:info.branch = l:nowpack.branch
+        endif
         let s:info[l:nowpack.name] = l:info
         " }}} End init info
     endfor
@@ -197,9 +202,15 @@ function! packager#manager#sync(opt = {})
         elseif l:packstat == s:PackStatus.Missing
             let l:action[l:packname] = printf('git clone --progress %s %s',
                         \ s:info[l:packname].url, s:info[l:packname].fullpath)
+            if s:info[l:packname]->has_key('branch')
+                let l:action[l:packname] .= " --single-branch --branch " . s:info[l:packname].branch
+            endif
         elseif l:packstat == s:PackStatus.NeedUpdate
             let l:action[l:packname] = printf('git -C %s pull --ff-only --progress --rebase=false',
                         \ s:info[l:packname].fullpath)
+            if s:info[l:packname]->has_key('branch')
+                let l:action[l:packname] .= " origin " . s:info[l:packname].branch
+            endif
         endif
     endfor
     let l:pending_packs = keys(l:status)
