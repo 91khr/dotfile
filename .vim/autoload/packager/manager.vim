@@ -43,7 +43,7 @@ function! packager#manager#init(opt = {})
     " Load config
     let s:conf.max_job = has_key(g:packager_config, 'max_job') ? g:packager_config.max_job : 8
     let s:conf.path = has_key(g:packager_config, 'packpath') ? g:packger_config.packpath :
-                \ expand(has('win32') ? '%userprofile%' : '$HOME') . '/.vim/pack/packager'
+                \ expand(has('win32') ? '$USERPROFILE' : '$HOME') . '/.vim/pack/packager'
     let s:conf.done = v:true
     if !has_key(g:packager_config, 'packs')
         throw "packager-E514: entry 'packs' not provided in g:packager_config"

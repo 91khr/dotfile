@@ -76,14 +76,14 @@ let g:packager_config = #{
             "\         'Shougo/echodoc.vim',
             \
             "\         Markdown
-            \          'godlygeek/tabular',
-            \          'plasticboy/vim-markdown',
+            "\          'godlygeek/tabular',
+            "\          'plasticboy/vim-markdown',
             "\         Latex
-            \          'lervag/vimtex',
-            \          '91khr/vim-latex-live-preview',
+            "\          'lervag/vimtex',
+            "\          '91khr/vim-latex-live-preview',
             \
             "\         Zen mode :)
-            \          'junegunn/goyo.vim',
+            "\          'junegunn/goyo.vim',
             \     ]
             \ }
 " System specific
@@ -197,7 +197,9 @@ function! s:LLFileName()
     if &ft == 'help' | return expand('%:t') | endif
     if expand('%:t') == '' | return '[No Name]' | endif
     let l:relpath = fnamemodify(expand('%'), ':.')
-    return s:IsWide() ? l:relpath : substitute(l:relpath, '\v([^/])([^/]*)\/', '\1/', 'g')
+    let l:pathsep = has("win32") ? '\' : '\/'
+    return s:IsWide() ? l:relpath :
+                \ substitute(l:relpath, '\v([^/])([^/]*)' . l:pathsep, '\1' . l:pathsep, 'g')
 endfunction
 function! s:LLCocStatus()
     if !exists(":CocInfo") || !s:IsWide() | return '' | endif

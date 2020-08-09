@@ -3,13 +3,15 @@ HISTFILE=~/.zsh_history
 HISTSIZE=500
 SAVEHIST=500
 bindkey -e
-zstyle :compinstall filename '/home/isaac/.zshrc'
+zstyle :compinstall filename '~/.zshrc'
 setopt correct
 autoload -Uz compinit
 compinit
+autoload zed
 
 # Syntax highlighting
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+HIGHLIGHT_FILE=/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if test -r $HIGHLIGHT_FILE; then source $HIGHLIGHT_FILE; fi
 # Enable comments
 setopt interactivecomments
 
@@ -24,5 +26,21 @@ export EDITOR=vim
 export PATH=${PATH}:~/bin
 
 # XTerm transparency
-[ -n "$XTERM_VERSION" ] && transset-df --id "$WINDOWID" >/dev/null
+if [ -n "$XTERM_VERSION" ] && which transset-df > /dev/null 2>&1; then
+    transset-df --id "$WINDOWID" > /dev/null
+fi
+
+# Utils
+if [ $WSL_DISTRO_NAME ]; then
+    function start() {
+        cmd.exe /c "(start $*)"
+        return $?
+    }
+else
+    function start() {
+        xdg-open $*
+        return $?
+    }
+fi
+function bing() { start "https://bing.com/search?q=${*// /+}" }
 
