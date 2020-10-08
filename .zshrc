@@ -14,6 +14,11 @@ HIGHLIGHT_FILE=/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlig
 if test -r $HIGHLIGHT_FILE; then source $HIGHLIGHT_FILE; fi
 # Enable comments
 setopt interactivecomments
+# Pastebin support
+function _paste_sh() {
+    _arguments -C '1: :(image text asciinema file)'
+}
+compdef _paste_sh paste.sh
 
 # Prompt
 setopt PROMPT_SUBST
@@ -24,11 +29,6 @@ export PROMPT='%F{3}[%d]%f %(?.%F{2}%?%f.%F{1}%?%f)
 alias ls="ls --color=auto"
 export EDITOR=vim
 export PATH=${PATH}:~/bin
-
-# XTerm transparency
-if [ -n "$XTERM_VERSION" ] && which transset-df > /dev/null 2>&1; then
-    transset-df --id "$WINDOWID" > /dev/null
-fi
 
 # Utils
 if [ $WSL_DISTRO_NAME ]; then

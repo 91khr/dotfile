@@ -106,6 +106,8 @@ nnoremap <silent><leader>cc :Compile<CR>
 " Autoselect suggest in completion
 inoremap <silent><expr> <Tab> pumvisible() ? '<C-N>' : '<Tab>'
 inoremap <silent><expr> <CR> (pumvisible() ? '<C-X>' : '') . '<CR>'
+" LSP actions
+noremap \a :CocAction<CR>
 " }}} End settings and autocmds
 
 " {{{ GUI and System settings
