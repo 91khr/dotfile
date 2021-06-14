@@ -4,7 +4,18 @@ HISTSIZE=500
 SAVEHIST=500
 bindkey -e
 zstyle :compinstall filename '~/.zshrc'
-setopt correct
+
+zstyle ':completion:*' completer _complete _ignored _correct _approximate
+zstyle ':completion:*' insert-unambiguous true
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' matcher-list '' 'm:{[:lower:]}={[:upper:]}' 'r:|[._-]=** r:|=**'
+zstyle ':completion:*' max-errors 2 numeric
+zstyle ':completion:*' menu select=4
+zstyle ':completion:*' prompt '(%e typo)'
+zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
+zstyle ':completion:*' squeeze-slashes true
+zstyle :compinstall filename '/root/.zshrc'
+
 autoload -Uz compinit
 compinit
 autoload zed
@@ -17,7 +28,7 @@ setopt interactivecomments
 
 # Prompt
 setopt PROMPT_SUBST
-export PROMPT='%F{3}[%d]%f %(?.%F{2}%?%f.%F{1}%?%f)
+export PROMPT='%F{3}[%~]%f %(?.%F{2}%?%f.%F{1}%?%f) %(1j.%F{5}(%j job%(2j.s.))%f.)
 %(#.%F{5}%n.%F{6}%n)%f%# '
 
 # Define commands and variables
