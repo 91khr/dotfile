@@ -133,37 +133,7 @@ command! PackSync call packager#manager#init() | call packager#manager#sync()
 " ==================================================================================================================
 " Language Server and Echodoc settings
 " ==================================================================================================================
-" Register lsp when it enables
-" TODO: find way to enable autocomplete without re-registering server
-function s:RegisterLsp()
-    let l:Getvar = { name -> exists(name) ? eval(name) : v:null }
-    if IsExec('clangd')
-        let l:cmdlst = (has('win32') ? ["wsl"] : []) + ["clangd", "-background-index"]
-        let l:clangopt = {
-                    \     'name': 'clangd',
-                    \     'cmd': {_->l:cmdlst},
-                    \     'whitelist': ['c', 'cpp'],
-                    \ }
-        call lsp#register_server(l:clangopt)
-        let s:CppServerAvailable = v:true
-    endif
-    if IsExec('lua-lsp') let l:cmdlst = (has('win32') ? ["wsl"] : []) + ["lua-lsp"]
-        call lsp#register_server({
-                    \     'name': 'lua-lsp',
-                    \     'cmd': {_->l:cmdlst},
-                    \     'whitelist': ['lua'],
-                    \ })
-        let s:LuaServerAvailable = v:true
-    endif
-endfunction
-autocmd User lsp_setup call s:RegisterLsp()
-" Well, it's exactly the same as autosetting,
-" but who knows if it will change one day?
-let g:asyncomplete_auto_completeopt = 0
 set completeopt=menuone,popup,noinsert,noselect
-" Enable echodoc
-let g:echodoc#enable_at_startup = 1
-let g:echodoc#enable_force_overwrite = 1
 
 " ==================================================================================================================
 " VimOI settings

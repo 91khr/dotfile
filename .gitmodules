@@ -1,3 +1,6 @@
 [submodule "Solarizedxterm"]
 	path = Solarizedxterm
 	url = https://github.com/maniat1k/Solarizedxterm
+[submodule "awesome/cyclefocus"]
+	path = awesome/cyclefocus
+	url = https://github.com/blueyed/awesome-cyclefocus
