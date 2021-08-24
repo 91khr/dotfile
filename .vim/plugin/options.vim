@@ -49,8 +49,10 @@ syntax enable
 syntax on
 " Highlight corrent line
 set cursorline
-" Open the line number
+" Open the line number when is not pager
 set number
+autocmd VimEnter * if exists('g:vimpager') && g:vimpager == 1
+            \ | set nonumber | endif
 " Show entered commands
 set showcmd
 " Set the width of indent and tab
@@ -73,6 +75,10 @@ set fileformats=unix,dos
 set exrc secure
 autocmd DirChanged * if filereadable('.vimrc') | confirm so .vimrc | endif
 autocmd BufWritePost .vimrc if filereadable('.vimrc') | so .vimrc | endif
+if index([ expand('$HOME'), expand('$HOME/.vim'), expand('$VIM') ], getcwd()) == -1
+            \ && filereadable('.vimrc')
+    autocmd VimEnter * confirm so .vimrc
+endif
 
 " ======================================================================================================================
 " Terminal settings

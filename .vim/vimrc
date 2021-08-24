@@ -14,6 +14,8 @@ if exists("g:vimrc_load_option")
         autocmd!
         set all&
         comclear
+    elseif g:vimrc_load_option == 2
+        finish
     endif
     set rtp+=~/.vim
     set packpath+=~/.vim
@@ -80,7 +82,7 @@ let g:packager_config = #{
             "\          'plasticboy/vim-markdown',
             "\         Latex
             "\          'lervag/vimtex',
-            "\          '91khr/vim-latex-live-preview',
+            \          '91khr/vim-latex-live-preview',
             \
             "\         Zen mode :)
             "\          'junegunn/goyo.vim',
@@ -242,10 +244,7 @@ let g:goyo_linenr = 1
 " }}} End plugin options
 " }}} End plugins
 
-" {{{ Language-specified
-" ==================================================================================================================
-" Default settings
-" ==================================================================================================================
+" {{{ Default filetype settings
 function! s:DefaultLanguageSettings()
     function! s:OutputUnableToCompile()
         echohl Error
@@ -257,105 +256,6 @@ function! s:DefaultLanguageSettings()
     endif
 endfunction
 autocmd FileType * call s:DefaultLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: Cpp
-" ==================================================================================================================
-function! s:CppLanguageSettings()
-    command! -buffer -nargs=* Compile CppCompile % <args>
-    " Set C-style indent and options
-    function! CppIndent()
-        let l:prevline = prevnonblank(line('.') - 1)
-        let l:prevctnt = getline(l:prevline)
-        let l:indent = cindent('.')
-        if l:prevctnt =~# '\m^\s*template<'
-            let l:indent = cindent(l:prevline)
-        elseif l:prevctnt =~# '^\s*class.*:.*'
-            let l:indent = indent(l:prevline)
-        endif
-        return l:indent
-    endfunction
-    setlocal indentexpr=CppIndent()
-    setlocal cinoptions+=L0.5s:0g0N-sj1
-    if exists("s:CppServerAvailable") && s:CppServerAvailable
-        setlocal omnifunc=lsp#complete
-    endif
-endfunction
-autocmd FileType cpp,cxx,c,h,hpp,hxx call s:CppLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: HTML
-" ==================================================================================================================
-function! s:HTMLLanguageSettings()
-    setlocal foldmethod=indent
-endfunction
-autocmd FileType html,htm,xml call s:HTMLLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: VimScript
-" ==================================================================================================================
-function! s:VimLanguageSettings()
-    setlocal foldmethod=marker
-    command! -buffer Compile so %
-endfunction
-autocmd FileType vim call s:VimLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: Python
-" ==================================================================================================================
-function! s:PythonLanguageSettings()
-    command! -buffer Compile py3file %
-endfunction
-autocmd FileType python call s:PythonLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: Racket
-" ==================================================================================================================
-function! s:RacketLanguageSettings()
-    command! -buffer Compile !racket %
-    if exists("s:RacketServerAvailable") && s:RacketServerAvailable
-        setlocal omnifunc=lsp#complete
-    endif
-endfunction
-autocmd FileType scheme call s:RacketLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: Lua
-" ==================================================================================================================
-function! s:LuaLanguageSettings()
-    command! -buffer Compile luafile %
-    if exists("s:LuaServerAvailable") && s:LuaServerAvailable
-        setlocal omnifunc=lsp#complete
-    endif
-endfunction
-autocmd FileType lua call s:LuaLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: Markdown
-" ==================================================================================================================
-function! s:MarkdownLanguageSettings()
-    function! s:CompileMarkdown(...)
-        " Process options
-        let options = ''
-        for item in a:000
-            let options .= ' ' . item
-        endfor
-        " Process output name
-        let outname = expand('%:t:r') . '.html'
-        " Compile...
-        execute ":AsyncRun pandoc % -o " . outname . ' ' . options
-    endfunction
-    command! -buffer -nargs=* Compile call <SID>CompileMarkdown(<f-args>)
-endfunction
-autocmd FileType md,markdown call s:MarkdownLanguageSettings()
-
-" ==================================================================================================================
-" Language settings: Racket
-" ==================================================================================================================
-function! s:RacketLanguageSettings()
-    command! -buffer -nargs=* Compile !racket %
-endfunction
-autocmd FileType scheme call s:RacketLanguageSettings()
-" }}} End language-specified
+" }}} End default filetype settings
 
 " vim: set ft=vim :

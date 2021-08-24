@@ -80,6 +80,7 @@ editor_cmd = editor
 -- I suggest you to remap Mod4 to another key using xmodmap or other tools.
 -- However, you can use another modifier like Mod1, but it may interact with others.
 modkey = "Mod4"
+modkey_cycle = modkey == "Mod4" and "Super_L" or "Alt_L"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
@@ -234,7 +235,7 @@ globalkeys = gears.table.join(
 
     -- Layout manipulation
     awful.key({ modkey,           }, "Tab", function ()
-            cyclefocus.cycle({ modifier = "Super_L" })
+            cyclefocus.cycle({ modifier = modkey_cycle })
         end, {description = "focus next by index", group = "client"}),
     awful.key({ modkey,           }, "u",   awful.client.urgent.jumpto,
               {description = "jump to urgent client", group = "client"}),
@@ -330,6 +331,7 @@ end
 clientbuttons = gears.table.join(
     awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
     awful.button({ modkey }, 1, awful.mouse.client.move),
+    awful.button({ modkey, "Shift" }, 1, awful.mouse.client.resize),
     awful.button({ modkey }, 3, awful.mouse.client.resize))
 
 -- Set keys
@@ -382,9 +384,6 @@ awful.rules.rules = {
       }, properties = { titlebars_enabled = false } },
 
     -- Specified configuration to some programs
-    -- Rdesktop should be defaultly maximized, right?(
-    { rule = { class="rdesktop" },
-      properties = { maximized = true } },
     -- I'm not a good student :)
     { rule = { class = "mpv" },
       properties = { sticky = true, ontop = true, floating = true,
@@ -403,10 +402,10 @@ awful.rules.rules = {
     { rule = { class = "XTerm" },
       callback = function(c)
           c:connect_signal("focus", function()
-              os.execute("transset-df --id \"" .. c.window .. "\" 0.8")
+              os.execute("transset-df --id \"" .. c.window .. "\" 0.9")
           end)
           c:connect_signal("unfocus", function()
-              os.execute("transset-df --id \"" .. c.window .. "\" 0.5")
+              os.execute("transset-df --id \"" .. c.window .. "\" 0.7")
           end)
       end, },
 }
@@ -476,9 +475,12 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 
 -- {{{ Post tasks
 -- Start some programs
-os.execute("picom --blur-background &") -- Transparency
+-- Transparency, maybe not needed currently><
+os.execute("picom &")
 -- Input method and key binding
 os.execute("fcitx && xmodmap " .. dotpath .. "/.Xmodmap")
+-- Battery display
+os.execute("killall xfce4-power-manager; xfce4-power-manager &")
 -- }}}
 
 -- vim: fdm=marker

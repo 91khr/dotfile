@@ -1,3 +1,3 @@
 export PATH="${PATH}:~/bin/"
-export TERMINAL="xterm"
-export EDITOR="gvim"
+export PAGER=vimpager
+export EDITOR=vim

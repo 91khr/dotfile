@@ -1,13 +1,14 @@
 ! Foundamental
 XTerm.termName: xterm-256color
-XTerm.vt100.locale: true
+XTerm.ttyModes: erase ^?
 XTerm.vt100.metaSendsEscape: true
 XTerm.vt100.backarrowKey: false
-XTerm.ttyModes: erase ^?
+XTerm.vt100.locale: false
+XTerm.vt100.utf8: true
 
 ! Fonts
 XTerm.vt100.faceName: Monaco
-XTerm.vt100.faceNameDoublesize: WenQuanYi Zen Hei Sharp
+XTerm.vt100.faceNameDoublesize: Source Han Sans CN
 XTerm.vt100.faceSize: 8
 
 ! Copy & Paste

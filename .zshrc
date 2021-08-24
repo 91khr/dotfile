@@ -32,7 +32,7 @@ compdef _paste_sh paste.sh
 
 # Prompt
 setopt PROMPT_SUBST
-export PROMPT='%F{3}[%~]%f %(?.%F{2}%?%f.%F{1}%?%f) %(1j.%F{5}(%j job%(2j.s.))%f.)
+export PROMPT='%F{3}[%~]%f %(?.%F{2}%?.%F{1}%?)%(1j. %F{5}(%j job%(2j.s.)).)%f
 %(#.%F{5}%n.%F{6}%n)%f%# '
 
 # Define commands and variables
