@@ -6,6 +6,8 @@
 " Note that this file should not be directly used as your .vimrc.
 version 8.0
 
+let s:config_dir = expand("<sfile>:h")
+
 " {{{ Clean up
 if exists("g:vimrc_load_option")
     " Reset all options
@@ -17,7 +19,6 @@ if exists("g:vimrc_load_option")
     elseif g:vimrc_load_option == 2
         finish
     endif
-    set rtp+=~/.vim
     set packpath+=~/.vim
     " Load the options loaded as plugins
     function! s:ReloadPlugins(header)
@@ -25,14 +26,15 @@ if exists("g:vimrc_load_option")
             execute "source " . a:header . '/' . l:file
         endfor
     endfunction
-    call s:ReloadPlugins(expand("<sfile>:h") . "/plugin")
+    call s:ReloadPlugins(s:config_dir . "/plugin")
     delfunction s:ReloadPlugins
 endif
 let g:vimrc_load_option = 1
 " }}} End cleaning up
 
-" {{{ Load files as package
+" {{{ Load files as package and internal packages
 execute "set rtp+=" . expand("<sfile>:h")
+let &packpath .= ',' . s:config_dir
 " }}} End loading files
 
 " {{{ Helper functions and commands
@@ -76,10 +78,12 @@ let g:packager_config = #{
             "\         'prabirshrestha/asyncomplete-lsp.vim',
             "\        Document for LSP
             "\         'Shougo/echodoc.vim',
+            "\        Snippets
+            \         #{ name: 'SirVer/ultisnips', location: 'start' },
             \
             "\         Markdown
-            "\          'godlygeek/tabular',
-            "\          'plasticboy/vim-markdown',
+            \          'godlygeek/tabular',
+            \          'plasticboy/vim-markdown',
             "\         Latex
             "\          'lervag/vimtex',
             \          '91khr/vim-latex-live-preview',
@@ -96,46 +100,44 @@ else
                 \ ]
 endif
 
-" Dynamic load plugin filetype
-function! s:AddPlugFT(filetype,plug)
+" {{{ Helpers for loading packages
+" Dynamic load package filetype
+function! s:AddPackFT(filetype,plug)
     let ft = type(a:filetype) == type([]) ? join(a:filetype, ",") : a:filetype
     let plglist = type(a:plug) == type([]) ? join(a:plug, " | packadd ") : a:plug
     execute "autocmd FileType " . ft . " packadd " . plglist
                 \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft | e %"
 endfunction
-call s:AddPlugFT('md,markdown', ['tabular', 'vim-markdown'])
-call s:AddPlugFT('tex,plaintex', 'vimtex')
-
-" Dynamic load plugin command
-function! s:AddPlugCmd(cmdname, exec, args)
+" Dynamic load package command
+function! s:AddPackCmd(cmdname, exec, args)
     if has_key(a:args, 'cond') ? eval(a:args.cond) : !has(':' . a:cmdname)
         let cmdargs = (has_key(a:args, 'args') ? '-nargs=' . a:args.args : '') . ' '
         execute "command! " . cmdargs . a:cmdname . ' delcommand ' . a:cmdname . '|' . a:exec
     endif
 endfunction
-call s:AddPlugCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
-call s:AddPlugCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
-call s:AddPlugCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
-call s:AddPlugCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
-call s:AddPlugCmd('LspOn', 'packadd async.vim | packadd vim-lsp |' .
-            \ 'doautocmd User lsp_setup | call lsp#enable()', {})
-call s:AddPlugCmd('CompleteOn', 'packadd async.vim | packadd vim-lsp | ' .
-            \ 'packadd asyncomplete.vim | packadd asyncomplete-lsp.vim |' .
-            \ 'doautocmd User lsp_setup | call lsp#enable() | e', {})
-call s:AddPlugCmd('MarkdownPreview', 'packadd markdown-preview.nvim | e | MarkdownPreview', {})
-call s:AddPlugCmd('Coc', 'packadd coc.nvim | CocStart', {})
-" }}} End plugin list and setup
+" }}} End helpers for loading packages
 
-" Plugin commands
+call s:AddPackFT('md,markdown', ['tabular', 'vim-markdown'])
+call s:AddPackFT('tex,plaintex', 'vimtex')
+call s:AddPackCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
+call s:AddPackCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
+call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
+call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
+call s:AddPackCmd('MarkdownPreview', 'packadd markdown-preview.nvim | e | MarkdownPreview', {})
+call s:AddPackCmd('Coc', 'packadd coc.nvim | CocStart', {})
+" }}} End package list and setup
+
+" Package commands
 command! PackClean call packager#manager#init() | call packager#manager#clean()
 command! PackStatus call packager#manager#init() | call packager#manager#status()
 command! PackSync call packager#manager#init() | call packager#manager#sync()
 
-" {{{ Plugin options
+" {{{ Package options
 " ==================================================================================================================
-" Language Server and Echodoc settings
+" Language Server, Echodoc and UltiSnip settings
 " ==================================================================================================================
 set completeopt=menuone,popup,noinsert,noselect
+let g:UltiSnipsExpandTrigger = "<nop>"  | " The config will handle it ><
 
 " ==================================================================================================================
 " VimOI settings
@@ -150,52 +152,6 @@ endif
 " ==================================================================================================================
 " Theme settings(statusline and solarized
 " ==================================================================================================================
-set laststatus=2  | " Ensure that status line is shown
-set noshowmode  | " The mode will be shown in status line
-let g:solarized_menu = 0  | " I don't use it, which would cause error
-function s:IsWide()
-    return winwidth(0) > 70
-endfunction
-function s:func(name)
-    return '<SNR>' . matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_func$') . '_' . a:name
-endfun
-function! s:LLFileFormat()
-    return s:IsWide() ? &ff : ''
-endfunction
-function! s:LLFileType()
-    return s:IsWide() ? &filetype : ''
-endfunction
-function! s:LLFileName()
-    if &ft == 'help' | return expand('%:t') | endif
-    if expand('%:t') == '' | return '[No Name]' | endif
-    let l:relpath = fnamemodify(expand('%'), ':.')
-    let l:pathsep = has("win32") ? '\' : '\/'
-    return s:IsWide() ? l:relpath :
-                \ substitute(l:relpath, '\v([^/])([^/]*)' . l:pathsep, '\1' . l:pathsep, 'g')
-endfunction
-function! s:LLCocStatus()
-    if !exists(":CocInfo") || !s:IsWide() | return '' | endif
-    return coc#status()
-endfunction
-let g:lightline = #{
-            \     colorscheme: 'solarized',
-            \     component_function: #{
-            \         cocstatus: s:func('LLCocStatus'),
-            \         filename: s:func('LLFileName'),
-            \         fileformat: s:func('LLFileFormat'),
-            \         filetype: s:func('LLFileType'),
-            \     },
-            \     active: #{
-		    \         left: [ [ 'mode', 'paste' ],
-		    \                 [ 'readonly', 'filename', 'modified' ],
-            \                 [ 'cocstatus' ],
-            \         ],
-		    \         right: [ [ 'lineinfo' ],
-		    \                  [ 'percent' ],
-		    \                  [ 'fileformat', 'fileencoding', 'filetype' ],
-            \         ],
-            \     },
-            \ }
 
 " ==================================================================================================================
 " Vimtex, preview and markdown settings
@@ -223,16 +179,8 @@ let g:mkdp_auto_close = 0
 let g:mkdp_browser = 'firefox'
 
 " ==================================================================================================================
-" Snippet settings
-" ==================================================================================================================
-" Never overwrite **MY** settings!
-let g:UltiSnipsExpandTrigger = '<C-S-M-Del>'
-let g:UltiSnipsListSnippets = '<C-S-M-Del>'
-
-" ==================================================================================================================
 " NERD Tree and Netrw settings
 " ==================================================================================================================
-let NERDTreeHijackNetrw=0  | " Use netrw as default directory viewer
 let g:netrw_liststyle=3
 
 " ==================================================================================================================
@@ -241,8 +189,8 @@ let g:netrw_liststyle=3
 let g:goyo_width = '80%'
 let g:goyo_height = '95%'
 let g:goyo_linenr = 1
-" }}} End plugin options
-" }}} End plugins
+" }}} End package options
+" }}} End packages
 
 " {{{ Default filetype settings
 function! s:DefaultLanguageSettings()

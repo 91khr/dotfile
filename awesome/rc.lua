@@ -71,7 +71,8 @@ beautiful.init(loadfile(dotpath .. '/awesome/theme.lua')(dotpath))
 -- This is used later as the default terminal and editor to run.
 terminal = os.getenv("TERMINAL") or "xterm"
 editor = os.getenv("EDITOR") or "gvim"
---editor_cmd = terminal .. " -e " .. editor
+os.execute("export TERMINAL=" .. terminal)
+os.execute("export EDITOR=" .. editor)
 editor_cmd = editor
 
 -- Default modkey.
@@ -476,11 +477,12 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- {{{ Post tasks
 -- Start some programs
 -- Transparency, maybe not needed currently><
-os.execute("picom &")
+--os.execute("picom &")
 -- Input method and key binding
-os.execute("fcitx && xmodmap " .. dotpath .. "/.Xmodmap")
+os.execute("fcitx && xmodmap " .. dotpath .. "/.Xmodmap &")
 -- Battery display
-os.execute("killall xfce4-power-manager; xfce4-power-manager &")
+os.execute("killall xfce4-power-manager")
+os.execute("xfce4-power-manager &")
 -- }}}
 
 -- vim: fdm=marker

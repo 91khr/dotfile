@@ -3,17 +3,11 @@
 " Author: Virginia Senioria
 " My VIm configuration: options
 
-" {{{ Auto-generated
+" {{{ Settings
 " ======================================================================================================================
-" Auto-generated content
+" Settings
 " ======================================================================================================================
-if &cp | set nocp | endif  | " No compitiable mode
-" Setting cpo {{{
-let s:cpo_save=&cpo
-set cpo&vim
-let &cpo=s:cpo_save
-unlet s:cpo_save
-" }}} End setting cpo
+set nocp  | " Vi is old
 " Set encodings
 set encoding=utf-8
 set termencoding=utf-8
@@ -24,10 +18,6 @@ set helplang=cn
 set hlsearch
 " Disables mouse in insert mode
 set mouse=nvcr
-
-nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(expand((exists("g:netrw_gx")? g:netrw_gx : '<cfile>'))
-            \,netrw#CheckIfRemote())
-vnoremap <silent> <Plug>NetrwBrowseXVis :call netrw#BrowseXVis()
 set display=truncate,uhex
 set incsearch
 set langnoremap
@@ -36,15 +26,9 @@ set nrformats=bin,hex
 set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc,.png,.jpg
 set ttimeout
 set ttimeoutlen=100
-set wildmenu
+set wildmenu  | " Command mode completion(though hard to use ><)
+" Open the syntax and corresponding highlight
 filetype plugin indent on
-" }}} End auto-generated
-
-" {{{ Settings
-" ======================================================================================================================
-" Settings
-" ======================================================================================================================
-" Open the syntax highlight
 syntax enable
 syntax on
 " Highlight corrent line
@@ -59,7 +43,7 @@ set showcmd
 set shiftwidth=4
 set tabstop=4
 set expandtab
-" Let backspace available
+" Let backspace more friendly
 set bs=3
 " Open code folding
 set foldmethod=syntax
@@ -79,6 +63,9 @@ if index([ expand('$HOME'), expand('$HOME/.vim'), expand('$VIM') ], getcwd()) ==
             \ && filereadable('.vimrc')
     autocmd VimEnter * confirm so .vimrc
 endif
+" Status line :)
+set laststatus=2  | " Ensure that status line is shown
+set noshowmode  | " The mode will be shown in status line
 
 " ======================================================================================================================
 " Terminal settings
@@ -96,7 +83,7 @@ let mapleader=' '
 " Fast fold code
 map <leader><space> za
 " Clear search
-nnoremap <silent><leader>/ :let @/=''<CR>
+nnoremap <silent><leader>/ <Cmd>let @/=''<CR>
 " Make cursor move in the virtual lines
 noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
 noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
@@ -105,15 +92,20 @@ cnoremap <C-B> <Left>
 cnoremap <C-F> <Right>
 cnoremap <M-B> <C-Left>
 cnoremap <M-F> <C-Right>
+cnoremap <C-A> <Home>
+cnoremap <C-E> <End>
 " Run shell commands -- :! is considered not useful
 nnoremap <leader>; :AsyncRun<space>
-" Quick compile
-nnoremap <silent><leader>cc :Compile<CR>
+" Quick compile & Run
+nnoremap <silent><leader>cc <Cmd>Compile<CR>
+nnoremap <silent><leader>cr <Cmd>Run<CR>
 " Autoselect suggest in completion
-inoremap <silent><expr> <Tab> pumvisible() ? '<C-N>' : '<Tab>'
-inoremap <silent><expr> <CR> (pumvisible() ? '<C-X>' : '') . '<CR>'
+inoremap <silent><expr> <Tab> 
+            \ UltiSnips#CanExpandSnippet() ? UltiSnips#ExpandSnippet() :
+            \ pumvisible() ? '<C-N>' : '<Tab>'
 " LSP actions
-noremap \a :CocAction<CR>
+noremap <silent>\a :CocAction<CR>
+noremap <silent>\? :CocDiagnostics<CR>
 " }}} End settings and autocmds
 
 " {{{ GUI and System settings

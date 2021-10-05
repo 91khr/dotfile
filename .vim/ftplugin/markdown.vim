@@ -16,3 +16,5 @@ function! s:CompileMarkdown(...)
 endfunction
 command! -buffer -nargs=* Compile call <SID>CompileMarkdown(<f-args>)
 
+let b:coc_suggest_disable = 1
+

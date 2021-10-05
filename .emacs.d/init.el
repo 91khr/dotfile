@@ -6,14 +6,14 @@
 (package-initialize)
 (if (not (boundp 'package-list))
     (setq package-list
-	  '(powerline neotree use-package markdown-mode solarized-theme fill-column-indicator)))
+      '(powerline neotree use-package markdown-mode solarized-theme evil)))
 (let ((package-install-list '())
       (ensure-package
-       (lambda (name) (unless (package-installed-p name))
-	 (setq package-install-list (cons name package-install-list)))))
+       (lambda (name) (unless (package-installed-p name)
+     (setq package-install-list (cons name package-install-list))))))
   (cl-loop for p in package-list do (funcall ensure-package p))
   (unless (eq nil package-install-list)
-    ;;(package-refresh-contents)
+    (package-refresh-contents)
     (cl-loop for p in package-install-list
              do (package-install p))))
 
@@ -37,14 +37,10 @@
  '(markdown-header-face-1 ((t (:inherit markdown-header-face :height 2.0))))
  '(markdown-header-face-2 ((t (:inherit markdown-header-face :height 1.6))))
  '(markdown-header-face-3 ((t (:inherit markdown-header-face :height 1.2)))))
+;; Prevent emacs from pouring trash into init file
+(setq custom-file null-device)
 
 
-;; Settings
-(setq face-font-rescale-list '(("WenQuanYi Zen Hei" . 1.2)))
-(setq font-use-system-font t)
-(add-to-list 'default-frame-alist
-             '(font . "monaco-10"))
-;(set-fontset-font t '(#x4e00 . #x9fff) "WenQuanYi Zen Hei")
 
 (use-package markdown-mode
   :ensure t
@@ -54,23 +50,27 @@
   :init (progn
           (setq markdown-command "pandoc")))
 
-(load-theme 'solarized-zenburn t)
+;; Appearance settings
+(setq face-font-rescale-list '(("WenQuanYi Zen Hei" . 1.2)))
+(setq font-use-system-font t)
+(add-to-list 'default-frame-alist
+             '(font . "monaco-10"))
+;(set-fontset-font t '(#x4e00 . #x9fff) "WenQuanYi Zen Hei")
+
+(if (display-graphic-p)
+  (load-theme 'solarized-light t)
+  (load-theme 'solarized-zenburn t))
 (global-linum-mode t)
 (tool-bar-mode 0)
 (menu-bar-mode 0)
+(show-paren-mode)
+(global-visual-line-mode)
 
-(require 'powerline)
+(use-package powerline)
 (powerline-default-theme)
 
-(require 'fill-column-indicator)
-(define-globalized-minor-mode
-  global-fci-mode fci-mode
-  (lambda ()
-    (if (and
-          (not (string-match "^\*.*\*$" (buffer-name)))
-          (not (eq major-mode 'dired-mode)))
-      (fci-mode 1))))
-(global-fci-mode 1)
-(setq fci-rule-column 120)
-(setq fci-rule-width 3)
+;; Evil settings
+(evil-mode)
 
+(define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
+(define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)

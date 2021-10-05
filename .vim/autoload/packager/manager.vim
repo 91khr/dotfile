@@ -155,6 +155,7 @@ function! packager#manager#status(opt = {})
             let l:status[l:pack.name] = s:PackStatus.Missing
             continue
         endif
+        call system("git -C " . l:path . " remote update")
         let l:local = system("git -C " . l:path . " rev-parse @")
         let l:remote = system("git -C " . l:path . " rev-parse @{u}")
         let l:base = system("git -C " . l:path . " merge-base @ @{u}")

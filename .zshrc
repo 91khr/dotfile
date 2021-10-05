@@ -22,6 +22,7 @@ autoload zed
 # Syntax highlighting
 HIGHLIGHT_FILE=/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 if test -r $HIGHLIGHT_FILE; then source $HIGHLIGHT_FILE; fi
+unset HIGHLIGHT_FILE
 # Enable comments
 setopt interactivecomments
 # Pastebin support
@@ -32,8 +33,11 @@ compdef _paste_sh paste.sh
 
 # Prompt
 setopt PROMPT_SUBST
-export PROMPT='%F{3}[%~]%f %(?.%F{2}%?.%F{1}%?)%(1j. %F{5}(%j job%(2j.s.)).)%f
-%(#.%F{5}%n.%F{6}%n)%f%# '
+HNAME=$([ -n "$SSH_CLIENT" -o -n "$SSH_TTY" ] && echo $HOST:)
+export PROMPT="%F{3}[$HNAME%~]%f %(?.%F{2}%?.%F{1}%?)%f \
+%(1j.%F{5}(%j job%(2j.s.))%f.)
+%(#.%F{5}%n.%F{6}%n)%f%# "
+unset HNAME
 
 # Define commands and variables
 alias ls="ls --color=auto"
