@@ -29,14 +29,12 @@ set ttimeoutlen=100
 set wildmenu  | " Command mode completion(though hard to use ><)
 " Open the syntax and corresponding highlight
 filetype plugin indent on
-syntax enable
 syntax on
 " Highlight corrent line
 set cursorline
 " Open the line number when is not pager
 set number
-autocmd VimEnter * if exists('g:vimpager') && g:vimpager == 1
-            \ | set nonumber | endif
+autocmd VimEnter * if get(g:, 'vimpager', 0) == 1 | set nonumber | endif
 " Show entered commands
 set showcmd
 " Set the width of indent and tab
@@ -70,8 +68,8 @@ set noshowmode  | " The mode will be shown in status line
 " ======================================================================================================================
 " Terminal settings
 " ======================================================================================================================
-" There's no difference between terminal and ordinary buffer(just like Emacs):)
-tnoremap <Esc> <C-W>N
+" Use <Esc> (or its equivant) will cause E21 qwq
+tnoremap <C-\> <C-W>N
 " }}} End settings
 
 " {{{ Mappings and autocmds
@@ -99,10 +97,16 @@ nnoremap <leader>; :AsyncRun<space>
 " Quick compile & Run
 nnoremap <silent><leader>cc <Cmd>Compile<CR>
 nnoremap <silent><leader>cr <Cmd>Run<CR>
-" Autoselect suggest in completion
-inoremap <silent><expr> <Tab> 
-            \ UltiSnips#CanExpandSnippet() ? UltiSnips#ExpandSnippet() :
-            \ pumvisible() ? '<C-N>' : '<Tab>'
+" Autoselect suggest in completion & expand snippets
+inoremap <silent><expr><Tab>
+            \ UltiSnips#CanExpandSnippet() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
+            \ UltiSnips#CanJumpForwards() ? "<C-R>=UltiSnips#JumpForwards()<CR>" :
+            \ pumvisible() ? "<C-N>" : "<Tab>"
+inoremap <silent><expr><S-Tab>
+            \ UltiSnips#CanJumpBackwards() ? "<C-R>=UltiSnips#JumpBackwards()<CR>" :
+            \ pumvisible() ? "<C-P>" : "<Tab>"
+xnoremap <silent><Tab> :call UltiSnips#SaveLastVisualSelection()<CR>gvs
+snoremap <silent><expr><Tab> <Esc>:call UltiSnips#ExpandSnippet()<CR>
 " LSP actions
 noremap <silent>\a :CocAction<CR>
 noremap <silent>\? :CocDiagnostics<CR>
@@ -147,4 +151,72 @@ else  | " Linux
     set guifont=Monaco
 endif
 " }}} System settings
+
+" {{{ Package options
+" ==================================================================================================================
+" Language Server, Echodoc and UltiSnip settings
+" ==================================================================================================================
+set completeopt=menuone,popup,noinsert,noselect
+let g:UltiSnipsExpandTrigger = "<nop>"  | " The config will handle it ><
+
+" ==================================================================================================================
+" Rainbow settings
+" ==================================================================================================================
+let g:rainbow_active = 1
+let g:rainbow_conf = #{
+            \     separately: #{
+            \         lua: #{
+            \             parentheses: ["start=/(/ end=/)/", "start=/{/ end=/}/",
+            \                 "start=/\\v\\[\\ze($|[^[])/ end=/\]/"],
+            \         }
+            \     }
+            \ }
+
+" ==================================================================================================================
+" VimOI settings
+" ==================================================================================================================
+if has('win32')
+    let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
+else
+    let g:VimOI_CompileArgs = [ '-Wall', '-Wextra', '-DDEBUG' ]
+endif
+
+" ==================================================================================================================
+" Vimtex, preview and markdown settings
+" ==================================================================================================================
+let g:vimtex_enabled = 1
+let g:vimtex_fold_enabled = 1
+let g:vimtex_compiler_latexmk = {
+            \     'options' : [
+            \       '-xelatex',
+            \     ],
+            \ }
+let g:livepreview_engine = 'xelatex'
+if has("win32")
+    let g:livepreview_previewer = 'start'
+else
+    let g:livepreview_previewer = 'zathura'
+    set updatetime=400
+endif
+" Markdown options
+let g:vim_markdown_frontmatter = 1
+let g:vim_markdown_strikethrough = 1
+let g:vim_markdown_new_list_item_indent = 2
+" Markdown preview
+let g:mkdp_refresh_slow = 1
+let g:mkdp_auto_close = 0
+let g:mkdp_browser = 'firefox'
+
+" ==================================================================================================================
+" NERD Tree and Netrw settings
+" ==================================================================================================================
+let g:netrw_liststyle=3
+
+" ==================================================================================================================
+" Goyo settings
+" ==================================================================================================================
+let g:goyo_width = '80%'
+let g:goyo_height = '95%'
+let g:goyo_linenr = 1
+" }}} End package options
 

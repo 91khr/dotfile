@@ -5,7 +5,7 @@
 
 let g:solarized_menu = 0  | " In tested versions, this is an erroneous option
 " {{{ Helpers
-function! s:IsWide()
+function! s:iswide()
     return winwidth(0) > 70
 endfunction
 function! s:func(name)
@@ -29,17 +29,17 @@ function! s:FileName()
     endif
     let l:relpath = fnamemodify(expand('%'), ':.')
     let l:pathsep = has("win32") ? '\' : '\/'
-    return s:IsWide() ? l:relpath :
+    return s:iswide() ? l:relpath :
                 \ substitute(l:relpath, '\v([^/])([^/]*)' . l:pathsep, '\1' . l:pathsep, 'g')
 endfunction
 
 function! s:CocStatus()
-    if !exists(":CocInfo") || !s:IsWide() | return '' | endif
+    if !exists(":CocInfo") || !s:iswide() | return '' | endif
     return coc#status()
 endfunction
 
 function! s:SpaceStatus()
-    if !s:IsWide() || &ft == "help" | return '' | endif
+    if !s:iswide() || get(b:, "spacecheck_disabled", v:false) | return '' | endif
     let pos = getcurpos()
     call cursor(1, 1)
     let trailing = search('\s\+$', 'ncw')
@@ -47,16 +47,10 @@ function! s:SpaceStatus()
         call cursor(pos[1:])
         return 'Trailing: ' .. trailing
     endif
-    let mixing = search('\v^( +\t)|(\t+ )', 'ncw')
+    let mixing = search('^ \+', 'ncw') ? search('^\s*\t', 'ncw') : 0
     if mixing != 0
         call cursor(pos[1:])
         return 'Mixed indent: ' .. mixing
-    endif
-    call search('^ \+', 'ncw')
-    let resttab = search('\t', 'ncw')
-    if resttab != 0
-        call cursor(pos[1:])
-        return 'Causal tab: ' .. resttab
     endif
     call cursor(pos[1:])
     return ''
@@ -66,8 +60,8 @@ endfunction
 let g:lightline = #{
             \     colorscheme: 'solarized',
             \     component_function: #{
-            \         cocstatus: s:func('CocStatus'),
             \         filename: s:func('FileName'),
+            \         cocstatus: s:func('CocStatus'),
             \     },
             \     component_expand: #{
             \         spacestatus: s:func('SpaceStatus'),
@@ -96,7 +90,7 @@ let s:wideonly_component = #{
             \     fileformat: '&ff',
             \     fileencoding: '&fenc!=#""?&fenc:&enc',
             \     filetype: '&ft!=#""?&ft:"no ft"',
-		    \     spell: '&spell?&spelllang:""',
+            \     spell: '&spell?&spelllang:""',
             \ }
 let s:wide_condition = "winwidth(0) > 70"
 for [name, exp] in items(s:wideonly_component)

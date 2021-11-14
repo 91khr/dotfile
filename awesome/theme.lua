@@ -57,6 +57,7 @@ theme.titlebar_bg_normal = "#3F3F3F"
 -- tooltip_[font|opacity|fg_color|bg_color|border_width|border_color]
 -- Example:
 --theme.taglist_bg_focus = "#CC9393"
+theme.prompt_fg = "#AECF96"
 -- }}}
 
 -- {{{ Variables
@@ -68,6 +69,7 @@ theme.titlebar_bg_normal = "#3F3F3F"
 --theme.fg_end_widget    = "#FF5656"
 --theme.bg_widget        = "#494B4F"
 --theme.border_widget    = "#3F3F3F"
+theme.notification_icon_size = dpi(80)
 -- }}}
 
 -- {{{ Mouse finder

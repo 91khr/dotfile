@@ -1,0 +1,3 @@
+text/html; firefox %s; needsterminal;
+application/*; xdg-open %s;
+image/*; xdg-open %s;

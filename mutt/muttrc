@@ -1,0 +1,49 @@
+# User and password is configurated in the local muttrc()(
+# Receiving options
+set mbox_type = Maildir
+set spoolfile = +Inbox
+mailboxes =Inbox
+
+set imap_check_subscribed
+set imap_keepalive = 300
+unset imap_passive
+set mail_check = 120
+
+set header_cache = ~/.cache/mutt
+set message_cachedir = ~/.cache/mutt
+
+# Sending options
+#set record = ***  # Different mails may differ ><
+set postponed = +Drafts
+set use_from=yes
+set realname = "Virginia Senioria"
+
+# Key bindings
+bind pager j next-line
+bind pager k previous-line
+bind attach,index,pager J next-page
+bind attach,index,pager K previous-page
+bind pager gg top
+bind pager G bottom
+bind attach,index gg first-entry
+bind attach,index G last-entry
+
+# Viewing and editing options
+alternative_order text/plain text/html
+set mailcap_path = $my_muttrc_path/mailcap
+auto_view text/html application/pdf image/*
+
+set editor="gvim --nofork"
+set text_flowed = yes
+
+set send_charset = "utf-8"
+
+set alias_file = ~/.mutt/aliases
+
+# Color scheme
+source $my_muttrc_path/mutt-colors-solarized/mutt-colors-solarized-dark-256.muttrc
+
+# Auto generate multipart ><
+set send_multipart_alternative
+set send_multipart_alternative_filter = $my_muttrc_path/gen_multipart_alternative.sh
+

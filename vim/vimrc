@@ -10,17 +10,11 @@ let s:config_dir = expand("<sfile>:h")
 
 " {{{ Clean up
 if exists("g:vimrc_load_option")
-    " Reset all options
-    if g:vimrc_load_option == 1
-        mapclear
-        autocmd!
-        set all&
-        comclear
-    elseif g:vimrc_load_option == 2
+    if g:vimrc_load_option == 2
         finish
     endif
     set packpath+=~/.vim
-    " Load the options loaded as plugins
+    " Reload the options loaded as plugins
     function! s:ReloadPlugins(header)
         for l:file in readdir(a:header, { -> v:val !~# '^\..*' })
             execute "source " . a:header . '/' . l:file
@@ -37,21 +31,10 @@ execute "set rtp+=" . expand("<sfile>:h")
 let &packpath .= ',' . s:config_dir
 " }}} End loading files
 
-" {{{ Helper functions and commands
-function! IsExec(name)  " Like executable(), but fallback to wsl on Windows
-    if executable(a:name) | return v:true  | " This is always correct
-    elseif has('win32') && executable("wsl")
-        silent call system("wsl which " . a:name)
-        return v:shell_error == 0
-    else | return v:false
-    endif
-endfunction
-" }}} End helper functions and commands
-
-" {{{ Plugins
-" {{{ Plugin list and setup options
+" {{{ Packages
+" {{{ Package list and setup options
 " ==================================================================================================================
-" Vim-packager and plugin settings
+" Packager and plugin settings
 " ==================================================================================================================
 
 let g:packager_config = #{
@@ -92,11 +75,13 @@ let g:packager_config = #{
             "\          'junegunn/goyo.vim',
             \     ]
             \ }
+
 " System specific
 if has("win32")
 else
     let g:packager_config.packs += [
-                \     #{ name: 'vim-scripts/fcitx.vim', location: 'start' }
+                "\     #{ name: 'vim-scripts/fcitx.vim', location: 'start' }
+                \     #{ name: 'lilydjwg/fcitx.vim', location: 'start' }
                 \ ]
 endif
 
@@ -132,64 +117,6 @@ command! PackClean call packager#manager#init() | call packager#manager#clean()
 command! PackStatus call packager#manager#init() | call packager#manager#status()
 command! PackSync call packager#manager#init() | call packager#manager#sync()
 
-" {{{ Package options
-" ==================================================================================================================
-" Language Server, Echodoc and UltiSnip settings
-" ==================================================================================================================
-set completeopt=menuone,popup,noinsert,noselect
-let g:UltiSnipsExpandTrigger = "<nop>"  | " The config will handle it ><
-
-" ==================================================================================================================
-" VimOI settings
-" ==================================================================================================================
-let g:rainbow_active = 1
-if has('win32')
-    let g:VimOI_CompileArgs = [ '/Od', '/nologo', '/utf-8', '/EHsc', '/W4', '/D_CRT_SECURE_NO_WARNINGS' ]
-else
-    let g:VimOI_CompileArgs = [ '-Wall', '-Wextra', '-DDEBUG' ]
-endif
-
-" ==================================================================================================================
-" Theme settings(statusline and solarized
-" ==================================================================================================================
-
-" ==================================================================================================================
-" Vimtex, preview and markdown settings
-" ==================================================================================================================
-let g:vimtex_enabled = 1
-let g:vimtex_fold_enabled = 1
-let g:vimtex_compiler_latexmk = {
-            \     'options' : [
-            \       '-xelatex',
-            \     ],
-            \ }
-let g:livepreview_engine = 'xelatex'
-if has("win32")
-    let g:livepreview_previewer = 'start'
-else
-    let g:livepreview_previewer = 'zathura'
-    set updatetime=400
-endif
-" Markdown options
-let g:vim_markdown_frontmatter = 1
-let g:vim_markdown_strikethrough = 1
-" Markdown preview
-let g:mkdp_refresh_slow = 1
-let g:mkdp_auto_close = 0
-let g:mkdp_browser = 'firefox'
-
-" ==================================================================================================================
-" NERD Tree and Netrw settings
-" ==================================================================================================================
-let g:netrw_liststyle=3
-
-" ==================================================================================================================
-" Goyo settings
-" ==================================================================================================================
-let g:goyo_width = '80%'
-let g:goyo_height = '95%'
-let g:goyo_linenr = 1
-" }}} End package options
 " }}} End packages
 
 " {{{ Default filetype settings

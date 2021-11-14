@@ -1,9 +1,12 @@
-[submodule "Solarizedxterm"]
-	path = Solarizedxterm
-	url = https://github.com/maniat1k/Solarizedxterm
 [submodule "cyclefocus"]
 	path = awesome/cyclefocus
 	url = https://github.com/blueyed/awesome-cyclefocus
 [submodule "vim-tasks"]
-	path = .vim/pack/internal/start/vim-tasks
+	path = vim/pack/internal/start/vim-tasks
 	url = git@github.com:XYNUniversity/vim-tasks
+[submodule "mutt/mutt-colors-solarized"]
+	path = mutt/mutt-colors-solarized
+	url = git@github.com:altercation/mutt-colors-solarized
+[submodule "profile/Solarizedxterm"]
+	path = profile/Solarizedxterm
+	url = https://github.com/maniat1k/Solarizedxterm

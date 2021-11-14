@@ -1,25 +1,12 @@
-#!/bin/sh
-
-if which python > /dev/null; then; else
-    sudo pacman -S --noconfirm python
-fi
-
-if [ $? -eq 0 ]; then
-    nowpath=$(dirname $0)
-    cd nowpath
-    ./install.py $(realpath nowpath)
-else
-    echo '>< Failed to install python...'
-fi
-
-exit
+#!/bin/bash
 
 # Constants
 dotdir=$(realpath $(dirname $0))
 
 # Install essential packages
-sudo pacman -S -noconfirm - <<EOF
-wqy-zenhei
+sudo pacman -S --noconfirm - <<EOF
+adobe-source-han-sans-cn-fonts
+adobe-source-han-serif-cn-fonts
 ttf-monaco
 base-devel
 zsh
@@ -40,7 +27,7 @@ xorg-xrdb
 yay
 xorg-xmodmap
 EOF
-yay -S -noconfirm - <<EOF
+yay -S --noconfirm - <<EOF
 transset-df
 EOF
 
@@ -61,18 +48,12 @@ loadfile('${dotdir}/awesome/rc.lua')('${dotdir}')" >> ~/.config/awesome/rc.lua
 
 # (fcitx
 cat <<EOF >> ~/.xprofile
-export XMODIFIERS="@im=fcitx"
-export QT_IM_MODULE=<module>
-export GTK_IM_MODULE=<module>
 EOF
 
 # xterm
 echo "
 #include \"${dotdir}/.Xresources\"
 #include \"${dotdir}/Solarizedxterm/.Xdefaults\"" >> ~/.Xresources
-
-# Enable lightdm
-sudo systemctl enable lightdm.service
 
 # Unmute alsa
 sudo pacman -S alsa-utils
@@ -81,3 +62,4 @@ amixer sset Speaker unmute
 amixer sset Headphone unmute
 sudo pacman -Rs alsa-utils
 
+# vim: fdm=marker

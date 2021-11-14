@@ -8,7 +8,6 @@ elif [[ "text" == "$1"* ]]; then
     cmd="xclip -selection clipboard -o | $cmdbase"
 elif [[ "asciinema" == "$1"* ]]; then
     cmd="asciinema rec >(${cmdbase})"
-    echo $cmd
 elif [[ "file" == "$1"* ]]; then
     cmdbase="curl -F 'c=@${2}' 'https://fars.ee'"
 else
