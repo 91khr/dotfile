@@ -5,6 +5,6 @@
 
 setlocal foldmethod=indent
 
-command! -buffer -nargs=* Compile exec "AsyncRun " . (has("win32") ? "start" : "xdg-open") . ' '
+command! -buffer -bar -nargs=* Run w | exec "!" . (has("win32") ? "start" : "xdg-open") . ' '
             \ . expand("%") . ' ' . <q-args>
 

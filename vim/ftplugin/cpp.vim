@@ -6,12 +6,16 @@
 " Compile options
 if has("win32")
     " Require VimOI
-    command! -buffer -nargs=* Compile CppCompile % <args>
+    command! -buffer -bar -nargs=* Compile CppCompile % <args>
 else
-    command! -buffer -nargs=* Compile exec "AsyncRun g++ % -std=c++20 "
+    command! -buffer -bar -nargs=* Compile w | exec "AsyncRun g++ % -std=c++20 -o %:t:r.out "
                 \ .. "-Wall -Wextra -Weffc++ -Wpedantic -g "
-                \ .. (exists('g:CppCompileFlags') ? join(g:CppCompileFlags, ' ') : '') .. <q-args>
+                \ .. (has_key(g:, "compile_flags_cpp") ? g:compile_flags_cpp :
+                \     get(b:, "compile_flags", []))->join(' ')
+                \ .. <q-args>
 endif
+command! -buffer -bar Run Compile | autocmd User AsyncRunStop ++once
+            \ if g:asyncrun_code == 0 | exec "botright term ./%:t:r.out" | call lightline#update() | endif
 
 " Set C-style indent and options
 function! CppIndent()

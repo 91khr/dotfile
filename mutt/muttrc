@@ -1,8 +1,7 @@
 # User and password is configurated in the local muttrc()(
+source "$my_muttrc_path/detect_localrc.sh|"
 # Receiving options
 set mbox_type = Maildir
-set spoolfile = +Inbox
-mailboxes =Inbox
 
 set imap_check_subscribed
 set imap_keepalive = 300
@@ -13,10 +12,10 @@ set header_cache = ~/.cache/mutt
 set message_cachedir = ~/.cache/mutt
 
 # Sending options
-#set record = ***  # Different mails may differ ><
-set postponed = +Drafts
-set use_from=yes
+set use_from = yes
 set realname = "Virginia Senioria"
+
+set send_charset = "utf-8"
 
 # Key bindings
 bind pager j next-line
@@ -31,14 +30,19 @@ bind attach,index G last-entry
 # Viewing and editing options
 alternative_order text/plain text/html
 set mailcap_path = $my_muttrc_path/mailcap
-auto_view text/html application/pdf image/*
+auto_view text/html
 
 set editor="gvim --nofork"
 set text_flowed = yes
 
-set send_charset = "utf-8"
+set sort = threads
+set sort_aux = last-date-received
 
+set folder_format = "%2C %t%N %f"
+
+# Alias options
 set alias_file = ~/.mutt/aliases
+source $alias_file
 
 # Color scheme
 source $my_muttrc_path/mutt-colors-solarized/mutt-colors-solarized-dark-256.muttrc

@@ -3,5 +3,5 @@
 " Author: Virginia Senioria
 " Senioriae VIm configuration: lua language configurations
 
-command! -buffer Compile luafile %
+command! -buffer -bar Run w | botright term lua %
 

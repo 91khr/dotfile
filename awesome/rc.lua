@@ -480,19 +480,4 @@ os.execute("fcitx5 && xmodmap " .. dotpath .. "/.Xmodmap &")
 os.execute("pkill xfce4-power-manager; xfce4-power-manager &")
 -- }}}
 
-function strize(v)
-    if type(v) ~= "table" then
-        return tostring(v)
-    end
-    local res = "{"
-    for k, v in pairs(v) do
-        res = res .. tostring(k) .. "=" .. strize(v) .. ", "
-    end
-    return res .. "}"
-end
-
-naughty.config.notify_callback = function(noti)
-    return noti
-end
-
 -- vim: fdm=marker

@@ -8,6 +8,15 @@
 " Settings
 " ======================================================================================================================
 set nocp  | " Vi is old
+set display=truncate,uhex
+set incsearch
+set langnoremap
+set nolangremap
+set nrformats=bin,hex
+set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc,.png,.jpg
+set ttimeout
+set ttimeoutlen=100
+set wildmenu  | " Command mode completion(though hard to use ><)
 " Set encodings
 set encoding=utf-8
 set termencoding=utf-8
@@ -18,15 +27,6 @@ set helplang=cn
 set hlsearch
 " Disables mouse in insert mode
 set mouse=nvcr
-set display=truncate,uhex
-set incsearch
-set langnoremap
-set nolangremap
-set nrformats=bin,hex
-set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc,.png,.jpg
-set ttimeout
-set ttimeoutlen=100
-set wildmenu  | " Command mode completion(though hard to use ><)
 " Open the syntax and corresponding highlight
 filetype plugin indent on
 syntax on
@@ -38,9 +38,7 @@ autocmd VimEnter * if get(g:, 'vimpager', 0) == 1 | set nonumber | endif
 " Show entered commands
 set showcmd
 " Set the width of indent and tab
-set shiftwidth=4
-set tabstop=4
-set expandtab
+set shiftwidth=4 tabstop=4 expandtab
 " Let backspace more friendly
 set bs=3
 " Open code folding
@@ -55,12 +53,15 @@ set fileformat=unix
 set fileformats=unix,dos
 " Turn on exrc on current directory, and auto run .vimrc on current file
 set exrc secure
-autocmd DirChanged * if filereadable('.vimrc') | confirm so .vimrc | endif
+function! s:ExecuteExrc()
+    if index([ expand('$HOME'), expand('$HOME/.vim'), expand('$VIM') ], getcwd()) == -1
+                \ && filereadable('.vimrc')
+        confirm so .vimrc
+    endif
+endfunction
+autocmd DirChanged * call s:ExecuteExrc()
+autocmd VimEnter * call s:ExecuteExrc()
 autocmd BufWritePost .vimrc if filereadable('.vimrc') | so .vimrc | endif
-if index([ expand('$HOME'), expand('$HOME/.vim'), expand('$VIM') ], getcwd()) == -1
-            \ && filereadable('.vimrc')
-    autocmd VimEnter * confirm so .vimrc
-endif
 " Status line :)
 set laststatus=2  | " Ensure that status line is shown
 set noshowmode  | " The mode will be shown in status line
@@ -88,8 +89,8 @@ noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
 " Emacs style motion in cmdline mode(q: may be better)
 cnoremap <C-B> <Left>
 cnoremap <C-F> <Right>
-cnoremap <M-B> <C-Left>
-cnoremap <M-F> <C-Right>
+cnoremap <A-B> <C-Left>
+cnoremap <A-F> <C-Right>
 cnoremap <C-A> <Home>
 cnoremap <C-E> <End>
 " Run shell commands -- :! is considered not useful
@@ -100,16 +101,24 @@ nnoremap <silent><leader>cr <Cmd>Run<CR>
 " Autoselect suggest in completion & expand snippets
 inoremap <silent><expr><Tab>
             \ UltiSnips#CanExpandSnippet() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
-            \ UltiSnips#CanJumpForwards() ? "<C-R>=UltiSnips#JumpForwards()<CR>" :
-            \ pumvisible() ? "<C-N>" : "<Tab>"
+            \ pumvisible() ? "<C-N>" :
+            \ UltiSnips#CanJumpForwards() ? "<C-R>=UltiSnips#JumpForwards()<CR>" : "<Tab>"
 inoremap <silent><expr><S-Tab>
-            \ UltiSnips#CanJumpBackwards() ? "<C-R>=UltiSnips#JumpBackwards()<CR>" :
-            \ pumvisible() ? "<C-P>" : "<Tab>"
+            \ pumvisible() ? "<C-P>" :
+            \ UltiSnips#CanJumpBackwards() ? "<C-R>=UltiSnips#JumpBackwards()<CR>" : "<Tab>"
 xnoremap <silent><Tab> :call UltiSnips#SaveLastVisualSelection()<CR>gvs
 snoremap <silent><expr><Tab> <Esc>:call UltiSnips#ExpandSnippet()<CR>
+" Confirm completion
+inoremap <silent><expr><CR> pumvisible() ? "<C-Y>" : "<CR>"
 " LSP actions
-noremap <silent>\a :CocAction<CR>
-noremap <silent>\? :CocDiagnostics<CR>
+noremap \a <Cmd>CocAction<CR>
+noremap \? <Cmd>CocDiagnostics<CR>
+" ======================================================================================================================
+" Autocmds
+" ======================================================================================================================
+autocmd User AsyncRunStop if g:asyncrun_code != 0 | echohl WarningMsg | endif |
+            \ unsilent echo "(AsyncRun finished with code " . g:asyncrun_code . ")" |
+            \ echohl Normal
 " }}} End settings and autocmds
 
 " {{{ GUI and System settings
@@ -120,9 +129,6 @@ if has("gui_running")
     " Color scheme
     colo solarized
     set background=light
-    " Status line theme
-    let g:airline_theme = 'solarized'
-    let g:airline_solarized_bg = 'dark'
     " Ban the annoying bell(cant be seen on Linux gui)
     set vb
     " I dont need the controls
@@ -133,8 +139,6 @@ else  | " GUI ^^^ Term vvv
     " Color scheme
     colo desert
     set background=dark
-    " Status line theme
-    let g:airline_theme = 'deus'
 endif
 
 " ======================================================================================================================
@@ -199,6 +203,7 @@ else
     set updatetime=400
 endif
 " Markdown options
+let g:vim_markdown_math = 1
 let g:vim_markdown_frontmatter = 1
 let g:vim_markdown_strikethrough = 1
 let g:vim_markdown_new_list_item_indent = 2

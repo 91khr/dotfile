@@ -13,6 +13,6 @@ setlocal formatoptions+=aw
 let b:spacecheck_disabled = v:true
 
 " Preview composed HTML
-command! -buffer Compile exec "AsyncRun -mode=term -pos=bottom "
+command! -buffer -bar Compile w | exec "AsyncRun -mode=term -pos=bottom "
             \ . s:config_dir . "/mutt/gen_multipart_alternative.sh < %" | set ft=html
 

@@ -1,0 +1,25 @@
+# The template for the profile of an account
+set my_main_user=...
+set my_main_pass=...
+set my_main_folder=imaps://provider
+
+# IMAP
+set imap_user=$my_main_user
+set imap_pass=$my_main_pass
+set folder=$my_main_folder
+set spoolfile = +Inbox
+mailboxes =Inbox
+
+# SMTP
+set from=$my_main_user
+set smtp_pass=$my_main_pass
+set smtp_url=smtp://${my_main_user}@provider
+set ssl_force_tls=yes
+set ssl_starttls=yes
+set record =  # Some
+set postponed = +Drafts
+
+# Reset hook ><
+account-hook $folder "set imap_user=$my_main_user imap_pass=$my_main_pass"
+
+# vim: ft=muttrc

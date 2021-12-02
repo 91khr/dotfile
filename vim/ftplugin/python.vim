@@ -3,5 +3,5 @@
 " Author: Virginia Senioria
 " Senioriae VIm configuration: Python language configurations
 
-command! -buffer Compile py3file %
+command! -buffer -bar Run w | botright term python %
 

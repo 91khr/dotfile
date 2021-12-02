@@ -1,2 +1,5 @@
+# Vim intermedium files
 *.swp
 .vim/doc/tags
+# Installer executable
+.install

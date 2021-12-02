@@ -1,0 +1,170 @@
+# {{{ Helpers
+global !p
+def toggle_im(en, zh):
+	if snip.tabstop == en:
+		vim.eval("Fcitx2en()")
+		vim.command("let b:inputtoggle=0")
+	elif snip.tabstop == zh:
+		vim.command("let b:inputtoggle=1")
+		vim.eval("Fcitx2zh()")
+def in_syntax(syn):
+	return vim.eval(f"""synstack(line('.'), col('.'))->map("synIDattr(v:val, 'name')")->index('{syn}')""") != "-1"
+def in_mathenv(): return in_syntax('mkdMath')
+def in_envbrace():
+	return re.match(r".*\\begin{[^}]+", snip.buffer[snip.line][:snip.column])
+endglobal
+# }}} End helpers
+
+# {{{ Environments
+
+priority 2
+context "snip.visual_text"
+snippet {{ "Latex \begin...\end block" i
+\begin{$1}${VISUAL}\end{$1}$0
+endsnippet
+
+priority 1
+snippet {{ "Latex \begin...\end block" i
+\begin{$1}$2\end{$1}$0
+endsnippet
+
+# {{{ Environment name abbrevs
+snippet /([pbv]?)mat/ "Latex matrix" "in_envbrace()" eir
+`!p snip.rv = match.group(1)`matrix
+endsnippet
+# }}} End environment name abbrevs
+
+# {{{ Math modes
+priority 2
+post_jump "toggle_im(1, 0)"
+snippet $$ "Latex math block"
+$$
+$1
+$$$0
+endsnippet
+
+priority 1
+post_jump "toggle_im(1, 0)"
+context "not in_syntax('texMathZoneY')"
+snippet $ "Latex math mode" i
+$$1$$0
+endsnippet
+# }}} End math modes
+
+context "in_mathenv()"
+snippet \{ "Latex math curly braces" i
+\\{$1\\}$0
+endsnippet
+
+# }}} End environments
+
+# {{{ Operators (with operands) and modifiers
+
+# {{{ Fraction
+context "snip.visual_text and in_mathenv()"
+snippet / "Latex fraction" i
+\frac{${VISUAL}}{$2}$0
+endsnippet
+context "not snip.visual_text and in_mathenv()"
+snippet / "Latex fraction" i
+\frac{$1}{$2}$0
+endsnippet
+# }}} End fraction
+
+context "in_mathenv()"
+snippet \rt "Latex pow root" i
+\sqrt{$1}$0
+endsnippet
+
+context "in_mathenv()"
+snippet /\\b([a-zA-Z])/ "Latex mathbb quick input" ir
+\mathbb{`!p snip.rv = match.group(1)`}
+endsnippet
+context "in_mathenv()"
+snippet \b "Latex mathbb" i
+\mathbb{$1}$0
+endsnippet
+
+# {{{ Subscript and superscript
+snippet _ "Latex subscript" i
+_{$1}$0
+endsnippet
+
+snippet ^ "Latex superscript" i
+^{$1}$0
+endsnippet
+# }}} End subscript and superscript
+
+context "in_mathenv()"
+snippet \t "Latex text" i
+\text{$1}$0
+endsnippet
+
+# }}} End operators
+
+# {{{ Abbreviations
+
+priority 2
+context "in_mathenv()"
+snippet .* "Latex dot multiply" i
+\cdot
+endsnippet
+priority 1
+context "in_mathenv()"
+snippet * "Latex times " i
+\times $0
+endsnippet
+
+# {{{ (Dots)
+context "in_mathenv()"
+snippet /([vcd]?)\.\.\./ "Normal dots" ir
+\\`!p snip.rv=match.group(1)`dots
+endsnippet
+
+context "in_mathenv()"
+snippet /(\w)\./ "Dot as modifier" ir
+\dot `!p snip.rv=match.group(1)`
+endsnippet
+# }}} End dots
+
+context "in_mathenv()"
+snippet inf "Infinity" i
+\infty
+endsnippet
+
+context "in_mathenv()"
+snippet \all "Latex forall" i
+\forall
+endsnippet
+context "in_mathenv()"
+snippet \has "Latex exists" i
+\exists
+endsnippet
+
+context "in_mathenv()"
+snippet => "Implies" i
+\implies
+endsnippet
+
+context "in_mathenv()"
+snippet /\\G(v?)([a-zA-Z]+)/ "Latex Greek letters" ir
+\\`!p ch = match.group(2)
+up = ch.isupper()
+try:
+	snip.rv = {
+		'a': 'alpha', 'b': 'beta', 'd': 'delta',
+		'e': 'epsilon', 'l': 'lambda',
+		't': 'tau', 'th': 'theta',
+		'ph': 'phi', 'ps': 'psi',
+		'o': 'omega',
+	}[ch.lower()]
+	if up: snip.rv = snip.rv[0].upper() + snip.rv[1:]
+	if len(match.group(1)) > 0: snip.rv = 'var' + snip.rv
+except:
+	print(f"Unrecognized letter sequence {ch}")
+	snip.rv = match.group(0)[1:]`
+endsnippet
+# }}} End abbreviations
+# }}} End abbreviations
+
+# vim:fdm=marker

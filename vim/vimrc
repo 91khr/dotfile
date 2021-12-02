@@ -90,8 +90,7 @@ endif
 function! s:AddPackFT(filetype,plug)
     let ft = type(a:filetype) == type([]) ? join(a:filetype, ",") : a:filetype
     let plglist = type(a:plug) == type([]) ? join(a:plug, " | packadd ") : a:plug
-    execute "autocmd FileType " . ft . " packadd " . plglist
-                \ . " | execute \"autocmd! FileType " . ft . "\" | execute \"set ft=\" . &ft | e %"
+    execute "autocmd FileType " . ft . " ++once packadd " . plglist
 endfunction
 " Dynamic load package command
 function! s:AddPackCmd(cmdname, exec, args)

@@ -4,17 +4,11 @@
 " Senioriae VIm configuration: markdown language configurations
 
 function! s:CompileMarkdown(...)
-    " Process options
-    let options = ''
-    for item in a:000
-        let options .= ' ' . item
-    endfor
-    " Process output name
-    let outname = expand('%:t:r') . '.html'
-    " Compile...
-    execute ":AsyncRun pandoc % -o " . outname . ' ' . options
+    execute ":AsyncRun pandoc % -s -o %:t:r.html " . a:000->flattennew()->join(' ')
 endfunction
-command! -buffer -nargs=* Compile call <SID>CompileMarkdown(<f-args>)
+command! -buffer -bar -nargs=* Compile w | call s:CompileMarkdown(<f-args>)
+command! -buffer -bar -nargs=* Run exec "!" . (has("win32") ? "start" : "xdg-open") . ' ' .
+            \ expand("%:t:r") . '.html ' . <q-args>
 
 let b:coc_suggest_disable = 1
 

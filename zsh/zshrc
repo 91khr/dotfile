@@ -25,11 +25,6 @@ if test -r $HIGHLIGHT_FILE; then source $HIGHLIGHT_FILE; fi
 unset HIGHLIGHT_FILE
 # Enable comments
 setopt interactivecomments
-# Pastebin support
-function _paste_sh() {
-    _arguments -C '1: :(image text asciinema file)'
-}
-compdef _paste_sh paste.sh
 
 # Prompt
 setopt PROMPT_SUBST
@@ -41,6 +36,7 @@ unset HNAME
 
 # Define commands and variables
 alias ls="ls --color=auto"
+alias grep="grep --color=auto"
 export EDITOR=vim
 export PATH=${PATH}:~/bin
 

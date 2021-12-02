@@ -39,7 +39,9 @@ function! s:CocStatus()
 endfunction
 
 function! s:SpaceStatus()
-    if !s:iswide() || get(b:, "spacecheck_disabled", v:false) | return '' | endif
+    if !s:iswide() || get(b:, "spacecheck_disabled", v:false) || &bt == 'terminal'
+        return ''
+    endif
     let pos = getcurpos()
     call cursor(1, 1)
     let trailing = search('\s\+$', 'ncw')

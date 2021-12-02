@@ -12,12 +12,12 @@ function! s:RunREPL()
     let l:curbuf = bufnr()
     botright call setbufvar(l:curbuf, "replbuf",
                 \ term_start([ "racket", "-ie",
-                \     printf("(enter! \"%s\")", expand("%")) ], #{
+                \     printf("(enter! (file \"%s\"))", expand("%")) ], #{
                 \         term_finish: "close", term_rows: float2nr(0.35 * winheight(0)),
                 \ }))
 endfunction
-command! -buffer Compile call s:RunREPL()
-command! -buffer Run AsyncRun racket %
+command! -buffer -bar Compile w | call s:RunREPL()
+command! -buffer -bar Run w | botright term racket %
 
 " Add some missing options ><
 setlocal lispwords+=syntax-case

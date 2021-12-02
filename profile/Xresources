@@ -1,7 +1,7 @@
 ! Foundamental
 XTerm.termName: xterm-256color
 XTerm.ttyModes: erase ^?
-XTerm.vt100.metaSendsEscape: true
+!XTerm.vt100.metaSendsEscape: true  ! May break vim's meta mapping, and so long no program rely on ESC sequence
 XTerm.vt100.backarrowKey: false
 XTerm.vt100.locale: false
 XTerm.vt100.utf8: true

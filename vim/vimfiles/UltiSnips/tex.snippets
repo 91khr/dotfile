@@ -1,0 +1,24 @@
+snippet \BeginDoc "Latex document template" b
+\\documentclass{minimal}
+
+\\begin{document}
+$0
+\\end{document}
+endsnippet
+
+snippet \{{ "Latex environment" i
+\begin{$1}$2\end{$1}$0
+endsnippet
+
+priority 1
+snippet $ "Latex inline math" i
+$$1$$0
+endsnippet
+
+priority 2
+snippet $$ "Latex math block" i
+$$
+$1
+$$$0
+endsnippet
+

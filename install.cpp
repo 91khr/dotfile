@@ -1,5 +1,5 @@
 #if 0
-out=$(mktemp)
+out=./.install
 dotpath=$(readlink -f $(dirname $0))
 homepath=$HOME
 if g++ $0 -std=c++20 -o $out \
@@ -10,12 +10,12 @@ else
 fi
 #endif
 // {{{ Premable
-
 #include <cstdio>
 #include <fstream>
 #include <cstdlib>
 #include <string>
 #include <filesystem>
+#include <concepts>
 #include <list>
 #include <tuple>
 #include <algorithm>
@@ -23,12 +23,16 @@ fi
 #include <unordered_set>
 #include <functional>
 using std::string;
+using std::to_string;
+using std::move;
 namespace fs = std::filesystem;
 // }}} End premable
 
+
+
 // {{{ Environment & options
 struct {
-    string dotpath, homepath;
+    string dotpath {}, homepath {};
     const bool iswin =
 #ifdef _WIN32
         true
@@ -52,34 +56,115 @@ and 'everything' stands for all config
 } env;
 // }}} End environment & options
 
-// {{{2 Config helpers
+
+
+// {{{1 Config helpers
+template<class T>
+concept ConfigInstaller = requires(const T a) {
+    { a.is_installed() } -> std::convertible_to<bool>;
+} && requires(T a) {
+    a.install();
+} && std::move_constructible<T> && std::destructible<T>;
+
 struct ConfigInfo
 {
-    string name;
-    enum {
-        UNIX, Win, All,
-    } os;
-    string description;
+public:
     inline static const char *OSName[] = { "UNIX", "Win", "All" };
-    std::function<void()> install;
-    std::function<bool()> is_installed;
+    enum OSType {
+        UNIX, Win, All,
+    };
+
+    const char *name;
+    OSType os;
+    const char *description;
+
+private:
+    struct Data
+    {
+        std::function<void(void*)> constructor;
+        void (*install)(void*) = [] (auto) {};
+        bool (*is_installed)(void*) = [] (auto) { return false; };
+        void (*destructor)(void*) = [] (auto) {};
+    };
+    char *data;
+
+public:
+    // {{{ Constructors and destructors
+    template<class T>
+    ConfigInfo(const char *n, OSType o, const char *desc, T inst)
+        requires ConfigInstaller<decltype(inst())>
+        : name(n), os(o), description(desc),
+          data(new char[sizeof(Data) + sizeof(decltype(inst()))])
+    {
+        using InstallerT = decltype(inst());
+        new(data) Data {
+            [inst=move(inst)] (void *data) { new(data) InstallerT(inst()); },
+            [] (void *data) { static_cast<InstallerT*>(data)->install(); },
+            [] (void *data) { return static_cast<InstallerT*>(data)->is_installed(); },
+            [] (void *data) { static_cast<InstallerT*>(data)->~InstallerT(); },
+        };
+    }
+    ConfigInfo(const ConfigInfo &) = delete;
+    ConfigInfo &operator=(const ConfigInfo &) = delete;
+    ConfigInfo(ConfigInfo &&o)
+        : name(o.name), os(o.os), description(o.description), data(o.data)
+    { o.data = nullptr; }
+    ConfigInfo &operator=(ConfigInfo &&o)
+    {
+        this->~ConfigInfo();
+        new(this) ConfigInfo(move(o));
+        return *this;
+    }
+    ~ConfigInfo()
+    {
+        if (data)
+        {
+            reinterpret_cast<Data*>(data)->destructor(data + sizeof(Data));
+            delete data;
+        }
+    }
+    // }}} End constructors and destructors
+
+    void init() { reinterpret_cast<Data*>(data)->constructor(data + sizeof(Data)); }
+    void install() { reinterpret_cast<Data*>(data)->install(data + sizeof(Data)); }
+    bool is_installed() { return reinterpret_cast<Data*>(data)->is_installed(data + sizeof(Data)); }
 };
 
+template<ConfigInstaller T, ConfigInstaller U>
+auto operator&(T &&a, U &&b)
+{
+    struct {
+        T a; U b;
+        void install() { a.install(); b.install(); }
+        bool is_installed() const { return a.is_installed() && b.is_installed(); }
+    } res{a, b};
+    return res;
+}
+
 std::unordered_map<string, ConfigInfo> conf_list;
-std::list<std::function<ConfigInfo()>> conf_list_fns;
 #define add_conf_impl(ln) struct AddConf##ln { \
-    AddConf##ln(std::function<ConfigInfo()> info) { conf_list_fns.push_back(info); } \
-} addconf_var##ln
+    AddConf##ln(ConfigInfo &&info) { conf_list.insert(std::pair { info.name, move(info) }); } \
+} addconf_var##ln = ConfigInfo
 #define add_conf_2(ln) add_conf_impl(ln)
 #define add_conf add_conf_2(__LINE__)
 
+// {{{ BindFnConfig
+class BindFnConfig
+{
+public:
+    std::function<void()> install;
+    std::function<bool()> is_installed;
+};
+// }}} End BindFnConfig
+
+// {{{ InvokerConfig
 class InvokerConfig
 {
 private:
     fs::path file;
     const string begline, endline;
     string commands;
-    std::list<string> readfile()
+    std::list<string> readfile() const
     {
         std::list<string> res;
         std::ifstream in(file);
@@ -103,7 +188,7 @@ public:
         auto ctnt = readfile();
         auto insertion = begline + "\n" + commands + endline;
         auto beg = std::find(ctnt.begin(), ctnt.end(), begline);
-        auto end = std::find(ctnt.begin(), ctnt.end(), endline);
+        auto end = std::find(beg, ctnt.end(), endline);
         if (end == ctnt.end())
             ctnt.push_back(insertion);
         else
@@ -118,26 +203,115 @@ public:
             out << line << "\n";
         out.close();
     }
-    bool is_installed()
+    bool is_installed() const
     {
         auto ctnt = readfile();
         return std::find(ctnt.begin(), ctnt.end(), begline) != ctnt.end();
     }
 };
+// }}} End InvokerConfig
 
-string format(string pat, string car, auto ...cdr)
+// {{{ SymlinkConfig
+class SymlinkConfig
 {
-    if (int pos = pat.find('$'); pos != pat.npos)
-        pat.replace(pos, 1, car);
-    if constexpr (sizeof...(cdr))
-        return format(pat, cdr...);
-    else
-        return pat;
+private:
+    fs::path src, dst;
+public:
+    SymlinkConfig(fs::path s, fs::path d)
+        : src(env.dotpath / s), dst(env.homepath / d) {}
+    void install()
+    {
+        if (fs::is_directory(src))
+        {
+            for (fs::recursive_directory_iterator it { src, fs::directory_options::follow_directory_symlink };
+                    it != decltype(it)(); ++it)
+            {
+                auto dstpath = dst / it->path().lexically_relative(src);
+                if (it->is_directory())
+                    fs::create_directories(dstpath);
+                else
+                    fs::create_symlink(*it, dstpath);
+            }
+        }
+        else
+            fs::create_symlink(src, dst);
+    }
+    bool is_installed() const
+    {
+        if (fs::is_directory(src))
+        {
+            for (fs::recursive_directory_iterator it { src, fs::directory_options::follow_directory_symlink };
+                    it != decltype(it)(); ++it)
+                if (!fs::exists(dst / it->path().lexically_relative(src)))
+                    return false;
+            return true;
+        }
+        else
+            return fs::exists(dst);
+    }
+};
+// }}} End SymlinkConfig
+
+string to_string(string s) { return s; }
+// {{{ fn format
+string format(string pat, auto ...args)
+{
+    // Stringfy the args
+    std::vector<string> argstr;
+    argstr.reserve(sizeof...(args));
+    auto putargs = [&argstr] (auto f, auto car, auto ...cdr) {
+        argstr.push_back(to_string(car));
+        if constexpr (sizeof...(cdr))
+            return f(f, cdr...);
+    };
+    if constexpr (sizeof...(args))
+        putargs(putargs, args...);
+    // Iterate and replace format patterns
+    auto argit = argstr.begin();
+    for (auto pos = pat.find('%'); pos != pat.npos; pos = pat.find('%', pos))
+        if (++pos < pat.size())
+            switch (pat[pos])
+            {
+            case 'D':
+                pat.replace(pos - 1, 2, env.dotpath);
+                break;
+            case 'H':
+                pat.replace(pos - 1, 2, env.homepath);
+                break;
+            case 'o':
+                if (argit == argstr.end())
+                {
+                    fprintf(stderr, "Too few arguments for format\n");
+                    exit(3);
+                }
+                pat.replace(pos - 1, 2, *argit++);
+                break;
+            case '%':
+                pat.replace(pos, 1, "");
+                break;
+            default:
+                fprintf(stderr, "Unrecognized pattern %c\n", pat[pos]);
+                exit(3);
+            }
+        else
+        {
+            fprintf(stderr, "Trailing %% in pattern string\n");
+            exit(3);
+        }
+    if (argit != argstr.end())
+    {
+        fprintf(stderr, "Too much arguments for format\n");
+        exit(3);
+    }
+    return pat;
 }
-// }}}2 End config helpers
+// }}} End fn format
+// }}}1 End config helpers
+
+
 
 // {{{ Main
-int main(int argc, char **argv)
+int main(int, char **argv)
 {
     // {{{ Process default parameters
     env.dotpath =
@@ -155,11 +329,9 @@ int main(int argc, char **argv)
 #endif  // HOMEPATH
         ;  // Resume the Vim indent ><
     // }}} End process default parameters
-    for (auto fn : conf_list_fns)
-    {
-        auto info = fn();
-        conf_list[info.name] = info;
-    }
+
+    fs::current_path(fs::path(argv[0]).remove_filename());
+
     // {{{ Process command-line arguments
     enum {
         Unset, Install, List, Reached, Pending,
@@ -170,7 +342,7 @@ int main(int argc, char **argv)
     auto check_operation = [&] {
         if (operation != Unset)
         {
-            printf("Duplicate actions!\n");
+            fprintf(stderr, "Duplicate actions!\n");
             exit(1);
         }
     };
@@ -225,43 +397,46 @@ int main(int argc, char **argv)
                 if (conf_list.find(curarg) != conf_list.end())
                     selected_config.insert(curarg);
                 else
-                    printf("Unrecognized config: %s\n", curarg.c_str());
+                    fprintf(stderr, "Unrecognized config: %s\n", curarg.c_str());
             }
         }
     }
     // }}} End processing command-line arguments
+    for (auto &conf : conf_list)
+        conf.second.init();
+
     // Perform operation
     if (operation == Unset)
         operation = selected_config.empty() ? List : Install;
     if (operation == List && selected_config.empty())
         copyall(true);
     std::list<ConfigInfo> installed, pending;
-    for (auto name : selected_config)
+    for (auto &name : selected_config)
     {
-        auto it = conf_list[name];
-        (it.is_installed() ? installed : pending).push_back(it);
+        auto &it = conf_list.find(name)->second;
+        (it.is_installed() ? installed : pending).push_back(move(it));
     }
     switch (operation)
     {
     case Unset:  // Impossible ><
     case List:
         puts("Installed:");
-        for (auto it : installed)
-            printf("  %s(%s): %s\n", it.name.c_str(), it.OSName[it.os], it.description.c_str());
+        for (auto &it : installed)
+            printf("  %s(%s): %s\n", it.name, it.OSName[it.os], it.description);
         puts("Not yet installed:");
-        for (auto it : pending)
-            printf("  %s(%s): %s\n", it.name.c_str(), it.OSName[it.os], it.description.c_str());
+        for (auto &it : pending)
+            printf("  %s(%s): %s\n", it.name, it.OSName[it.os], it.description);
         break;
     case Reached:
     case Pending:
-        for (auto it : operation == Reached ? installed : pending)
-            printf("%s ", it.name.c_str());
+        for (auto &it : operation == Reached ? installed : pending)
+            printf("%s ", it.name);
         puts("");
         break;
     case Install:
-        for (auto it : pending)
+        for (auto &it : pending)
         {
-            printf("Installing %s\n", it.name.c_str());
+            printf("Installing %s\n", it.name);
             it.install();
         }
         break;
@@ -269,78 +444,56 @@ int main(int argc, char **argv)
 }
 // }}} End main
 
-add_conf([] () -> ConfigInfo {
-    static InvokerConfig profile{ ".profile", "#", "profile", format("source $/profile/profile", env.dotpath) };
-    static InvokerConfig xprofile{ ".xprofile", "#", "profile", format("source $/profile/xprofile", env.dotpath) };
-    static InvokerConfig xres{ ".Xresources", "!", "profile",
-        format(R"(#include "$/profile/Xresources"
-#include "$/profile/Solarizedxterm/Xdefaults")", env.dotpath, env.dotpath) };
-    return {
-        .name = "profile", .os = ConfigInfo::UNIX,
-        .description = "Default user profiles",
-        .install = [&] {
-            profile.install();
-            xprofile.install();
-            xres.install();
-        },
-        .is_installed = [&] {
-            return profile.is_installed() && xprofile.is_installed() && xres.is_installed();
-        },
-    };
-});
 
-add_conf([] () -> ConfigInfo {
-    static InvokerConfig zsh{ ".zshrc", "#", "zshrc", format("source $/zsh/zshrc", env.dotpath) };
-    return {
-        .name = "zshrc", .os = ConfigInfo::All,
-        .description = "Z shell config",
-        .install = [&] { zsh.install(); },
-        .is_installed = [&] { return zsh.is_installed(); },
-    };
-});
 
-add_conf([] () -> ConfigInfo {
-    static InvokerConfig vim{ ".vimrc", "\"", "vimrc", format("source $/vim/vimrc", env.dotpath) };
-    return {
-        .name = "vimrc", .os = ConfigInfo::All,
-        .description = "Vim config",
-        .install = [&] { vim.install(); },
-        .is_installed = [&] { return vim.is_installed(); },
-    };
-});
+add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
+    [] {
+        return InvokerConfig { ".profile", "#", "profile", format("source %D/profile/profile") } &
+            InvokerConfig { ".xprofile", "#", "profile", format("source %D/profile/xprofile") } &
+            InvokerConfig { ".Xresources", "!", "profile", format(R"(#include "%D/profile/Xresources"
+#include "%D/profile/Solarizedxterm/.Xdefaults")") };
+    },
+};
 
-add_conf([] () -> ConfigInfo {
-    static InvokerConfig emacs{ ".emacs.d/init.el", ";;", "emacs conf",
-        format("(load-file \"$/emacs/init.el\")", env.dotpath) };
-    return {
-        .name = "emacsrc", .os = ConfigInfo::All,
-        .description = "Emacs config",
-        .install = [&] { emacs.install(); },
-        .is_installed = [&] { return emacs.is_installed(); },
-    };
-});
+add_conf { "awesome", ConfigInfo::UNIX, "AwesomeWM config",
+    [] { return InvokerConfig { ".config/awesome/rc.lua", "--", "awesome",
+        format(R"(loadfile("%D/awesome/rc.lua")("%D"))") }; },
+};
 
-add_conf([] () -> ConfigInfo {
-    static InvokerConfig mutt{ ".mutt/muttrc", "#", "mutt",
-        format(R"(set my_muttrc_path = $/mutt
-source $/mutt/muttrc)", env.dotpath, env.dotpath) };
-    return {
-        .name = "mutt", .os = ConfigInfo::UNIX,
-        .description = "Mutt config",
-        .install = [&] { mutt.install(); },
-        .is_installed = [&] { return mutt.is_installed(); },
-    };
-});
+add_conf { "zshrc", ConfigInfo::All, "Z shell config",
+    [] { return InvokerConfig { ".zshrc", "#", "zshrc", format("source %D/zsh/zshrc") }; },
+};
 
-add_conf([] () -> ConfigInfo {
-    static InvokerConfig awesome{ ".config/awesome/rc.lua", "--", "awesome",
-        format(R"(loadfile("$/awesome/rc.lua")("$"))", env.dotpath, env.dotpath) };
-    return {
-        .name = "awesome", .os = ConfigInfo::UNIX,
-        .description = "AwesomeWM config",
-        .install = [&] { awesome.install(); },
-        .is_installed = [&] { return awesome.is_installed(); },
-    };
-});
+add_conf { "vimrc", ConfigInfo::All, "Vim config",
+    [] {
+        return InvokerConfig { ".vimrc", "\"", "vimrc", format("source %D/vim/vimrc") } &
+            SymlinkConfig { "vim/vimfiles", ".vim" };
+    },
+};
+
+add_conf { "emacsrc", ConfigInfo::All, "Emacs config",
+    [] { return InvokerConfig { ".emacs.d/init.el", ";;", "emacs conf",
+        format("(load-file \"%D/emacs/init.el\")") }; },
+};
+
+add_conf { "mutt", ConfigInfo::UNIX, "Mutt config",
+    [] { return InvokerConfig { ".mutt/muttrc", "#", "mutt",
+        format("set my_muttrc_path = %D/mutt\nsource %D/mutt/muttrc") }; },
+};
+
+add_conf { "utils", ConfigInfo::All, "Some utilities to make life better",
+    [] { return SymlinkConfig { "utils", "bin" }; },
+};
+
+add_conf { "system", ConfigInfo::UNIX, "Arch Linux system setup",
+    [] {
+        return BindFnConfig {
+            .install = [] { system("./arch_setup.sh"); },
+            .is_installed = [] { return true; },
+        };
+    },
+};
+
+
 
 // vim: fdm=marker
