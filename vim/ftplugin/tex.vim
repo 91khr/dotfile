@@ -3,8 +3,8 @@
 " Author: Virginia Senioria
 " Senioriae VIm configuration: Latex language configurations
 
-let s:compile_cmd = "AsyncRun cd %:h; xelatex %:t"
-command! -buffer -bar Compile w | exec s:compile_cmd
-command! -buffer -bar Run Compile | exec s:compile_cmd .. "&&"
+let s:compile_cmd = "w | AsyncRun cd %:h; xelatex %:t"
+command! -buffer -bar Compile exec s:compile_cmd
+command! -buffer -bar Run exec s:compile_cmd .. " &&"
             \ (has('win') ? "start" : "xdg-open") . " %:r.pdf"
 

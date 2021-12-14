@@ -62,41 +62,65 @@ endsnippet
 
 # {{{ Fraction
 context "snip.visual_text and in_mathenv()"
-snippet / "Latex fraction" i
+snippet / "Math fraction" i
 \frac{${VISUAL}}{$2}$0
 endsnippet
 context "not snip.visual_text and in_mathenv()"
-snippet / "Latex fraction" i
+snippet / "Math fraction" i
 \frac{$1}{$2}$0
 endsnippet
 # }}} End fraction
 
 context "in_mathenv()"
-snippet \rt "Latex pow root" i
+snippet \rt "Math pow root" i
 \sqrt{$1}$0
 endsnippet
 
+# {{{ Differential and integrate
 context "in_mathenv()"
-snippet /\\b([a-zA-Z])/ "Latex mathbb quick input" ir
+snippet \lim "lim" i
+\lim_{${1:x}\to $2}$0
+endsnippet
+context "in_mathenv()"
+snippet \int "Integrate" i
+\int_{$1}^{$2}$0
+endsnippet
+# }}} End differencial and integrate
+
+# {{{ Math fonts
+context "in_mathenv()"
+snippet /\\b([a-zA-Z])/ "Mathbb abbreviated" ir
 \mathbb{`!p snip.rv = match.group(1)`}
 endsnippet
 context "in_mathenv()"
-snippet \b "Latex mathbb" i
+snippet \b "Mathbb full" i
 \mathbb{$1}$0
 endsnippet
 
+context "in_mathenv()"
+snippet \r "Mathrm full" i
+\mathrm{$1}$0
+endsnippet
+# }}} End math fonts
+
 # {{{ Subscript and superscript
-snippet _ "Latex subscript" i
+snippet _ "Subscript" i
 _{$1}$0
 endsnippet
 
-snippet ^ "Latex superscript" i
+context "in_mathenv()"
+snippet /([a-zA-Z])(\d)/ "Subscripted variables" ir
+`!p snip.rv=match.group(1) + '_' + match.group(2)`
+endsnippet
+
+snippet ^ "Superscript" i
 ^{$1}$0
 endsnippet
 # }}} End subscript and superscript
 
 context "in_mathenv()"
-snippet \t "Latex text" i
+post_jump "toggle_im(0, 1)"
+snippet \t "Math mode text" i
 \text{$1}$0
 endsnippet
 
@@ -164,7 +188,10 @@ except:
 	print(f"Unrecognized letter sequence {ch}")
 	snip.rv = match.group(0)[1:]`
 endsnippet
-# }}} End abbreviations
+
+snippet \op "Define math operator"
+\\DeclareMathOperator{\\$1}{$1}$0
+endsnippet
 # }}} End abbreviations
 
 # vim:fdm=marker

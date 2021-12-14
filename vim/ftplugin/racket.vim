@@ -2,21 +2,12 @@
 " Note: Readers are suggested to use a wide(>120 chars) client to view or edit this file
 " Author: Virginia Senioria
 " Senioriae VIm configuration: Racket language configurations
+import TermRun from "ftext.vim"
 
 " Util to open REPL & execute file
-let b:replbuf = -1
-function! s:RunREPL()
-    if bufexists(b:replbuf)
-        exec string(b:replbuf) .. "bw!"
-    endif
-    let l:curbuf = bufnr()
-    botright call setbufvar(l:curbuf, "replbuf",
-                \ term_start([ "racket", "-ie",
-                \     printf("(enter! (file \"%s\"))", expand("%")) ], #{
-                \         term_finish: "close", term_rows: float2nr(0.35 * winheight(0)),
-                \ }))
-endfunction
-command! -buffer -bar Compile w | call s:RunREPL()
+command! -buffer -bar Compile w | call s:TermRun([ "racket", "-ie",
+            \     printf("(enter! (file \"%s\"))", expand("%")) ],
+            \     #{ persist: v:false, unique: v:true })
 command! -buffer -bar Run w | botright term racket %
 
 " Add some missing options ><
