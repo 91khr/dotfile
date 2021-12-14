@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ensure permission
+ls /root > /dev/null 2>&1 || exec sudo bash $0 $USER $@
+
 # Pacman conf
 sed -i 's/#Color/Color/' /etc/pacman.conf
 cat <<EOF > /etc/pacman.conf
@@ -34,15 +37,15 @@ xorg-xrdb
 # Extra packaging tool
 yay
 EOF
-yay -S --noconfirm - <<EOF
+sudo -u $1 yay -S --noconfirm - <<EOF
 transset-df
 EOF
 
 # Unmute alsa
-sudo pacman -S alsa-utils
+pacman -S alsa-utils
 amixer sset Master unmute
 amixer sset Speaker unmute
 amixer sset Headphone unmute
-sudo pacman -Rs alsa-utils
+pacman -Rs alsa-utils
 
 # vim: fdm=marker

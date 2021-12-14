@@ -1,13 +1,9 @@
 #if 0
-out=./.install
 dotpath=$(readlink -f $(dirname $0))
-homepath=$HOME
-if g++ $0 -std=c++20 -o $out \
-    -DDOTPATH="\"$dotpath\"" -DHOMEPATH="\"$homepath\""; then
-    exec $out $@
-else
-    exit $?
-fi
+cd $dotpath
+flags='-std=c++20 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\""'
+CXXFLAGS="$flags" make -sf <(echo -e '.install:install.cpp; $(CXX) $< $(CXXFLAGS)') .install || exit $?
+exec ./.install
 #endif
 // {{{ Premable
 #include <cstdio>
@@ -19,6 +15,7 @@ fi
 #include <list>
 #include <tuple>
 #include <algorithm>
+#include <numeric>
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
@@ -71,7 +68,7 @@ struct ConfigInfo
 public:
     inline static const char *OSName[] = { "UNIX", "Win", "All" };
     enum OSType {
-        UNIX, Win, All,
+        UNIX, Win, AllOS,
     };
 
     const char *name;
@@ -206,7 +203,14 @@ public:
     bool is_installed() const
     {
         auto ctnt = readfile();
-        return std::find(ctnt.begin(), ctnt.end(), begline) != ctnt.end();
+        auto beg = std::find(ctnt.begin(), ctnt.end(), begline);
+        auto end = std::find(beg, ctnt.end(), endline);
+        if (end == ctnt.end())
+            return false;
+        else
+            return std::accumulate(++beg, end, string(), [] (auto a, auto b) {
+                return a + b + "\n";
+            }) == commands;
     }
 };
 // }}} End InvokerConfig
@@ -336,6 +340,7 @@ int main(int, char **argv)
     enum {
         Unset, Install, List, Reached, Pending,
     } operation(Unset);
+    bool force = false;
     std::unordered_map<string, std::function<void()>> longopt_fns;
     std::unordered_map<char, std::function<void()>> shortopt_fns;
     std::unordered_set<string> selected_config;
@@ -349,7 +354,7 @@ int main(int, char **argv)
     auto copyall = [&] (bool everything) {
         selected_config.clear();
         for (auto &it : conf_list)
-            if (everything || it.second.os == ConfigInfo::All ||
+            if (everything || it.second.os == ConfigInfo::AllOS ||
                     ((it.second.os == ConfigInfo::Win) == env.iswin))
                 selected_config.insert(it.first);
     };
@@ -359,6 +364,7 @@ int main(int, char **argv)
         { "list", 'l', [&] { check_operation(); operation = List; }, },
         { "reached", 'r', [&] { check_operation(); operation = Reached; copyall(false); }, },
         { "pending", 'u', [&] { check_operation(); operation = Pending; copyall(false); }, },
+        { "force", 'f', [&] { force = true; }, },
     })
     {
         longopt_fns[std::get<0>(it)] = std::get<2>(it);
@@ -434,6 +440,8 @@ int main(int, char **argv)
         puts("");
         break;
     case Install:
+        if (force)
+            std::move(installed.begin(), installed.end(), std::back_inserter(pending));
         for (auto &it : pending)
         {
             printf("Installing %s\n", it.name);
@@ -446,6 +454,27 @@ int main(int, char **argv)
 
 
 
+add_conf { "awesome", ConfigInfo::UNIX, "AwesomeWM config",
+    [] { return InvokerConfig { ".config/awesome/rc.lua", "--", "awesome",
+        format(R"(loadfile("%D/awesome/rc.lua")("%D"))") }; },
+};
+
+add_conf { "emacs", ConfigInfo::AllOS, "Emacs config",
+    [] { return InvokerConfig { ".emacs.d/init.el", ";;", "emacs conf",
+        format("(load-file \"%D/emacs/init.el\")") }; },
+};
+
+/* TODO:
+add_conf { "firefox", ConfigInfo::AllOS, "Firefox css & chrome",
+    [] {},
+};
+*/
+
+add_conf { "mutt", ConfigInfo::UNIX, "Mutt config",
+    [] { return InvokerConfig { ".mutt/muttrc", "#", "mutt",
+        format("set my_muttrc_path = %D/mutt\nsource %D/mutt/muttrc") }; },
+};
+
 add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
     [] {
         return InvokerConfig { ".profile", "#", "profile", format("source %D/profile/profile") } &
@@ -455,40 +484,30 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
     },
 };
 
-add_conf { "awesome", ConfigInfo::UNIX, "AwesomeWM config",
-    [] { return InvokerConfig { ".config/awesome/rc.lua", "--", "awesome",
-        format(R"(loadfile("%D/awesome/rc.lua")("%D"))") }; },
+add_conf { "utils", ConfigInfo::AllOS, "Some utilities to make life better",
+    [] { return SymlinkConfig { "utils", "bin" }; },
 };
 
-add_conf { "zshrc", ConfigInfo::All, "Z shell config",
-    [] { return InvokerConfig { ".zshrc", "#", "zshrc", format("source %D/zsh/zshrc") }; },
-};
-
-add_conf { "vimrc", ConfigInfo::All, "Vim config",
+add_conf { "vim", ConfigInfo::AllOS, "Vim config",
     [] {
         return InvokerConfig { ".vimrc", "\"", "vimrc", format("source %D/vim/vimrc") } &
             SymlinkConfig { "vim/vimfiles", ".vim" };
     },
 };
 
-add_conf { "emacsrc", ConfigInfo::All, "Emacs config",
-    [] { return InvokerConfig { ".emacs.d/init.el", ";;", "emacs conf",
-        format("(load-file \"%D/emacs/init.el\")") }; },
+add_conf { "zsh", ConfigInfo::AllOS, "Z shell config",
+    [] { return InvokerConfig { ".zshrc", "#", "zshrc", format("source %D/zsh/zshrc") }; },
 };
 
-add_conf { "mutt", ConfigInfo::UNIX, "Mutt config",
-    [] { return InvokerConfig { ".mutt/muttrc", "#", "mutt",
-        format("set my_muttrc_path = %D/mutt\nsource %D/mutt/muttrc") }; },
-};
-
-add_conf { "utils", ConfigInfo::All, "Some utilities to make life better",
-    [] { return SymlinkConfig { "utils", "bin" }; },
-};
-
-add_conf { "system", ConfigInfo::UNIX, "Arch Linux system setup",
+add_conf { "system", ConfigInfo::AllOS, "System setup",
     [] {
         return BindFnConfig {
-            .install = [] { system("./arch_setup.sh"); },
+            .install = [] {
+                system(format("%o %D/system/%o%o",
+                            env.iswin ? "powershell" : "sh",
+                            env.iswin ? "win.ps1" : "arch.sh",
+                            "").c_str());
+            },
             .is_installed = [] { return true; },
         };
     },
