@@ -1,8 +1,3 @@
-" ======================================================================================================================
-" Note: Readers are suggested to use a wide(>120 chars) client to view or edit this file
-" Author: Virginia Senioria
-" Senioriae VIm configuration: markdown language configurations
-
 function! s:CompileMarkdown(...)
     execute ":AsyncRun pandoc % -s -o %:t:r.html " . a:000->flattennew()->join(' ')
 endfunction

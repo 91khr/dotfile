@@ -1,10 +1,4 @@
-" ======================================================================================================================
-" Note: You are suggested to use a wide(>120 chars) client to view or edit this file
-" TODO: Sort the commands by a cleaner key
-" Author: Virginia Senioria
-" Senioriae VIm configuration. Supports Windows and Linux(Only tested on Arch Linux, may not be the newest)
 " Note that this file should not be directly used as your .vimrc.
-version 8.0
 
 let s:config_dir = expand("<sfile>:h")
 

@@ -1,8 +1,3 @@
-" ======================================================================================================================
-" Note: You are suggested to use a wide(>120 chars) client to view or edit this file
-" Author: Virginia Senioria
-" Senioriae VIm configuration: status line
-
 let g:solarized_menu = 0  | " In tested versions, this is an erroneous option
 " {{{ Helpers
 function! s:iswide()

@@ -1,8 +1,3 @@
-" ======================================================================================================================
-" Note: Readers are suggested to use a wide(>120 chars) client to view or edit this file
-" Author: Virginia Senioria
-" Senioriae VIm configuration: Mails language configurations
-
 let s:config_dir = expand("<sfile>:p:h:h:h")
 
 " Senioria would often type chars triggering foldings qwq><

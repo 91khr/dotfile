@@ -3,7 +3,7 @@ dotpath=$(readlink -f $(dirname $0))
 cd $dotpath
 flags='-std=c++20 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\""'
 CXXFLAGS="$flags" make -sf <(echo -e '.install:install.cpp; $(CXX) $< $(CXXFLAGS)') .install || exit $?
-exec ./.install
+exec ./.install $@
 #endif
 // {{{ Premable
 #include <cstdio>
@@ -196,6 +196,9 @@ public:
         if (!fs::exists(file.parent_path()))
             fs::create_directories(file.parent_path());
         std::ofstream out(file);
+        // When there's eol at the end of file, do not include the empty line
+        if (ctnt.back().empty())
+            ctnt.pop_back();
         for (auto line : ctnt)
             out << line << "\n";
         out.close();
@@ -233,8 +236,10 @@ public:
                 auto dstpath = dst / it->path().lexically_relative(src);
                 if (it->is_directory())
                     fs::create_directories(dstpath);
-                else
+                else if (!fs::exists(dstpath))
                     fs::create_symlink(*it, dstpath);
+                else
+                    fprintf(stderr, "%s already exists\n", dstpath.c_str());
             }
         }
         else
@@ -464,11 +469,9 @@ add_conf { "emacs", ConfigInfo::AllOS, "Emacs config",
         format("(load-file \"%D/emacs/init.el\")") }; },
 };
 
-/* TODO:
 add_conf { "firefox", ConfigInfo::AllOS, "Firefox css & chrome",
-    [] {},
+    [] { return SymlinkConfig { "firefox", ".mozilla/firefox/userprofile" }; },
 };
-*/
 
 add_conf { "mutt", ConfigInfo::UNIX, "Mutt config",
     [] { return InvokerConfig { ".mutt/muttrc", "#", "mutt",
