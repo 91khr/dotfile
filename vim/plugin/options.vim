@@ -108,6 +108,14 @@ inoremap <silent><expr><CR> pumvisible() ? "<C-Y>" : "<CR>"
 " LSP actions
 noremap \a <Cmd>CocAction<CR>
 noremap \? <Cmd>CocDiagnostics<CR>
+nnoremap \\ <Cmd>CocAction('doHover')<CR>
+nmap gd <Plug>(coc-definition)
+nmap gr <Plug>(coc-references)
+nmap \j <Plug>(coc-diagnostic-next)
+nmap \k <Plug>(coc-diagnostic-prev)
+nmap \r <Plug>(coc-refactor)
+nmap \= <Plug>(coc-format)
+vmap \= <Plug>(coc-format-selected)
 " ======================================================================================================================
 " Autocmds
 " ======================================================================================================================
@@ -122,8 +130,15 @@ autocmd User AsyncRunStop if g:asyncrun_code != 0 | echohl WarningMsg | endif |
 " ======================================================================================================================
 if has("gui_running")
     " Color scheme
-    colo solarized
     set background=light
+    colo solarized
+    " Extracted from SolarizedXTerm
+    "hi Terminal guibg=#002B36 guifg=#D2D2D2
+    hi link Terminal Normal
+    let g:terminal_ansi_colors = [
+                \ "#222222", "#9E5641", "#6C7E55", "#CAAF2B", "#7FB8D8", "#956D9D",
+                \ "#4c8ea1", "#808080", "#454545", "#CC896D", "#C4DF90", "#FFE080",
+                \ "#B8DDEA", "#C18FCB", "#6bc1d0", "#cdcdcd", ]
     " Ban the annoying bell(cant be seen on Linux gui)
     set vb
     " I dont need the controls
@@ -132,8 +147,8 @@ if has("gui_running")
     hi Error gui=undercurl
 else  | " GUI ^^^ Term vvv
     " Color scheme
-    colo desert
     set background=dark
+    colo desert
 endif
 
 " ======================================================================================================================
@@ -162,14 +177,6 @@ let g:UltiSnipsExpandTrigger = "<nop>"  | " The config will handle it ><
 " Rainbow settings
 " ==================================================================================================================
 let g:rainbow_active = 1
-let g:rainbow_conf = #{
-            \     separately: #{
-            \         lua: #{
-            \             parentheses: ["start=/(/ end=/)/", "start=/{/ end=/}/",
-            \                 "start=/\\v\\[\\ze($|[^[])/ end=/\]/"],
-            \         }
-            \     }
-            \ }
 
 " ==================================================================================================================
 " VimOI settings

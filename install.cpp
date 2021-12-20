@@ -266,15 +266,7 @@ string to_string(string s) { return s; }
 string format(string pat, auto ...args)
 {
     // Stringfy the args
-    std::vector<string> argstr;
-    argstr.reserve(sizeof...(args));
-    auto putargs = [&argstr] (auto f, auto car, auto ...cdr) {
-        argstr.push_back(to_string(car));
-        if constexpr (sizeof...(cdr))
-            return f(f, cdr...);
-    };
-    if constexpr (sizeof...(args))
-        putargs(putargs, args...);
+    std::vector<string> argstr { to_string(args)... };
     // Iterate and replace format patterns
     auto argit = argstr.begin();
     for (auto pos = pat.find('%'); pos != pat.npos; pos = pat.find('%', pos))

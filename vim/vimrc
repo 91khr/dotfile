@@ -49,21 +49,18 @@ let g:packager_config = #{
             \
             "\        Language server
             \         #{ name: 'neoclide/coc.nvim', branch: 'release' },
-            "\         'prabirshrestha/async.vim',
-            "\         'prabirshrestha/vim-lsp',
-            "\         'prabirshrestha/asyncomplete.vim',
-            "\         'prabirshrestha/asyncomplete-lsp.vim',
-            "\        Document for LSP
-            "\         'Shougo/echodoc.vim',
             "\        Snippets
             \         #{ name: 'SirVer/ultisnips', location: 'start' },
+            \
+            "\         Editor config
+            \         #{ name: 'editorconfig/editorconfig-vim', location: 'start' },
             \
             "\         Markdown
             \          'godlygeek/tabular',
             \          'plasticboy/vim-markdown',
             "\         Latex
             "\          'lervag/vimtex',
-            \          '91khr/vim-latex-live-preview',
+            "\          '91khr/vim-latex-live-preview',
             \
             "\         Zen mode :)
             "\          'junegunn/goyo.vim',
