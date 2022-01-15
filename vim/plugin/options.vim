@@ -108,7 +108,7 @@ inoremap <silent><expr><CR> pumvisible() ? "<C-Y>" : "<CR>"
 " LSP actions
 noremap \a <Cmd>CocAction<CR>
 noremap \? <Cmd>CocDiagnostics<CR>
-nnoremap \\ <Cmd>CocAction('doHover')<CR>
+nnoremap \\ <Cmd>call CocAction('doHover')<CR>
 nmap gd <Plug>(coc-definition)
 nmap gr <Plug>(coc-references)
 nmap \j <Plug>(coc-diagnostic-next)

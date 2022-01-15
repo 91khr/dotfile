@@ -10,10 +10,10 @@ export def TermRun(cmd: list<string>, args: dict<bool> = { persist: false, uniqu
     def Exec(): number
         var nr: number
         belowright nr = term_start(cmd, {
-                    \     term_rows: float2nr(0.35 * winheight(0)),
-                    \     term_finish: args.persist ? "open" : "close",
-                    \     exit_cb: (_, _) => timer_start(10, (_) => Post(nr)),
-                    \ })
+                          term_rows: float2nr(0.35 * winheight(0)),
+                          term_finish: args.persist ? "open" : "close",
+                          exit_cb: (_, _) => timer_start(10, (_) => Post(nr)),
+                      })
         return nr
     enddef
     if args.unique

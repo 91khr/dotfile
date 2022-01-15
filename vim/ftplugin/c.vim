@@ -1,23 +1,29 @@
-import TermRun from "ftext.vim"
+import "ftext.vim"
 
 " Compile options
 if has("win32")
-    " Require VimOI
-    command! -buffer -bar -nargs=* Compile CppCompile % <args>
+    if !exists(":Compile")
+        " Require VimOI
+        command! -buffer -bar -nargs=* Compile CppCompile % <args>
+    endif
 else
-    command! -buffer -bar -nargs=* Compile exec "AsyncRun g++ % -std=c++20 -o a.out "
-                \ .. "-Wall -Wextra -Weffc++ -Wpedantic -g "
-                \ .. (has_key(g:, "compile_flags_cpp") ? g:compile_flags_cpp :
-                \     get(b:, "compile_flags", []))->join(' ')
-                \ .. " " .. <q-args>
+    if !exists(":Compile")
+        command! -buffer -bar -nargs=* Compile exec "AsyncRun g++ % -std=c++20 -o %:h/a.out "
+                    \ .. "-Wall -Wextra -Weffc++ -Wpedantic -g "
+                    \ .. (has_key(g:, "compile_flags_cpp") ? g:compile_flags_cpp :
+                    \     get(b:, "compile_flags", []))->join(' ')
+                    \ .. " " .. <q-args>
+    endif
 endif
 
 function! s:Run(args)
     if g:asyncrun_code != 0 | return | endif
-    call s:TermRun(["./a.out", a:args], #{ persist: v:true, unique: v:false })
+    call s:ftext.TermRun([expand("%:p:h") .. "/a.out", a:args], #{ persist: v:true, unique: v:false })
     doautocmd WinEnter !.
 endfunction
-command! -buffer -bar -nargs=? Run Compile | autocmd User AsyncRunStop ++once call s:Run(<q-args>)
+if !exists(":Run")
+    command! -buffer -bar -nargs=? Run Compile | autocmd User AsyncRunStop ++once call s:Run(<q-args>)
+endif
 
 " Set C-style indent and options
 function! CppIndent()

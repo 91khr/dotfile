@@ -1,2 +1,4 @@
-command! -buffer -bar Run w | botright term python %
+if !exists(":Run")
+    command! -buffer -bar Run w | botright term python %
+endif
 
