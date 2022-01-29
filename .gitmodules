@@ -1,9 +1,6 @@
 [submodule "cyclefocus"]
 	path = awesome/cyclefocus
 	url = https://github.com/blueyed/awesome-cyclefocus
-[submodule "vim-tasks"]
-	path = vim/pack/internal/start/vim-tasks
-	url = git@github.com:XYNUniversity/vim-tasks
 [submodule "mutt/mutt-colors-solarized"]
 	path = mutt/mutt-colors-solarized
 	url = git@github.com:altercation/mutt-colors-solarized
