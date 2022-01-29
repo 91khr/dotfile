@@ -480,7 +480,7 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
 };
 
 add_conf { "utils", ConfigInfo::AllOS, "Some utilities to make life better",
-    [] { return SymlinkConfig { "utils", "bin" }; },
+    [] { return SymlinkConfig { "utils", ".local/bin" }; },
 };
 
 add_conf { "vim", ConfigInfo::AllOS, "Vim config",

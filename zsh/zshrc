@@ -38,7 +38,7 @@ unset HNAME
 alias ls="ls --color=auto"
 alias grep="grep --color=auto"
 export EDITOR=vim
-export PATH=${PATH}:~/bin
+export PATH=${PATH}
 
 # Utils
 if [ $WSL_DISTRO_NAME ]; then

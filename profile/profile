@@ -1,4 +1,4 @@
-export PATH="${PATH}:$(realpath ~/bin/)"
+export PATH="${PATH}:$(realpath ~/.local/bin/)"
 export PAGER=vimpager
 export EDITOR=vim
 export TERM=xterm
