@@ -21,8 +21,8 @@ let g:vimrc_load_option = 1
 " }}} End cleaning up
 
 " {{{ Load files as package and internal packages
-execute "set rtp+=" . expand("<sfile>:h")
-let &packpath .= ',' . s:config_dir
+let &rtp .= ',' .. s:config_dir
+let &packpath .= ',' .. s:config_dir
 " }}} End loading files
 
 " {{{ Packages
@@ -111,16 +111,19 @@ command! PackSync call packager#manager#init() | call packager#manager#sync()
 
 " {{{ Default filetype settings
 function! s:DefaultLanguageSettings()
-    function! s:OutputUnableToCompile()
+    function! s:OutputUnableToRun(name)
         echohl Error
-        echom "找不到编译方法, 不能编译"
+        echom a:name .. " is not defined for this file > <"
         echohl Normal
     endfunction
     if !exists(":Compile")
-        command! -buffer Compile call <SID>OutputUnableToCompile()
+        command! -buffer Compile call s:OutputUnableToRun("Compile")
+    endif
+    if !exists(":Run")
+        command! -buffer Run call s:OutputUnableToRun("Run")
     endif
 endfunction
-autocmd FileType * call s:DefaultLanguageSettings()
+autocmd BufEnter,BufFilePost * call s:DefaultLanguageSettings()
 " }}} End default filetype settings
 
 " vim: set ft=vim :

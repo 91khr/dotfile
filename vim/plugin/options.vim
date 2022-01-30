@@ -28,8 +28,7 @@ syntax on
 " Highlight corrent line
 set cursorline
 " Open the line number when is not pager
-set number
-autocmd VimEnter * if get(g:, 'vimpager', 0) == 1 | set nonumber | endif
+autocmd VimEnter * if get(g:, 'vimpager', 0) == 0 | set number | endif
 " Show entered commands
 set showcmd
 " Set the width of indent and tab
@@ -38,25 +37,16 @@ set shiftwidth=4 tabstop=4 expandtab
 set bs=3
 " Open code folding
 set foldmethod=syntax
-" I dont need the .viminfo
-set viminfo='0,f0,<0,:0,@0,/0
+" .viminfo is not needed > <
+set viminfofile=NONE
 " Width for line breaking and vertical prompt line
 set textwidth=120
 set colorcolumn=+0
 " Use LF by default
 set fileformat=unix
 set fileformats=unix,dos
-" Turn on exrc on current directory, and auto run .vimrc on current file
-set exrc secure
-function! s:ExecuteExrc()
-    if index([ expand('$HOME'), expand('$HOME/.vim'), expand('$VIM') ], getcwd()) == -1
-                \ && filereadable('.vimrc')
-        confirm so .vimrc
-    endif
-endfunction
-autocmd DirChanged * call s:ExecuteExrc()
-autocmd VimEnter * call s:ExecuteExrc()
-autocmd BufWritePost .vimrc if filereadable('.vimrc') | so .vimrc | endif
+" Set the splitting behavior
+set splitright noequalalways
 " Status line :)
 set laststatus=2  | " Ensure that status line is shown
 set noshowmode  | " The mode will be shown in status line
@@ -68,7 +58,7 @@ set noshowmode  | " The mode will be shown in status line
 tnoremap <C-\> <C-W>N
 " }}} End settings
 
-" {{{ Mappings and autocmds
+" {{{ Mappings
 " ======================================================================================================================
 " Mappings
 " ======================================================================================================================
@@ -88,6 +78,7 @@ cnoremap <A-B> <C-Left>
 cnoremap <A-F> <C-Right>
 cnoremap <C-A> <Home>
 cnoremap <C-E> <End>
+set cedit=\<C-K>
 " Run shell commands -- :! is considered not useful
 nnoremap <leader>; :AsyncRun<space>
 " Quick compile & Run
@@ -116,13 +107,7 @@ nmap \k <Plug>(coc-diagnostic-prev)
 nmap \r <Plug>(coc-refactor)
 nmap \= <Plug>(coc-format)
 vmap \= <Plug>(coc-format-selected)
-" ======================================================================================================================
-" Autocmds
-" ======================================================================================================================
-autocmd User AsyncRunStop if g:asyncrun_code != 0 | echohl WarningMsg | endif |
-            \ unsilent echo "(AsyncRun finished with code " . g:asyncrun_code . ")" |
-            \ echohl Normal
-" }}} End settings and autocmds
+" }}} End mappings
 
 " {{{ GUI and System settings
 " ======================================================================================================================
@@ -130,7 +115,6 @@ autocmd User AsyncRunStop if g:asyncrun_code != 0 | echohl WarningMsg | endif |
 " ======================================================================================================================
 if has("gui_running")
     " Color scheme
-    set background=light
     colo solarized
     " Extracted from SolarizedXTerm
     "hi Terminal guibg=#002B36 guifg=#D2D2D2
@@ -145,6 +129,8 @@ if has("gui_running")
     set go=''
     " Make error easier to see
     hi Error gui=undercurl
+    " Use a larger default size x_x
+    set columns=120 lines=40
 else  | " GUI ^^^ Term vvv
     " Color scheme
     set background=dark
@@ -164,7 +150,7 @@ else  | " Linux
     " Font
     set guifont=Monaco
 endif
-" }}} System settings
+" }}} End GUI and system settings
 
 " {{{ Package options
 " ==================================================================================================================
@@ -190,6 +176,7 @@ endif
 " ==================================================================================================================
 " Vimtex, preview and markdown settings
 " ==================================================================================================================
+let g:tex_flavor = "latex"
 let g:vimtex_enabled = 1
 let g:vimtex_fold_enabled = 1
 let g:vimtex_compiler_latexmk = {

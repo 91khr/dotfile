@@ -1,7 +1,7 @@
 import "ftext.vim"
 
 if !exists(":Compile")
-    command! -buffer -bar Compile w | call s:ftext.TermRun([ "racket", "-ie",
+    command! -buffer -bar Compile w | eval s:ftext.TermRun([ "racket", "-ie",
                 \     printf("(enter! (file \"%s\"))", expand("%")) ],
                 \     #{ persist: v:false, unique: v:true })
 endif
