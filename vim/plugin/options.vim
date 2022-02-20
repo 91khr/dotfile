@@ -47,6 +47,7 @@ set fileformat=unix
 set fileformats=unix,dos
 " Set the splitting behavior
 set splitright noequalalways
+set switchbuf=usetab,split,uselast
 " Status line :)
 set laststatus=2  | " Ensure that status line is shown
 set noshowmode  | " The mode will be shown in status line

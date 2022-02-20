@@ -38,7 +38,7 @@ let g:packager_config = #{
             "\        Color scheme
             \         #{ name: 'altercation/vim-colors-solarized', location: 'start' },
             "\        Make quotes colorful, for lisp :)
-            \         #{ name: 'luochen1990/rainbow', location: 'start' },
+            \         #{ name: '91khr/rainbow', location: 'start' },
             "\        Show the marks
             \         #{ name: 'kshenoy/vim-signature', location: 'start' },
             \
@@ -60,7 +60,7 @@ let g:packager_config = #{
             \          'plasticboy/vim-markdown',
             "\         Latex
             "\          'lervag/vimtex',
-            "\          '91khr/vim-latex-live-preview',
+            \          '91khr/vim-latex-live-preview',
             \
             "\         Zen mode :)
             "\          'junegunn/goyo.vim',

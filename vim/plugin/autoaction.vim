@@ -21,6 +21,7 @@ def ExecuteExrc(needconfirm = true): bool
     endif
     if forbidden_dirs->has_key(cwd) | return false | endif
     const answer = trusted_dirs->has_key(cwd) ? "yes" :
+                \ needconfirm ? "no" :
                 \ input("Found .vimrc in current directory, trust and execute it? (yes/N[O]/ban) ")->tolower()
     if answer == "yes"
         unsilent so .vimrc
