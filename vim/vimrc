@@ -103,9 +103,9 @@ call s:AddPackCmd('Coc', 'packadd coc.nvim | CocStart', {})
 " }}} End package list and setup
 
 " Package commands
-command! PackClean call packager#manager#init() | call packager#manager#clean()
-command! PackStatus call packager#manager#init() | call packager#manager#status()
-command! PackSync call packager#manager#init() | call packager#manager#sync()
+command! -bang PackClean call packager#manager#clean(#{ silent: <bang>v:false })
+command! -bang PackStatus call packager#manager#status(#{ silent: <bang>v:false })
+command! -bang PackSync call packager#manager#sync(#{ silent: <bang>v:false })
 
 " }}} End packages
 

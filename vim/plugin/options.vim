@@ -28,7 +28,7 @@ syntax on
 " Highlight corrent line
 set cursorline
 " Open the line number when is not pager
-autocmd VimEnter * if get(g:, 'vimpager', 0) == 0 | set number | endif
+if get(g:, 'vimpager', 0) == 0 | set number | endif
 " Show entered commands
 set showcmd
 " Set the width of indent and tab
