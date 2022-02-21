@@ -1,6 +1,3 @@
-[submodule "cyclefocus"]
-	path = awesome/cyclefocus
-	url = https://github.com/blueyed/awesome-cyclefocus
 [submodule "mutt/mutt-colors-solarized"]
 	path = mutt/mutt-colors-solarized
 	url = git@github.com:altercation/mutt-colors-solarized

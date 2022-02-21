@@ -15,8 +15,6 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 local dotpath = ...
 -- Local modules
 package.path = package.path .. ';' .. dotpath .. '/awesome/?.lua'
--- Cyclefocus
-local cyclefocus = require('cyclefocus/init')
 -- }}}
 
 -- {{{ Error handling
@@ -252,10 +250,6 @@ root.buttons(gears.table.join(
 -- }}}
 
 -- {{{ Key bindings
--- Cyclefocus options
-cyclefocus.cycle_filters = { cyclefocus.filters.common_tag }
-
-
 globalkeys = gears.table.join(
     awful.key({ modkey,           }, "s", hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
@@ -263,9 +257,18 @@ globalkeys = gears.table.join(
               {description="get window class", group="awesome"}),
 
     -- Layout manipulation
-    awful.key({ modkey,           }, "Tab", function ()
-            cyclefocus.cycle({ modifier = modkey_cycle })
-        end, {description = "focus next by index", group = "client"}),
+    awful.key({ modkey,           }, "l", function ()
+        awful.client.focus.byidx(1)
+        end, {description = "focus next", group = "client"}),
+    awful.key({ modkey,           }, "h", function ()
+        awful.client.focus.byidx(-1)
+        end, {description = "focus prev", group = "client"}),
+    awful.key({ modkey, "Shift"   }, "l", function ()
+        awful.client.swap.byidx(1)
+        end, {description = "focus next", group = "client"}),
+    awful.key({ modkey, "Shift"   }, "h", function ()
+        awful.client.swap.byidx(-1)
+        end, {description = "focus prev", group = "client"}),
     awful.key({ modkey,           }, "u",   awful.client.urgent.jumpto,
               {description = "jump to urgent client", group = "client"}),
 
