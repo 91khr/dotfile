@@ -1,7 +1,9 @@
 vim9script
 
 var infobuf = -1
-# name: string -> { lnum: int, status: string, lasthl: (match id), }
+# name: string -> { lnum: int, lasthl: (match id),
+#     status: ("pending" | "running" | "error_exit" | "ok_exit"),
+#     output: [string] }
 var packlist: dict<dict<any>>
 var hlprops = {
     name: "Identifier",
@@ -11,44 +13,78 @@ var hlprops = {
     oper_exit: "Label",
     ok_exit: "String",
     }
+var lnlist: list<string> = []
+var popupid = -1
 
-export def Show(packages: list<string>)
-    if infobuf != -1 && bufexists(infobuf)
+def ClosePopup()
+    if popupid != -1
+        popup_close(popupid)
+        popupid = -1
+    endif
+enddef
+
+def PopStatus()
+    var ln = line('.') - 1
+    ClosePopup()
+    if ln >= len(packlist) || empty(packlist[lnlist[ln]].output)
         return
     endif
-    # Init the buf
-    vsplit [Package Status]
-    setlocal nonu bt=nofile bufhidden=delete noswapfile nobuflisted
-    infobuf = bufnr()
+    popupid = popup_atcursor(packlist[lnlist[ln]].output, {
+        moved: "any",
+        })
+enddef
+
+export def Show(packages: list<string>)
+    if infobuf == -1 || !bufexists(infobuf)
+        # Init the buf
+        vsplit [Package Status]
+        setlocal nonu bt=nofile bufhidden=delete noswapfile nobuflisted
+        infobuf = bufnr()
+    else
+        packlist = {}
+        deletebufline(infobuf, 1, "$")
+    endif
     # Fill in the content
     append("$", repeat([''], packages->len()))
+    lnlist = packages
     for id in range(len(packages))
         var name = packages[id]
-        packlist[name] = { lnum: id + 1, status: "", lasthl: -1 }
-        Update(name, { text: "Pending", status: "pending" })
+        packlist[name] = { lnum: id + 1, status: "", lasthl: -1, output: [] }
+        Update(name, { text: ["Pending"], status: "pending" })
+        packlist[name].output = []
+        ClosePopup()
         matchaddpos(hlprops['name'], [[id + 1, 1, len(name)]])
     endfor
+    # Add popup for status
+    autocmd CursorMoved <buffer> PopStatus()
+    autocmd BufHidden <buffer> packlist = {}
+    normal G
 enddef
 
 export def Hide()
     if infobuf == -1 || !bufexists(infobuf)
         return
     endif
+    ClosePopup()
     exec ":" .. infobuf .. "bw"
 enddef
 
-# status: { text: string, status: ("pending" | "running" | "error_exit" | "ok_exit")? }
-export def Update(name: string, status: dict<string>)
+# status: { text: [string], status: ("pending" | "running" | "error_exit" | "ok_exit")? }
+export def Update(name: string, status: dict<any>)
     if infobuf == -1 || !bufexists(infobuf)
         return
     endif
     var lnum = packlist[name].lnum
     var proplen: number
     if status->has_key("text")
-        setbufline(infobuf, lnum, name .. ": " .. status.text)
-        proplen = len(status.text)
+        setbufvar(infobuf, "&modifiable", true)
+        setbufline(infobuf, lnum, name .. ": " .. status.text[-1])
+        setbufvar(infobuf, "&modifiable", false)
+        proplen = len(status.text[-1])
+        packlist[name].output += status.text
+        PopStatus()
     else
-        proplen = getbufline(infobuf, lnum)[0]->len() - len(name) - 2
+        proplen = len(packlist[name].output[-1])
     endif
     packlist[name].status = get(status, "status", packlist[name].status)
     if packlist[name].lasthl != -1

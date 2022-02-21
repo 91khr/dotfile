@@ -1,5 +1,6 @@
 vim9script
 import "packager/manager.vim"
 
-manager.Sync()
+#manager.Sync()
+manager.Clean()
 

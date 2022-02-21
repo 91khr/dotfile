@@ -2,10 +2,10 @@ vim9script
 import "packager/info.vim" as info
 
 const statusmap = {
-    missing: { text: "Not installed", status: "oper_exit" },
-    diverged: { text: "Diverged with upstream", status: "error_exit" },
-    latest: { text: "Up to date", status: "ok_exit" },
-    outdated: { text: "Need to update", status: "oper_exit" },
+    missing: { text: ["Not installed"], status: "oper_exit" },
+    diverged: { text: ["Diverged with upstream"], status: "error_exit" },
+    latest: { text: ["Up to date"], status: "ok_exit" },
+    outdated: { text: ["Need to update"], status: "oper_exit" },
     }
 
 # [ { name: string, path: string, url: string, branch: string,
@@ -69,7 +69,7 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(job, number): any>
     var hasexit = false
     # {{{ Helpers
     def OnOutput(_ch: channel, ctnt: string)
-        var status = { text: ctnt->split("\r")[-1]->split("\n")[-1] }
+        var status: dict<any> = { text: ctnt->split("\r")->mapnew("split(v:val, '\n')")->flattennew() }
         if !hasexit
             status.status = "running"
         endif
@@ -143,7 +143,7 @@ def Status_Callback(pack: dict<string>, opts: dict<any>, job: job, res: number):
     return [[]]
 enddef
 
-export def Status(opts = { force: false, silent: false })
+export def Status(opts: dict<any> = { force: false, silent: false })
     InitPack(opts)
     if !opts->get("silent", false)
         info.Show(packconf->mapnew("v:val.name"))
@@ -161,7 +161,7 @@ export def Status(opts = { force: false, silent: false })
     endfor
 enddef
 
-export def Sync(opts = { force: false, silent: false })
+export def Sync(opts: dict<any> = { force: false, silent: false })
     InitPack(opts)
     if !opts->get("silent", false)
         info.Show(packconf->mapnew("v:val.name"))
@@ -187,7 +187,38 @@ export def Sync(opts = { force: false, silent: false })
     endfor
 enddef
 
-export def Clean(opts = { force: false, silent: false })
+export def Clean(opts: dict<any> = { force: false, silent: false })
+    var dirlist = {}
+    for loc in ["opt", "start"]
+        var basepath = packpath .. loc .. "/"
+        for dir in readdir(basepath, (f) => isdirectory(basepath .. f))
+            dirlist[dir] = loc
+        endfor
+    endfor
+    for pack in packconf
+        var [loc, dir] = pack.path->split("/")[-2 : ]
+        if dirlist[dir] == loc
+            dirlist[dir] = ""
+        endif
+    endfor
+    dirlist->filter("empty(v:val)")
+    if !opts->get("silent", false)
+        info.Show(dirlist->keys())
+        for it in dirlist->keys()
+            info.Update(it, { text: ["Not in configuration"], status: "oper_exit" })
+        endfor
+    endif
+    redraw
+    if !opts->get("force", false) && (opts->get("silent", false)
+            || confirm("Are you sure to remove those directories?", "&Yes\n&No", 1, "Question") == 2)
+        return
+    endif
+    for now in dirlist->keys()
+        var status = delete(packpath .. dirlist[now] .. "/" .. now) == 0 ?
+            { text: ["Removed"], status: "ok_exit" } :
+            { text: ["Remove failed"], status: "error_exit" }
+        info.Update(now, status)
+    endfor
 enddef
 
 # vim: fdm=marker

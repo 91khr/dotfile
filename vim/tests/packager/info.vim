@@ -3,12 +3,12 @@ vim9script
 import "packager/info.vim" as packinfo
 
 var events = [
-    "'a', { text: 'hello', status: 'running' }",
-    "'hello', { text: 'hi', status: 'running' }",
-    "'a', { text: 'error', status: 'running' }",
+    "'a', { text: ['world', 'hello'], status: 'running' }",
+    "'hello', { text: ['hi'], status: 'running' }",
+    "'a', { text: ['error'], status: 'running' }",
     "'a', { status: 'ok_exit' }",
-    "'hello', { text: 'ok_exit', status: 'ok_exit' }",
-    "'a', { text: 'error exit', status: 'error_exit' }",
+    "'hello', { text: ['ok_exit'], status: 'ok_exit' }",
+    "'a', { text: ['error exit'], status: 'error_exit' }",
     ]
 var eventid = -1
 var packs = [ 'a', 'hello' ]
@@ -28,5 +28,6 @@ def PollEvent(...args: list<any>)
 enddef
 
 packinfo.Show(packs)
-timer_start(800, PollEvent, { repeat: -1 })
+eventid = 0
+timer_start(2000, PollEvent, { repeat: len(events) + 1 })
 
