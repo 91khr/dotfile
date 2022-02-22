@@ -44,6 +44,7 @@ let g:packager_config = #{
             \
             "\        File explorer
             \         'scrooloose/nerdtree',
+            \         'PhilRunninger/nerdtree-visual-selection',
             "\        Run shell asyncly
             \         'skywind3000/asyncrun.vim',
             \
@@ -94,7 +95,7 @@ endfunction
 
 call s:AddPackFT('md,markdown', ['tabular', 'vim-markdown'])
 call s:AddPackFT('tex,plaintex', 'vimtex')
-call s:AddPackCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
+call s:AddPackCmd('NERDTree', 'packadd nerdtree | packadd nerdtree-visual-selection | NERDTree', {})
 call s:AddPackCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
 call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
