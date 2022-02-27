@@ -159,6 +159,7 @@ endif
 " ==================================================================================================================
 set completeopt=menuone,popup,noinsert,noselect
 let g:UltiSnipsExpandTrigger = "<nop>"  | " The config will handle it ><
+let g:coc_global_extensions = [ "coc-clangd", "coc-explorer", "coc-rust-analyzer", "coc-lua", ]
 
 " ==================================================================================================================
 " Rainbow settings

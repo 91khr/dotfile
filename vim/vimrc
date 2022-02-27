@@ -44,7 +44,6 @@ let g:packager_config = #{
             \
             "\        File explorer
             \         'scrooloose/nerdtree',
-            \         'PhilRunninger/nerdtree-visual-selection',
             "\        Run shell asyncly
             \         'skywind3000/asyncrun.vim',
             \

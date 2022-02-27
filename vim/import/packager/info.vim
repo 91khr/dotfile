@@ -42,23 +42,23 @@ export def Show(packages: list<string>)
         infobuf = bufnr()
     else
         packlist = {}
+        setbufvar(infobuf, "&modifiable", true)
         deletebufline(infobuf, 1, "$")
     endif
     # Fill in the content
     append("$", repeat([''], packages->len()))
+    normal G
     lnlist = packages
     for id in range(len(packages))
         var name = packages[id]
         packlist[name] = { lnum: id + 1, status: "", lasthl: -1, output: [] }
         Update(name, { text: ["Pending"], status: "pending" })
         packlist[name].output = []
-        ClosePopup()
         matchaddpos(hlprops['name'], [[id + 1, 1, len(name)]])
     endfor
     # Add popup for status
     autocmd CursorMoved <buffer> PopStatus()
     autocmd BufHidden <buffer> packlist = {}
-    normal G
 enddef
 
 export def Hide()
@@ -84,7 +84,7 @@ export def Update(name: string, status: dict<any>)
         packlist[name].output += status.text
         PopStatus()
     else
-        proplen = len(packlist[name].output[-1])
+        proplen = empty(packlist[name].output) ? len("Pending") : len(packlist[name].output[-1])
     endif
     packlist[name].status = get(status, "status", packlist[name].status)
     if packlist[name].lasthl != -1

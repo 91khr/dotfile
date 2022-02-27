@@ -171,7 +171,7 @@ snippet => "Implies" i
 endsnippet
 
 context "in_mathenv()"
-snippet /\\G(v?)([a-zA-Z]+)/ "Latex Greek letters" ir
+snippet /\\[gG](v?)([a-zA-Z]+)/ "Latex Greek letters" ir
 \\`!p ch = match.group(2)
 up = ch.isupper()
 try:

@@ -20,14 +20,12 @@ def PollEvent(...args: list<any>)
         packinfo.Hide()
         eventid = -2
     else
-        packinfo.Show(packs)
         exec "packinfo.Update(" .. events[eventid] .. ")"
-        packinfo.Show(packs)
     endif
     eventid += 1
 enddef
 
 packinfo.Show(packs)
 eventid = 0
-timer_start(2000, PollEvent, { repeat: len(events) + 1 })
+timer_start(800, PollEvent, { repeat: len(events) + 1 })
 

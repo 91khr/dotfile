@@ -100,3 +100,7 @@ for [name, exp] in items(s:wideonly_component)
     endif
 endfor
 
+" Automatically update status line when something changes
+autocmd TextChanged,InsertLeave * call lightline#update()
+autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
+

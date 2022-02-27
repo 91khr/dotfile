@@ -12,7 +12,7 @@ const statusmap = {
 #   status: "latest" | "outdated" | "diverged" | "missing" } ]
 var packconf: list<dict<string>>
 var hasinit = false
-var max_job = 1
+var max_job = 2
 var cur_job = 0
 var pending_jobs: list<func()> = []
 var packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/packager/"
@@ -61,19 +61,19 @@ enddef
 # post return: non empty list for execute that command, empty list for head to next post
 #   1 for exit and status was set, 0 for succeed exit, -1 for error exit
 #   (due to vim limitations, it is wrapped in a list)
-def ChainJob(name: string, cmd: list<string>, post: list<func(job, number): any>)
+def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
     if cur_job >= max_job
         pending_jobs->add(function(ChainJob, [name, cmd, post]))
         return
     endif
     var hasexit = false
+    var code: number
     # {{{ Helpers
     def OnOutput(_ch: channel, ctnt: string)
-        var status: dict<any> = { text: ctnt->split("\r")->mapnew("split(v:val, '\n')")->flattennew() }
-        if !hasexit
-            status.status = "running"
-        endif
-        info.Update(name, status)
+        info.Update(name, {
+            text: ctnt->split("\r")->mapnew("split(v:val, '\n')")->flattennew(),
+            status: "running",
+        })
     enddef
     def ExecPost(Fn: func(job, number): number, job: job, res: number): bool
         var state = Fn(job, res)
@@ -84,37 +84,47 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(job, number): any>
             return state == 2
         endif
     enddef
+    def RunPost()
+        if !hasexit
+            hasexit = true
+            return
+        endif
+        var resset = false
+        for id in range(len(post))
+            var next = post[id](code)[0]
+            if type(next) == type(0)
+                if next != 1
+                    info.Update(name, { status: next == 0 ? "ok_exit" : "error_exit" })
+                endif
+                resset = true
+                break
+            elseif type(next) == type([]) && !empty(next)
+                ChainJob(name, next, post[id + 1 : ])
+                return
+            endif
+        endfor
+        if !resset
+            info.Update(name, { status: code == 0 ? "ok_exit" : "error_exit" })
+        endif
+        cur_job -= 1
+        if !empty(pending_jobs)
+            remove(pending_jobs, len(pending_jobs) - 1)()
+        endif
+    enddef
     # }}} End helpers
     cur_job += 1
     job_start(cmd, {
         out_mode: "raw", err_mode: "raw",
         out_cb: OnOutput, err_cb: OnOutput,
+        close_cb: (ch) => RunPost(),
         exit_cb: (job, res) => {
-            for id in range(len(post))
-                var next = post[id](job, res)[0]
-                if type(next) == type(0)
-                    if next != 1
-                        info.Update(name, { status: next == 0 ? "ok_exit" : "error_exit" })
-                    endif
-                    break
-                elseif type(next) == type([]) && !empty(next)
-                    ChainJob(name, next, post[id + 1 : ])
-                    return
-                endif
-            endfor
-            if len(post) == 0
-                info.Update(name, { status: res == 0 ? "ok_exit" : "error_exit" })
-            endif
-            cur_job -= 1
-            hasexit = true
-            if !empty(pending_jobs)
-                remove(pending_jobs, len(pending_jobs) - 1)()
-            endif
+            code = res
+            RunPost()
             },
         })
 enddef
 
-def Status_Callback(pack: dict<string>, opts: dict<any>, job: job, res: number): list<any>
+def Status_Callback(pack: dict<string>, opts: dict<any>, res: number): list<any>
     if res != 0
         return [-1]
     endif
@@ -156,8 +166,8 @@ export def Status(opts: dict<any> = { force: false, silent: false })
             info.Update(pack.name, statusmap[pack.status])
             continue
         endif
-        ChainJob(pack.name, ["git", "-C", pack.path, "remote", "update"],
-            [function(Status_Callback, [pack, opts]), function((curpack, job, res) => {
+        ChainJob(pack.name, ["git", "-C", pack.path, "remote", "-v", "update"],
+            [function(Status_Callback, [pack, opts]), function((curpack, res) => {
                 info.Update(curpack.name, statusmap[curpack.status])
                 return [[]]
             }, [pack])])
@@ -169,12 +179,14 @@ export def Sync(opts: dict<any> = { force: false, silent: false })
     if !opts->get("silent", false)
         info.Show(packconf->mapnew("v:val.name"))
     endif
-    def Helptags(pack: dict<any>, job: job, res: number): list<any>
+    def Helptags(pack: dict<any>, res: number): list<any>
         if res != 0
             return [-1]
         else
-            exec "helptags " .. pack.path .. "/doc"
-            return [1]
+            if isdirectory(pack.path .. "/doc")
+                exec "helptags " .. pack.path .. "/doc"
+            endif
+            return [[]]
         endif
     enddef
     for pack in packconf
@@ -184,12 +196,12 @@ export def Sync(opts: dict<any> = { force: false, silent: false })
         elseif pack->get("status", "") == "missing"
             ChainJob(pack.name, ["git", "clone", pack.url, pack.path], [function(Helptags, [pack])])
         else
-            ChainJob(pack.name, ["git", "-C", pack.path, "remote", "update"], [
-                function(Status_Callback, [pack, opts]), function((curpack, job, res): list<any> => {
+            ChainJob(pack.name, ["git", "-C", pack.path, "remote", "-v", "update"], [
+                function(Status_Callback, [pack, opts]), function((curpack, res): list<any> => {
                         if index(["latest", "diverged"], curpack.status) != -1
                             info.Update(curpack.name, statusmap[curpack.status])
                             return [1]
-                        else
+                        else  # curpack.status == "outdated"
                             return [["git", "-C", curpack.path, "pull", "--ff-only", "--rebase=false", "--progress"]]
                         endif
                         }, [pack]), function(Helptags, [pack])])
@@ -198,6 +210,7 @@ export def Sync(opts: dict<any> = { force: false, silent: false })
 enddef
 
 export def Clean(opts: dict<any> = { force: false, silent: false })
+    InitPack(opts)
     var dirlist = {}
     for loc in ["opt", "start"]
         var basepath = packpath .. loc .. "/"
@@ -211,7 +224,7 @@ export def Clean(opts: dict<any> = { force: false, silent: false })
             dirlist[dir] = ""
         endif
     endfor
-    dirlist->filter("empty(v:val)")
+    dirlist->filter("!empty(v:val)")
     if !opts->get("silent", false)
         info.Show(dirlist->keys())
         for it in dirlist->keys()
@@ -224,9 +237,9 @@ export def Clean(opts: dict<any> = { force: false, silent: false })
         return
     endif
     for now in dirlist->keys()
-        var status = delete(packpath .. dirlist[now] .. "/" .. now) == 0 ?
+        var status = delete(packpath .. dirlist[now] .. "/" .. now, "rf") == 0 ?
             { text: ["Removed"], status: "ok_exit" } :
-            { text: ["Remove failed"], status: "error_exit" }
+            { text: ["Removal failed"], status: "error_exit" }
         info.Update(now, status)
     endfor
 enddef
