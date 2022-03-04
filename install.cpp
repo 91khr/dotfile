@@ -242,8 +242,10 @@ public:
                     fprintf(stderr, "%s already exists\n", dstpath.c_str());
             }
         }
-        else
+        else if (!fs::exists(dst))
             fs::create_symlink(src, dst);
+        else
+            fprintf(stderr, "%s already exists\n", dst.c_str());
     }
     bool is_installed() const
     {
@@ -475,7 +477,9 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
         return InvokerConfig { ".profile", "#", "profile", format("source %D/profile/profile") } &
             InvokerConfig { ".xprofile", "#", "profile", format("source %D/profile/xprofile") } &
             InvokerConfig { ".Xresources", "!", "profile", format(R"(#include "%D/profile/Xresources"
-#include "%D/profile/Solarizedxterm/.Xdefaults")") };
+#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
+            SymlinkConfig { "profile/clang-format", ".clang-format" } &
+            SymlinkConfig { "profile/compile_flags.txt", "compile_flags.txt" };
     },
 };
 
