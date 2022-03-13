@@ -16,6 +16,7 @@ var max_job = 2
 var cur_job = 0
 var pending_jobs: list<func()> = []
 var packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/packager/"
+var processing = false
 # for all opts arg: { force: bool?, silent: bool? }
 
 # {{{ InitPack
@@ -75,39 +76,32 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
             status: "running",
         })
     enddef
-    def ExecPost(Fn: func(job, number): number, job: job, res: number): bool
-        var state = Fn(job, res)
-        if state < 1
-            info.Update(name, { status: state == 0 ? "ok_exit" : "error_exit" })
-            return false
-        else
-            return state == 2
-        endif
-    enddef
     def RunPost()
         if !hasexit
             hasexit = true
             return
         endif
-        var resset = false
+        var hasres = false
         for id in range(len(post))
             var next = post[id](code)[0]
             if type(next) == type(0)
                 if next != 1
                     info.Update(name, { status: next == 0 ? "ok_exit" : "error_exit" })
                 endif
-                resset = true
+                hasres = true
                 break
             elseif type(next) == type([]) && !empty(next)
                 ChainJob(name, next, post[id + 1 : ])
                 return
             endif
         endfor
-        if !resset
+        if !hasres
             info.Update(name, { status: code == 0 ? "ok_exit" : "error_exit" })
         endif
         cur_job -= 1
-        if !empty(pending_jobs)
+        if empty(pending_jobs)
+            processing = false
+        else
             remove(pending_jobs, len(pending_jobs) - 1)()
         endif
     enddef
@@ -157,7 +151,14 @@ def Status_Callback(pack: dict<string>, opts: dict<any>, res: number): list<any>
 enddef
 
 export def Status(opts: dict<any> = { force: false, silent: false })
+    if processing
+        echohl Error
+        echom "Another operation is processing, halting..."
+        echohl Normal
+        return
+    endif
     InitPack(opts)
+    processing = true
     if !opts->get("silent", false)
         info.Show(packconf->mapnew("v:val.name"))
     endif
@@ -175,7 +176,14 @@ export def Status(opts: dict<any> = { force: false, silent: false })
 enddef
 
 export def Sync(opts: dict<any> = { force: false, silent: false })
+    if processing
+        echohl Error
+        echom "Another operation is processing, halting..."
+        echohl Normal
+        return
+    endif
     InitPack(opts)
+    processing = true
     if !opts->get("silent", false)
         info.Show(packconf->mapnew("v:val.name"))
     endif
@@ -210,7 +218,14 @@ export def Sync(opts: dict<any> = { force: false, silent: false })
 enddef
 
 export def Clean(opts: dict<any> = { force: false, silent: false })
+    if processing
+        echohl Error
+        echom "Another operation is processing, halting..."
+        echohl Normal
+        return
+    endif
     InitPack(opts)
+    processing = true
     var dirlist = {}
     for loc in ["opt", "start"]
         var basepath = packpath .. loc .. "/"
@@ -234,6 +249,7 @@ export def Clean(opts: dict<any> = { force: false, silent: false })
     redraw
     if !opts->get("force", false) && (opts->get("silent", false)
             || confirm("Are you sure to remove those directories?", "&Yes\n&No", 1, "Question") == 2)
+        processing = false
         return
     endif
     for now in dirlist->keys()
@@ -242,6 +258,7 @@ export def Clean(opts: dict<any> = { force: false, silent: false })
             { text: ["Removal failed"], status: "error_exit" }
         info.Update(now, status)
     endfor
+    processing = false
 enddef
 
 # vim: fdm=marker

@@ -75,11 +75,11 @@ noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
 " Emacs style motion in cmdline mode(q: may be better)
 cnoremap <C-B> <Left>
 cnoremap <C-F> <Right>
-cnoremap <A-B> <C-Left>
-cnoremap <A-F> <C-Right>
+cnoremap <A-b> <C-Left>
+cnoremap <A-f> <C-Right>
 cnoremap <C-A> <Home>
 cnoremap <C-E> <End>
-set cedit=\<C-K>
+set cedit=\<C-]>
 " Run shell commands -- :! is considered not useful
 nnoremap <leader>; :AsyncRun<space>
 " Quick compile & Run
@@ -116,14 +116,7 @@ vmap \= <Plug>(coc-format-selected)
 " ======================================================================================================================
 if has("gui_running")
     " Color scheme
-    colo solarized
-    " Extracted from SolarizedXTerm
-    "hi Terminal guibg=#002B36 guifg=#D2D2D2
-    hi link Terminal Normal
-    let g:terminal_ansi_colors = [
-                \ "#222222", "#9E5641", "#6C7E55", "#CAAF2B", "#7FB8D8", "#956D9D",
-                \ "#4c8ea1", "#808080", "#454545", "#CC896D", "#C4DF90", "#FFE080",
-                \ "#B8DDEA", "#C18FCB", "#6bc1d0", "#cdcdcd", ]
+    colo solarized8
     " Ban the annoying bell(cant be seen on Linux gui)
     set vb
     " I dont need the controls
@@ -136,6 +129,8 @@ else  | " GUI ^^^ Term vvv
     " Color scheme
     set background=dark
     colo desert
+    " GUI colors ><
+    "set termguicolors
 endif
 
 " ======================================================================================================================

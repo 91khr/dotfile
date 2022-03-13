@@ -26,7 +26,7 @@ enddef
 def PopStatus()
     var ln = line('.') - 1
     ClosePopup()
-    if ln >= len(packlist) || empty(packlist[lnlist[ln]].output)
+    if ln >= len(packlist) || bufnr() != infobuf || empty(packlist[lnlist[ln]].output)
         return
     endif
     popupid = popup_atcursor(packlist[lnlist[ln]].output, {
@@ -35,7 +35,11 @@ def PopStatus()
 enddef
 
 export def Show(packages: list<string>)
-    if infobuf == -1 || !bufexists(infobuf)
+    if infobuf == -1 || bufwinid(infobuf) == -1
+        # infobuf exists, but hidden, wipeout it
+        if infobuf != -1
+            exec ":" .. infobuf .. "bw"
+        endif
         # Init the buf
         vsplit [Package Status]
         setlocal nonu bt=nofile bufhidden=delete noswapfile nobuflisted
@@ -71,7 +75,8 @@ enddef
 
 # status: { text: [string], status: ("pending" | "running" | "error_exit" | "ok_exit")? }
 export def Update(name: string, status: dict<any>)
-    if infobuf == -1 || !bufexists(infobuf)
+    if infobuf == -1 || bufwinid(infobuf) == -1
+        infobuf = -1
         return
     endif
     var lnum = packlist[name].lnum

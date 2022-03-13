@@ -36,7 +36,7 @@ let g:packager_config = #{
             "\        Status line
             \         #{ name: 'itchyny/lightline.vim', location: 'start' },
             "\        Color scheme
-            \         #{ name: 'altercation/vim-colors-solarized', location: 'start' },
+            \         #{ name: 'lifepillar/vim-solarized8', location: 'start' },
             "\        Make quotes colorful, for lisp :)
             \         #{ name: '91khr/rainbow', location: 'start' },
             "\        Show the marks
