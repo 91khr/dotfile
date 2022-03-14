@@ -121,8 +121,6 @@ if has("gui_running")
     set vb
     " I dont need the controls
     set go=''
-    " Make error easier to see
-    hi Error gui=undercurl
     " Use a larger default size x_x
     set columns=120 lines=40
 else  | " GUI ^^^ Term vvv

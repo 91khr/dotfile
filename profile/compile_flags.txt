@@ -1,4 +1,4 @@
--std=c++23
+-std=c++2b
 -Wall
 -Wextra
 -Weffc++
