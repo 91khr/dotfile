@@ -19,6 +19,8 @@ var packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/pa
 var processing = false
 # for all opts arg: { force: bool?, silent: bool? }
 
+
+
 # {{{ InitPack
 def InitPack(opts: dict<any>)
     if hasinit && !opts->get("force", false)
@@ -83,7 +85,7 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
         endif
         var hasres = false
         for id in range(len(post))
-            var next = post[id](code)[0]
+            var next = post[id](code)
             if type(next) == type(0)
                 if next != 1
                     info.Update(name, { status: next == 0 ? "ok_exit" : "error_exit" })
@@ -118,23 +120,23 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
         })
 enddef
 
-def Status_Callback(pack: dict<string>, opts: dict<any>, res: number): list<any>
+def Status_Callback(pack: dict<string>, opts: dict<any>, res: number): any
     if res != 0
-        return [-1]
+        return -1
     endif
     if pack->get("status", "") == "missing"
-        return [[]]
+        return []
     endif
     if !empty(pack.branch)
         && system("git -C " .. pack.path_sh .. " branch --show-current")->trim() != pack.branch
         if opts->get("force", false)
             system("git -C " .. pack.path_sh .. " checkout " .. pack.branch)
             if v:shell_error != 0
-                return [-1]
+                return -1
             endif
         else
             pack.status = "diverged"
-            return [-1]
+            return -1
         endif
     endif
     var local = system("git -C " .. pack.path_sh .. " rev-parse @")
@@ -147,8 +149,10 @@ def Status_Callback(pack: dict<string>, opts: dict<any>, res: number): list<any>
     else
         pack.status = "diverged"
     endif
-    return [[]]
+    return []
 enddef
+
+
 
 export def Status(opts: dict<any> = { force: false, silent: false })
     if processing
@@ -162,17 +166,33 @@ export def Status(opts: dict<any> = { force: false, silent: false })
     if !opts->get("silent", false)
         info.Show(packconf->mapnew("v:val.name"))
     endif
+    def ProcPack(pack: dict<string>)
+        ChainJob(pack.name, ["git", "-C", pack.path, "remote", "-v", "update"],
+            [(res) => Status_Callback(pack, opts, res), (res) => {
+                info.Update(pack.name, statusmap[pack.status])
+                return []
+            }])
+    enddef
     for pack in packconf
         if pack->has_key("status")
             info.Update(pack.name, statusmap[pack.status])
             continue
         endif
-        ChainJob(pack.name, ["git", "-C", pack.path, "remote", "-v", "update"],
-            [function(Status_Callback, [pack, opts]), function((curpack, res) => {
-                info.Update(curpack.name, statusmap[curpack.status])
-                return [[]]
-            }, [pack])])
+        ProcPack(pack)
     endfor
+enddef
+
+
+
+def Helptags(pack: dict<any>, res: number): any
+    if res != 0
+        return -1
+    else
+        if isdirectory(pack.path .. "/doc")
+            exec "helptags " .. pack.path .. "/doc"
+        endif
+        return []
+    endif
 enddef
 
 export def Sync(opts: dict<any> = { force: false, silent: false })
@@ -187,35 +207,32 @@ export def Sync(opts: dict<any> = { force: false, silent: false })
     if !opts->get("silent", false)
         info.Show(packconf->mapnew("v:val.name"))
     endif
-    def Helptags(pack: dict<any>, res: number): list<any>
-        if res != 0
-            return [-1]
+    def ProcPack(pack: dict<string>)
+        if pack->get("status", "") == "missing"
+            ChainJob(pack.name, ["git", "clone", pack.url, pack.path], [(res): any => Helptags(pack, res)])
         else
-            if isdirectory(pack.path .. "/doc")
-                exec "helptags " .. pack.path .. "/doc"
-            endif
-            return [[]]
+            ChainJob(pack.name, ["git", "-C", pack.path, "remote", "-v", "update"], [
+                (res) => Status_Callback(pack, opts, res), (res): any => {
+                    if index(["latest", "diverged"], pack.status) != -1
+                        info.Update(pack.name, statusmap[pack.status])
+                        return 1
+                    else  # pack.status == "outdated"
+                        return ["git", "-C", pack.path, "pull", "--ff-only", "--rebase=false", "--progress"]
+                    endif
+                    }, (res): any => Helptags(pack, res)])
         endif
     enddef
     for pack in packconf
         if pack->has_key("status") && index(["diverged", "latest"], pack.status) != -1
             info.Update(pack.name, statusmap[pack.status])
             continue
-        elseif pack->get("status", "") == "missing"
-            ChainJob(pack.name, ["git", "clone", pack.url, pack.path], [function(Helptags, [pack])])
         else
-            ChainJob(pack.name, ["git", "-C", pack.path, "remote", "-v", "update"], [
-                function(Status_Callback, [pack, opts]), function((curpack, res): list<any> => {
-                        if index(["latest", "diverged"], curpack.status) != -1
-                            info.Update(curpack.name, statusmap[curpack.status])
-                            return [1]
-                        else  # curpack.status == "outdated"
-                            return [["git", "-C", curpack.path, "pull", "--ff-only", "--rebase=false", "--progress"]]
-                        endif
-                        }, [pack]), function(Helptags, [pack])])
+            ProcPack(pack)
         endif
     endfor
 enddef
+
+
 
 export def Clean(opts: dict<any> = { force: false, silent: false })
     if processing
