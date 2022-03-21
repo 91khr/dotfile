@@ -52,6 +52,24 @@ function! s:SpaceStatus()
     call cursor(pos[1:])
     return ''
 endfunction
+
+let s:wordcounted_filetypes = ["markdown"]
+function! s:WordCount()
+    if !s:iswide() || index(s:wordcounted_filetypes, &ft) || get(b:, "wordcount_disabled", v:false)
+        return ''
+    endif
+    perl <<EOF
+    my $ctnt = join ' ', $curbuf->Get(1..$curbuf->Count());
+    utf8::decode($ctnt);
+    my $hanzi = 0 + $ctnt =~ s/\p{Han}/ i /g;
+    my $count = () = $ctnt =~ /\b\w[\w'.]*\b/g;
+    my $res = "$count WD";
+    if ($hanzi != 0) {
+        $res = $res . ", $hanzi HZ";
+    }
+    VIM::DoCommand("return '$res'");
+EOF
+endfunction
 " }}} End components
 
 let g:lightline = #{
@@ -62,10 +80,12 @@ let g:lightline = #{
             \     },
             \     component_expand: #{
             \         spacestatus: s:func('SpaceStatus'),
+            \         wordcount: s:func('WordCount'),
             \     },
             \     component: #{ },
             \     component_type: #{
             \         spacestatus: 'error',
+            \         wordcount: '',
             \     },
             \     component_visible_condition: #{
             \         spell: '&spell',
@@ -77,7 +97,7 @@ let g:lightline = #{
             \         ],
             \         right: [ [ 'lineinfo' ],
             \                  [ 'percent' ],
-            \                  [ 'spacestatus' ],
+            \                  [ 'spacestatus', 'wordcount' ],
             \                  [ 'fileformat', 'fileencoding', 'filetype' ],
             \         ],
             \     },
