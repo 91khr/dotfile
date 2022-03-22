@@ -467,6 +467,14 @@ add_conf { "firefox", ConfigInfo::AllOS, "Firefox css & chrome",
     [] { return SymlinkConfig { "firefox", ".mozilla/firefox/userprofile" }; },
 };
 
+add_conf { "fonts", ConfigInfo::UNIX, "Extra font config",
+    [] { return SymlinkConfig { "fonts", ".config/fontconfig/" }; },
+};
+
+add_conf { "kitty", ConfigInfo::UNIX, "Kitty terminal config",
+    [] { return SymlinkConfig { "kitty", ".config/kitty" }; },
+};
+
 add_conf { "mutt", ConfigInfo::UNIX, "Mutt config",
     [] { return InvokerConfig { ".mutt/muttrc", "#", "mutt",
         format("set my_muttrc_path = %D/mutt\nsource %D/mutt/muttrc") }; },

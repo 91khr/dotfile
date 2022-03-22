@@ -440,6 +440,15 @@ awful.rules.rules = {
               os.execute("transset-df --id \"" .. c.window .. "\" 0.7")
           end)
       end, },
+    { rule = { class = "kitty" },
+      callback = function(c)
+          c:connect_signal("focus", function()
+              os.execute("transset-df --id \"" .. c.window .. "\" 0.9")
+          end)
+          c:connect_signal("unfocus", function()
+              os.execute("transset-df --id \"" .. c.window .. "\" 0.7")
+          end)
+      end, },
 }
 -- }}}
 
