@@ -11,7 +11,9 @@ set nrformats=bin,hex
 set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.ilg,.inx,.out,.toc,.png,.jpg
 set ttimeout
 set ttimeoutlen=100
-set wildmenu  | " Command mode completion(though hard to use ><)
+" Command line completion
+set wildmenu wildmode=lastused:longest:full,lastused:full
+set wildoptions=fuzzy,pum
 " Set encodings
 set encoding=utf-8
 set termencoding=utf-8
@@ -51,12 +53,6 @@ set switchbuf=usetab,split,uselast
 " Status line :)
 set laststatus=2  | " Ensure that status line is shown
 set noshowmode  | " The mode will be shown in status line
-
-" ======================================================================================================================
-" Terminal settings
-" ======================================================================================================================
-" Use <Esc> (or its equivant) will cause E21 qwq
-tnoremap <C-\> <C-W>N
 " }}} End settings
 
 " {{{ Mappings
@@ -67,6 +63,8 @@ tnoremap <C-\> <C-W>N
 let mapleader=' '
 " Fast fold code
 map <leader><space> za
+" Terminal normal, Use <Esc> (or its equivant) will cause E21 qwq
+tnoremap <C-\> <C-W>N
 " Clear search
 nnoremap <silent><leader>/ <Cmd>let @/=''<CR>
 " Make cursor move in the virtual lines
@@ -82,6 +80,7 @@ cnoremap <C-E> <End>
 set cedit=\<C-]>
 " Run shell commands -- :! is considered not useful
 nnoremap <leader>; :AsyncRun<space>
+nnoremap <leader>: :term ++shell<space>
 " Quick compile & Run
 nnoremap <silent><leader>cc <Cmd>Compile<CR>
 nnoremap <silent><leader>cr <Cmd>Run<CR>
@@ -158,6 +157,12 @@ let g:coc_global_extensions = [ "coc-clangd", "coc-explorer", "coc-rust-analyzer
 " Rainbow settings
 " ==================================================================================================================
 let g:rainbow_active = 1
+let g:rainbow_conf = #{
+            \     separately: #{
+            \         c: #{ inherit: '', parentheses: [ "start=/{/ end=/}/ fold" ] },
+            \         cpp: #{ inherit: 'c', parentheses: [] },
+            \     }
+            \ }
 
 " ==================================================================================================================
 " VimOI settings
