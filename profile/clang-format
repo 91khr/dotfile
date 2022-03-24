@@ -22,7 +22,9 @@ BraceWrapping:
     SplitEmptyNamespace: true
 BreakBeforeConceptDeclarations: true
 IncludeBlocks: Regroup
+AccessModifierOffset: -4
 #PackConstructorInitializers: NextLine
 SpaceBeforeCpp11BracedList: true
 SpacesBeforeTrailingComments: 2
+Cpp11BracedListStyle: false
 Standard: Latest

@@ -472,7 +472,8 @@ add_conf { "fonts", ConfigInfo::UNIX, "Extra font config",
 };
 
 add_conf { "kitty", ConfigInfo::UNIX, "Kitty terminal config",
-    [] { return SymlinkConfig { "kitty", ".config/kitty" }; },
+    [] { return InvokerConfig { ".config/kitty/kitty.conf", "#", "kitty",
+        format("include %D/kitty/kitty.conf") }; },
 };
 
 add_conf { "mutt", ConfigInfo::UNIX, "Mutt config",
