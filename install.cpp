@@ -460,7 +460,8 @@ add_conf { "awesome", ConfigInfo::UNIX, "AwesomeWM config",
 
 add_conf { "emacs", ConfigInfo::AllOS, "Emacs config",
     [] { return InvokerConfig { ".emacs.d/init.el", ";;", "emacs conf",
-        format("(load-file \"%D/emacs/init.el\")") }; },
+        format("(load-file \"%D/emacs/init.el\")") } &
+            SymlinkConfig { "emacs/custom.el", ".emacs.d/custom.el" }; },
 };
 
 add_conf { "firefox", ConfigInfo::AllOS, "Firefox css & chrome",
