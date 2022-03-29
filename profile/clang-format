@@ -6,7 +6,7 @@ Language: Cpp
 BreakBeforeBraces: Custom
 BraceWrapping:
     AfterCaseLabel: true
-    AfterClass: false
+    AfterClass: true
     AfterControlStatement: Always
     AfterEnum: true
     AfterFunction: true

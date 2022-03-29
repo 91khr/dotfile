@@ -9,8 +9,8 @@ if !exists(":Run")
     command! -buffer -bar Run w | botright term racket %
 endif
 
-" Add some missing options ><
-setlocal lispwords+=syntax-case
+" Add some missing syntaxes ><
+setlocal lispwords+=syntax-case,match,for/list,for/fold
 
 " Only preserve the outmost fold ><
 autocmd BufEnter * ++once silent! %foldopen! | silent! %foldclose
