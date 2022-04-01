@@ -20,8 +20,12 @@ set send_charset = "utf-8"
 # Key bindings
 bind pager j next-line
 bind pager k previous-line
-bind attach,index,pager J next-page
-bind attach,index,pager K previous-page
+bind attach,index J next-page
+bind attach,index K previous-page
+bind pager J next-undeleted
+bind pager K previous-undeleted
+bind pager <Down> next-line
+bind pager <Up> previous-line
 bind pager gg top
 bind pager G bottom
 bind attach,index gg first-entry

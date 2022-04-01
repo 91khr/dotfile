@@ -486,8 +486,9 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
     [] {
         return InvokerConfig { ".profile", "#", "profile", format("source %D/profile/profile") } &
             InvokerConfig { ".xprofile", "#", "profile", format("source %D/profile/xprofile") } &
-            InvokerConfig { ".Xresources", "!", "profile", format(R"(#include "%D/profile/Xresources"
-#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
+            InvokerConfig { ".Xresources", "!", "profile", format(
+                    R"(#include "%D/profile/Xresources")"
+                    R"(#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
             SymlinkConfig { "profile/clang-format", ".clang-format" } &
             SymlinkConfig { "profile/compile_flags.txt", "compile_flags.txt" };
     },

@@ -2,6 +2,9 @@ export TERMINAL=xterm
 export EDITOR=gvim
 
 export GTK_IM_MODULE=fcitx
+# kitty use this, and not recognize fcitx >_<
+export GLFW_IM_MODULE=ibus
 export QT_IM_MODULE=fcitx
 export XMODIFIERS=@im=fcitx
 
+# vim: ft=sh
