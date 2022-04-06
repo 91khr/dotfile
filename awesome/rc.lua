@@ -434,19 +434,19 @@ awful.rules.rules = {
     { rule = { class = "XTerm" },
       callback = function(c)
           c:connect_signal("focus", function()
-              os.execute("transset-df --id \"" .. c.window .. "\" 0.9")
+              c.opacity = 0.9
           end)
           c:connect_signal("unfocus", function()
-              os.execute("transset-df --id \"" .. c.window .. "\" 0.7")
+              c.opacity = 0.7
           end)
       end, },
     { rule = { class = "kitty" },
       callback = function(c)
           c:connect_signal("focus", function()
-              os.execute("transset-df --id \"" .. c.window .. "\" 0.9")
+              c.opacity = 0.9
           end)
           c:connect_signal("unfocus", function()
-              os.execute("transset-df --id \"" .. c.window .. "\" 0.7")
+              c.opacity = 0.7
           end)
       end, },
 }

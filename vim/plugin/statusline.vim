@@ -53,9 +53,9 @@ function! s:SpaceStatus()
     return ''
 endfunction
 
-let s:wordcounted_filetypes = ["markdown"]
+let s:wordcounted_filetypes = ["markdown", "mail", "text"]
 function! s:WordCount()
-    if !s:iswide() || index(s:wordcounted_filetypes, &ft) || get(b:, "wordcount_disabled", v:false)
+    if !s:iswide() || index(s:wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", v:false)
         return ''
     endif
     perl <<EOF
