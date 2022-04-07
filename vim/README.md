@@ -10,7 +10,12 @@ Due to some vim restrictions, buf-loading related autocommands
 must be defined in `BufRead` event of `vimrc` group to be able to be executed
 when the buffer is loaded at the startup.
 
+When changing directory or writing to current `.vimrc`, current exrc should be unloaded.
+A global variable `g:Undo_exrc` can be used to unload current exrc configuration,
+which can be a string representing a ex command or a funcref;
+it will be executed before the new exrc is loaded.
+
 ## TODO
 
-- [ ] Rewrite packager
+- [x] Rewrite packager
 

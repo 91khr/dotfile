@@ -7,10 +7,21 @@ var loaded_trustdb = false
 final [ trusted_dirs, forbidden_dirs ] = [ {}, {} ]
 def ExecuteExrc(needconfirm = true): bool
     const cwd = getcwd()
+    # Undo the exrc if needed
+    if exists("g:Undo_exrc")
+        if type(g:Undo_exrc) == v:t_string
+            exec g:Undo_exrc
+        elseif type(g:Undo_exrc) == v:t_func
+            call g:Undo_exrc()
+        endif
+        g:Undo_exrc = null
+    endif
+    # Check if needed to load exrc
     if index([ expand('$HOME'), expand('$HOME/.vim'), expand('$VIM') ], cwd) != -1
                 \ || !filereadable(".vimrc")
         return false
     endif
+    # Load trustdb
     if !loaded_trustdb
         var ctnt: list<string>
         ctnt = filereadable(trustdb_file) ? readfile(trustdb_file) : []
@@ -19,6 +30,7 @@ def ExecuteExrc(needconfirm = true): bool
         for key in ctnt | forbidden_dirs[key] = null | endfor
         loaded_trustdb = true
     endif
+    # Confirm whether to load the exrc and load it
     if forbidden_dirs->has_key(cwd) | return false | endif
     const answer = trusted_dirs->has_key(cwd) ? "yes" :
                 \ needconfirm ?
@@ -40,7 +52,7 @@ def ExecuteExrc(needconfirm = true): bool
 enddef
 autocmd DirChanged * call ExecuteExrc()
 autocmd BufWritePost .vimrc call ExecuteExrc(v:false)
-autocmd VimEnter * if ExecuteExrc() | silent doautocmd <nomodeline> vimrc BufRead | endif
+autocmd VimEnter * if ExecuteExrc() && exists("#vimrc#BufRead") | silent doautocmd vimrc BufRead | endif
 
 # Report asyncrun status after finish
 autocmd User AsyncRunStop {
