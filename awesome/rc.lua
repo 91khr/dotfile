@@ -3,6 +3,7 @@
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
+--require("awful.spawn")
 require("awful.autofocus")
 -- Widget and layout library
 local wibox = require("wibox")
@@ -485,11 +486,12 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- {{{ Post tasks
 -- Start some programs
 -- Transparency, maybe not needed currently><
---os.execute("picom &")
+awful.spawn("picom")
 -- Input method and key binding
-os.execute("fcitx5 && xmodmap " .. dotpath .. "/.Xmodmap &")
+awful.spawn("fcitx5")
+awful.spawn("xmodmap " .. dotpath .. "/.Xmodmap")
 -- Battery display
-os.execute("pkill xfce4-power-manager; xfce4-power-manager &")
+awful.spawn("xfce4-power-manager")
 -- }}}
 
 -- vim: fdm=marker
