@@ -25,7 +25,6 @@ set hlsearch
 " Disables mouse in insert mode
 set mouse=nvcr
 " Open the syntax and corresponding highlight
-filetype plugin indent on
 syntax on
 " Highlight corrent line
 set cursorline

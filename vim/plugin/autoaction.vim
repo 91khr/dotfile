@@ -78,7 +78,7 @@ def DefaultLanguageSettings()
         command! -buffer Run OutputUnableToRun("Run")
     endif
 enddef
-filetype plugin on
+filetype plugin indent on
 augroup filetypeplugin
     autocmd FileType * DefaultLanguageSettings()
 augroup END
