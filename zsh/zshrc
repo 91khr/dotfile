@@ -54,3 +54,8 @@ else
 fi
 function bing() { start "https://bing.com/search?q=${*// /+}" }
 
+# Execute the subfiles
+for f in $(find $(dirname $(realpath $0)) -type f -name '*.zsh'); do
+    source $f
+done
+
