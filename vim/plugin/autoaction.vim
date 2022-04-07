@@ -1,5 +1,6 @@
 vim9script
-# Run local rc when it's trusted
+
+# {{{ Run local rc when it's trusted
 const db_path = expand("~/.local/share")
 const trustdb_file = db_path .. "/trusted_dirs.txt"
 const forbiddendb_file = db_path .. "/forbidden_dirs.txt"
@@ -50,9 +51,11 @@ def ExecuteExrc(needconfirm = true): bool
     endif
     return false
 enddef
+
 autocmd DirChanged * call ExecuteExrc()
 autocmd BufWritePost .vimrc call ExecuteExrc(v:false)
 autocmd VimEnter * if ExecuteExrc() && exists("#vimrc#BufRead") | silent doautocmd vimrc BufRead | endif
+# }}} End local exrc loading
 
 # Report asyncrun status after finish
 autocmd User AsyncRunStop {
@@ -60,4 +63,24 @@ autocmd User AsyncRunStop {
     unsilent echo "(AsyncRun finished with code " .. g:asyncrun_code .. ")"
     echohl Normal
 }
+
+# {{{ Default filetype settings
+def OutputUnableToRun(name: string)
+    echohl Error
+    echom name .. " is not defined for this file > <"
+    echohl Normal
+enddef
+def DefaultLanguageSettings()
+    if !exists(":Compile")
+        command! -buffer Compile OutputUnableToRun("Compile")
+    endif
+    if !exists(":Run")
+        command! -buffer Run OutputUnableToRun("Run")
+    endif
+enddef
+filetype plugin on
+augroup filetypeplugin
+    autocmd FileType * DefaultLanguageSettings()
+augroup END
+# }}} End default filetype settings
 

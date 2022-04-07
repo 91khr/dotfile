@@ -21,8 +21,8 @@ let g:vimrc_load_option = 1
 " }}} End cleaning up
 
 " {{{ Load files as package and internal packages
-let &rtp .= ',' .. s:config_dir
-let &packpath .= ',' .. s:config_dir
+let &rtp ..= ',' .. s:config_dir
+let &packpath ..= ',' .. s:config_dir
 " }}} End loading files
 
 " {{{ Packages
@@ -103,30 +103,13 @@ call s:AddPackCmd('Coc', 'packadd coc.nvim | CocStart', {})
 " }}} End package list and setup
 
 " Package commands
-command! -bang PackClean call packager#manager#clean(#{
+command! -bang -bar PackClean call packager#manager#clean(#{
             \ force: <bang>v:false, silent: stridx("<mods>", "silent") != -1 })
-command! -bang PackStatus call packager#manager#status(#{
+command! -bang -bar PackStatus call packager#manager#status(#{
             \ force: <bang>v:false, silent: stridx("<mods>", "silent") != -1 })
-command! -bang PackSync call packager#manager#sync(#{
+command! -bang -bar PackSync call packager#manager#sync(#{
             \ force: <bang>v:false, silent: stridx("<mods>", "silent") != -1 })
 
 " }}} End packages
-
-" {{{ Default filetype settings
-function! s:DefaultLanguageSettings()
-    function! s:OutputUnableToRun(name)
-        echohl Error
-        echom a:name .. " is not defined for this file > <"
-        echohl Normal
-    endfunction
-    if !exists(":Compile")
-        command! -buffer Compile call s:OutputUnableToRun("Compile")
-    endif
-    if !exists(":Run")
-        command! -buffer Run call s:OutputUnableToRun("Run")
-    endif
-endfunction
-autocmd BufEnter,BufFilePost * call s:DefaultLanguageSettings()
-" }}} End default filetype settings
 
 " vim: set ft=vim :
