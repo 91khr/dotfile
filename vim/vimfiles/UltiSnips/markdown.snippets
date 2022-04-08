@@ -29,8 +29,13 @@ snippet {{ "Latex \begin...\end block" i
 endsnippet
 
 # {{{ Environment name abbrevs
-snippet /([pbv]?)mat/ "Latex matrix" "in_envbrace()" eir
-`!p snip.rv = match.group(1)`matrix
+snippet /([a-z]?)mat/ "Latex matrix" "in_envbrace()" eir
+`!p
+if match.group(1) not in "pbBvV" and match.group(1) != "":
+	print(f"Unknown matrix type {match.group(1)}, use one of pbBvV")
+	snip.rv = match.group(0)
+else:
+	snip.rv = match.group(1) + "matrix"`
 endsnippet
 # }}} End environment name abbrevs
 

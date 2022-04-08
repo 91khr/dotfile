@@ -11,6 +11,7 @@ endif
 
 " Add some missing syntaxes ><
 setlocal lispwords+=syntax-case,match,for/list,for/fold
+setlocal lispwords+=generator
 
 " Only preserve the outmost fold ><
 autocmd BufEnter * ++once silent! %foldopen! | silent! %foldclose
