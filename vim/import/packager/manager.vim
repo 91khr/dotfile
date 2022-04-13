@@ -83,6 +83,7 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
             hasexit = true
             return
         endif
+        cur_job -= 1  # As long as a job ends, amount of pending jobs would decrease
         var hasres = false
         for id in range(len(post))
             var next = post[id](code)
@@ -100,7 +101,6 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
         if !hasres
             info.Update(name, { status: code == 0 ? "ok_exit" : "error_exit" })
         endif
-        cur_job -= 1
         if empty(pending_jobs)
             processing = false
         else
