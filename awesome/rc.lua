@@ -275,19 +275,11 @@ local globalkeys = gears.table.join(
         if c then c:raise() end
         end, {description = "raise focused client", group = "client"}),
     awful.key({ modkey, "Control" }, "l", function ()
-        local c = client.focus
-        awful.client.next(1):raise()
-        gears.timer.start_new(0.01, function()
-            if c then c:emit_signal("request::activate", "reset_focus", {raise = false}) end
-        end)
-        end, {description = "raise next client", group = "client"}),
+        client.focus = awful.client.next(1)
+        end, {description = "focus next client without raising", group = "client"}),
     awful.key({ modkey, "Control" }, "h", function ()
-        local c = client.focus
-        awful.client.next(-1):raise()
-        gears.timer.start_new(0.01, function()
-            if c then c:emit_signal("request::activate", "reset_focus", {raise = false}) end
-        end)
-        end, {description = "raise previous client", group = "client"}),
+        client.focus = awful.client.next(-1)
+        end, {description = "focus previous client without raising", group = "client"}),
     awful.key({ modkey,           }, "u",   awful.client.urgent.jumpto,
               {description = "jump to urgent client", group = "client"}),
 
