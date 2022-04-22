@@ -251,7 +251,7 @@ root.buttons(gears.table.join(
 -- }}}
 
 -- {{{ Key bindings
-globalkeys = gears.table.join(
+local globalkeys = gears.table.join(
     awful.key({ modkey,           }, "s", hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
     awful.key({ modkey,           }, "i", function() notify_info(client.focus.class) end,
@@ -260,16 +260,34 @@ globalkeys = gears.table.join(
     -- Layout manipulation
     awful.key({ modkey,           }, "l", function ()
         awful.client.focus.byidx(1)
-        end, {description = "focus next", group = "client"}),
+        end, {description = "focus next client", group = "client"}),
     awful.key({ modkey,           }, "h", function ()
         awful.client.focus.byidx(-1)
-        end, {description = "focus prev", group = "client"}),
+        end, {description = "focus previous client", group = "client"}),
     awful.key({ modkey, "Shift"   }, "l", function ()
         awful.client.swap.byidx(1)
-        end, {description = "focus next", group = "client"}),
+        end, {description = "swap client with next", group = "client"}),
     awful.key({ modkey, "Shift"   }, "h", function ()
         awful.client.swap.byidx(-1)
-        end, {description = "focus prev", group = "client"}),
+        end, {description = "swap client with previous", group = "client"}),
+    awful.key({ modkey, "Control" }, "i", function ()
+        local c = client.focus
+        if c then c:raise() end
+        end, {description = "raise focused client", group = "client"}),
+    awful.key({ modkey, "Control" }, "l", function ()
+        local c = client.focus
+        awful.client.next(1):raise()
+        gears.timer.start_new(0.01, function()
+            if c then c:emit_signal("request::activate", "reset_focus", {raise = false}) end
+        end)
+        end, {description = "raise next client", group = "client"}),
+    awful.key({ modkey, "Control" }, "h", function ()
+        local c = client.focus
+        awful.client.next(-1):raise()
+        gears.timer.start_new(0.01, function()
+            if c then c:emit_signal("request::activate", "reset_focus", {raise = false}) end
+        end)
+        end, {description = "raise previous client", group = "client"}),
     awful.key({ modkey,           }, "u",   awful.client.urgent.jumpto,
               {description = "jump to urgent client", group = "client"}),
 
@@ -298,7 +316,7 @@ globalkeys = gears.table.join(
         end, {description = "run lua command", group = "awesome"})
 )
 
-clientkeys = gears.table.join(
+local clientkeys = gears.table.join(
     awful.key({ modkey,           }, "f", function (c) c.fullscreen = not c.fullscreen; c:raise() end,
         {description = "toggle fullscreen", group = "client"}),
     awful.key({ modkey,           }, "\\",      function (c) c:kill()                         end,
@@ -367,7 +385,7 @@ for i = 1, 9 do
     )
 end
 
-clientbuttons = gears.table.join(
+local clientbuttons = gears.table.join(
     awful.button({ }, 1, function (c) client.focus = c; c:raise() end),
     awful.button({ modkey }, 1, awful.mouse.client.move),
     awful.button({ modkey, "Shift" }, 1, awful.mouse.client.resize),
