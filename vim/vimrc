@@ -49,6 +49,8 @@ let g:packager_config = #{
             \
             "\        Language server
             \         #{ name: 'neoclide/coc.nvim', branch: 'release' },
+            "\        Debug adapter
+            \         #{ name: 'puremourning/vimspector' },
             "\        Snippets
             \         #{ name: 'SirVer/ultisnips', location: 'start' },
             \

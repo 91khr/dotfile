@@ -33,6 +33,7 @@ def InitPack(opts: dict<any>)
         packpath ..= "/"
     endif
     # Process packages
+    packconf = []
     for it in g:packager_config.packs
         var pack = type(it) == type("") ? { name: it } : it
         var path = packpath .. pack->get("location", "opt") .. "/" .. matchstr(pack.name, '\v\/\zs[^/]+$')
