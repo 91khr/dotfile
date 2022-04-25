@@ -96,12 +96,13 @@ endfunction
 
 call s:AddPackFT('md,markdown', ['tabular', 'vim-markdown'])
 call s:AddPackFT('tex,plaintex', 'vimtex')
-call s:AddPackCmd('NERDTree', 'packadd nerdtree | packadd nerdtree-visual-selection | NERDTree', {})
+call s:AddPackCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
 call s:AddPackCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
 call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
-call s:AddPackCmd('MarkdownPreview', 'packadd markdown-preview.nvim | e | MarkdownPreview', {})
+call s:AddPackCmd('MarkdownPreview', 'packadd markdown-preview.nvim | MarkdownPreview', {})
 call s:AddPackCmd('Coc', 'packadd coc.nvim | CocStart', {})
+nnoremap <F5> <Cmd>packadd vimspector<CR><Plug>VimspectorContinue
 " }}} End package list and setup
 
 " Package commands

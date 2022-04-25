@@ -146,11 +146,13 @@ endif
 
 " {{{ Package options
 " ==================================================================================================================
-" Language Server, Echodoc and UltiSnip settings
+" Language Server, UltiSnip, and DAP settings
 " ==================================================================================================================
 set completeopt=menuone,popup,noinsert,noselect
 let g:UltiSnipsExpandTrigger = "<nop>"  | " The config will handle it ><
 let g:coc_global_extensions = [ "coc-clangd", "coc-explorer", "coc-rust-analyzer", "coc-lua", ]
+let g:vimspector_base_dir='/home/virginia/.vim/vimspector'
+let g:vimspector_enable_mappings = 'HUMAN'
 
 " ==================================================================================================================
 " Rainbow settings
