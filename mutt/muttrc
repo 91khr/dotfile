@@ -38,6 +38,7 @@ auto_view text/html
 
 set editor="gvim --nofork"
 set text_flowed = yes
+set reflow_wrap = 120
 
 set sort = threads
 set sort_aux = last-date-received

@@ -18,7 +18,6 @@ function Reader(input, opts)
     setmetatable(filter, {
         __index = function(k)
             return function(s)
-                flow = false
                 return s
             end
         end,
