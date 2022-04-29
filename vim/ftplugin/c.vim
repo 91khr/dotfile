@@ -2,9 +2,10 @@ import "ftext.vim"
 
 " Compile options
 if has("win32")
-    if !exists(":Compile")
+    if s:ftext.CanCmd("Compile")
         " Require VimOI
         command! -buffer -bar -nargs=* Compile CppCompile % <args>
+        let b:compile_overridable = 0
     endif
 else
     exec s:ftext.MakeRun("cpp", "Compile",

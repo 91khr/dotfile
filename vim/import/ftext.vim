@@ -30,8 +30,12 @@ export def TermRun(cmd: list<string>, args: dict<bool> = { persist: false, uniqu
     endif
 enddef
 
+export def CanCmd(cmd: string): bool
+    return !exists(":" .. cmd) || get(b:, tolower(cmd) .. "_overridable", true)
+enddef
+
 export def MakeRun(ft: string, cmd: string, pat: string, options: dict<bool> = {}): string
-    if !!exists(":" .. cmd) && !options->get("force", false)
+    if !CanCmd(cmd) && !options->get("force", false)
         return ""
     endif
     var flagname = tolower(cmd) .. "_flags"
@@ -46,6 +50,7 @@ export def MakeRun(ft: string, cmd: string, pat: string, options: dict<bool> = {
         endif
         return varlist[v]
     enddef
+    exec "b:" .. tolower(cmd) .. "_overridable = 0"
     return "command! -buffer " .. (options->get("bar", true) ? "-bar " : "") .. "-nargs=? " ..
                 \ (cmd == "Compile" ? "Compile exec 'AsyncRun ' .. " :
                 \     "Run Compile | autocmd User AsyncRunStop ++once ") ..

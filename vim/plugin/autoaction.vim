@@ -71,13 +71,22 @@ def OutputUnableToRun(name: string)
     echohl Normal
 enddef
 def DefaultLanguageSettings()
-    if !exists(":Compile")
+    if !exists(":Compile") || b:compile_overridable
         command! -buffer Compile OutputUnableToRun("Compile")
+        b:compile_overridable = 1
     endif
-    if !exists(":Run")
+    if !exists(":Run") || b:run_overridable
         command! -buffer Run OutputUnableToRun("Run")
+        b:run_overridable = 1
     endif
 enddef
+augroup filetypeplugin
+    # All previously defined commands can be overrided
+    autocmd FileType * {
+        b:compile_overridable = 1
+        b:run_overridable = 1
+    }
+augroup END
 filetype plugin indent on
 augroup filetypeplugin
     autocmd FileType * DefaultLanguageSettings()
