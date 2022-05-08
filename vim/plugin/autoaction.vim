@@ -53,16 +53,9 @@ def ExecuteExrc(needconfirm = true): bool
 enddef
 
 autocmd DirChanged * call ExecuteExrc()
-autocmd BufWritePost .vimrc call ExecuteExrc(v:false)
+autocmd BufWritePost .vimrc call ExecuteExrc(false)
 autocmd VimEnter * if ExecuteExrc() && exists("#vimrc#BufRead") | silent doautocmd vimrc BufRead | endif
 # }}} End local exrc loading
-
-# Report asyncrun status after finish
-autocmd User AsyncRunStop {
-    if g:asyncrun_code != 0 | echohl WarningMsg | endif
-    unsilent echo "(AsyncRun finished with code " .. g:asyncrun_code .. ")"
-    echohl Normal
-}
 
 # {{{ Default filetype settings
 def OutputUnableToRun(name: string)
@@ -92,4 +85,18 @@ augroup filetypeplugin
     autocmd FileType * DefaultLanguageSettings()
 augroup END
 # }}} End default filetype settings
+
+# Report asyncrun status after finish
+autocmd User AsyncRunStop {
+    if g:asyncrun_code != 0 | echohl WarningMsg | endif
+    unsilent echo "(AsyncRun finished with code " .. g:asyncrun_code .. ")"
+    echohl Normal
+}
+
+# Automatically update status line when something changes
+import "plgext.vim"
+if plgext.Installed("start/lightline.vim")
+    autocmd TextChanged,InsertLeave * call lightline#update()
+    autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
+endif
 

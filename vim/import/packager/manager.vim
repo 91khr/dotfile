@@ -12,10 +12,10 @@ const statusmap = {
 #   status: "latest" | "outdated" | "diverged" | "missing" } ]
 var packconf: list<dict<string>>
 var hasinit = false
-var max_job = 2
+var max_job = 3
 var cur_job = 0
 var pending_jobs: list<func()> = []
-var packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/packager/"
+export const packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/packager/"
 var processing = false
 # for all opts arg: { force: bool?, silent: bool? }
 

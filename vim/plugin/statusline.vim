@@ -1,61 +1,62 @@
-let g:solarized_menu = 0  | " In tested versions, this is an erroneous option
-" {{{ Helpers
-function! s:iswide()
-    return winwidth(0) > 70
-endfunction
-function! s:func(name)
-    return '<SNR>' . matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_func$') . '_' . a:name
-endfun
-" }}} End helpers
+vim9script
 
-" {{{ Components
-function! s:FileName()
+# {{{ Helpers
+def IsWide(): bool
+    return winwidth(0) > 70
+enddef
+def Func(name: string): string
+    return '<SNR>' .. matchstr(expand('<stack>'), '<SNR>\zs\d\+\ze_Func') .. '_' .. name
+enddef
+# }}} End helpers
+
+# {{{ Components
+def FileName(): string
     if &ft == 'help' | return expand('%:t') | endif
     if expand('%:t') == ''
         if &buftype == 'quickfix'
             return getwininfo()[winnr() - 1].loclist ? '[Location List]' : '[Quickfix List]'
         endif
-        let l:btlist = #{
+        var btlist = {
                     \     nofile: '[Scratch]',
                     \     prompt: '[Prompt]',
                     \     popup: '[Popup]',
                     \ }
-        return l:btlist->has_key(&bt) ? l:btlist[&bt] : '[No Name]'
+        return btlist->has_key(&bt) ? btlist[&bt] : '[No Name]'
     endif
-    let l:relpath = fnamemodify(expand('%'), ':.')
-    let l:pathsep = has("win32") ? '\' : '\/'
-    return s:iswide() ? l:relpath :
-                \ substitute(l:relpath, '\v([^/])([^/]*)' . l:pathsep, '\1' . l:pathsep, 'g')
-endfunction
+    var relpath = fnamemodify(expand('%'), ':.')
+    var pathsep = has("win32") ? '\' : '\/'
+    return IsWide() ? relpath :
+                \ substitute(relpath, '\v([^/])([^/]*)' .. pathsep, '\1' .. pathsep, 'g')
+enddef
 
-function! s:CocStatus()
-    if !exists(":CocInfo") || !s:iswide() | return '' | endif
+def CocStatus(): string
+    if !exists(":CocInfo") || !IsWide() | return '' | endif
     return coc#status()
-endfunction
+enddef
 
-function! s:SpaceStatus()
-    if !s:iswide() || get(b:, "spacecheck_disabled", v:false) || &bt == 'terminal'
+def SpaceStatus(): string
+    if !IsWide() || get(b:, "spacecheck_disabled", false) || &bt == 'terminal'
         return ''
     endif
-    let pos = getcurpos()
-    call cursor(1, 1)
-    let trailing = search('\s\+$', 'ncw')
+    var pos = getcurpos()
+    cursor(1, 1)
+    var trailing = search('\s\+$', 'ncw')
     if trailing != 0
-        call cursor(pos[1:])
+        cursor(pos[1:])
         return 'Trailing: ' .. trailing
     endif
-    let mixing = search('^ \+', 'ncw') ? search('^\s*\t', 'ncw') : 0
+    var mixing = search('^ \+', 'ncw') ? search('^\s*\t', 'ncw') : 0
     if mixing != 0
-        call cursor(pos[1:])
+        cursor(pos[1:])
         return 'Mixed indent: ' .. mixing
     endif
-    call cursor(pos[1:])
+    cursor(pos[1:])
     return ''
-endfunction
+enddef
 
-let s:wordcounted_filetypes = ["markdown", "mail", "text"]
-function! s:WordCount()
-    if !s:iswide() || index(s:wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", v:false)
+var wordcounted_filetypes = ["markdown", "mail", "text"]
+def WordCount(): string
+    if !IsWide() || index(wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", false)
         return ''
     endif
     perl <<EOF
@@ -69,28 +70,28 @@ function! s:WordCount()
     }
     VIM::DoCommand("return '$res'");
 EOF
-endfunction
-" }}} End components
+enddef
+# }}} End components
 
-let g:lightline = #{
+g:lightline = {
             \     colorscheme: 'solarized',
-            \     component_function: #{
-            \         filename: s:func('FileName'),
-            \         cocstatus: s:func('CocStatus'),
+            \     component_function: {
+            \         filename: Func('FileName'),
+            \         cocstatus: Func('CocStatus'),
             \     },
-            \     component_expand: #{
-            \         spacestatus: s:func('SpaceStatus'),
-            \         wordcount: s:func('WordCount'),
+            \     component_expand: {
+            \         spacestatus: Func('SpaceStatus'),
+            \         wordcount: Func('WordCount'),
             \     },
-            \     component: #{ },
-            \     component_type: #{
+            \     component: { },
+            \     component_type: {
             \         spacestatus: 'error',
             \         wordcount: '',
             \     },
-            \     component_visible_condition: #{
+            \     component_visible_condition: {
             \         spell: '&spell',
             \     },
-            \     active: #{
+            \     active: {
             \         left: [ [ 'mode', 'paste', 'spell' ],
             \                 [ 'readonly', 'filename', 'modified' ],
             \                 [ 'cocstatus' ],
@@ -103,24 +104,20 @@ let g:lightline = #{
             \     },
             \ }
 
-let s:wideonly_component = #{
+var wideonly_component = {
             \     fileformat: '&ff',
             \     fileencoding: '&fenc!=#""?&fenc:&enc',
             \     filetype: '&ft!=#""?&ft:"no ft"',
             \     spell: '&spell?&spelllang:""',
             \ }
-let s:wide_condition = "winwidth(0) > 70"
-for [name, exp] in items(s:wideonly_component)
-    let g:lightline.component[name] = printf("%%{%s ? (%s) : ''}", s:wide_condition, exp)
-    let cond = g:lightline.component_visible_condition
+var wide_condition = "winwidth(0) > 70"
+for [name, exp] in items(wideonly_component)
+    g:lightline.component[name] = printf("%%{%s ? (%s) : ''}", wide_condition, exp)
+    var cond = g:lightline.component_visible_condition
     if cond->has_key(name)
-        let cond[name] = printf("(%s)&&(%s)", cond[name], s:wide_condition)
+        cond[name] = printf("(%s)&&(%s)", cond[name], wide_condition)
     else
-        let cond[name] = s:wide_condition
+        cond[name] = wide_condition
     endif
 endfor
-
-" Automatically update status line when something changes
-autocmd TextChanged,InsertLeave * call lightline#update()
-autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
 

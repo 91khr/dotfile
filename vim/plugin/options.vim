@@ -114,7 +114,13 @@ vmap \= <Plug>(coc-format-selected)
 " ======================================================================================================================
 if has("gui_running")
     " Color scheme
-    colo solarized8
+    import "plgext.vim"
+    if s:plgext.Installed("start/vim-solarized8")
+        colo solarized8
+        let g:solarized_menu = 0  | " In tested versions, this is an erroneous option
+    else
+        colo desert
+    endif
     " Ban the annoying bell(cant be seen on Linux gui)
     set vb
     " I dont need the controls

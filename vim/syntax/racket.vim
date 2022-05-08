@@ -1,4 +1,5 @@
-syn keyword schemeSyntax syntax-case match for/list for/fold for/or for/sum
+syn keyword schemeSyntax syntax-case match
+syn keyword schemeSyntax for for* for/list for/fold for/or for/sum
 syn keyword schemeSyntax provide
 
 syn keyword schemeFunction require

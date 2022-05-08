@@ -13,7 +13,7 @@ endif
 
 " Add some missing syntaxes ><
 setlocal lispwords+=syntax-case,match
-setlocal lispwords+=for/list,for/fold,for/or,for/sum
+setlocal lispwords+=for,for*,for/list,for/fold,for/or,for/sum
 setlocal lispwords+=generator
 
 " Only preserve the outmost fold ><
