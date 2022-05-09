@@ -54,22 +54,31 @@ def SpaceStatus(): string
     return ''
 enddef
 
-var wordcounted_filetypes = ["markdown", "mail", "text"]
-def WordCount(): string
-    if !IsWide() || index(wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", false)
-        return ''
-    endif
-    perl <<EOF
+const wordcounted_filetypes = ["markdown", "mail", "text"]
+perl <<EOF
+my $tick = 0;
+my $last = "";
+sub WordCount {
+    if (@_[0] == $tick) {
+        return $last;
+    }
+    $tick = @_[0];
     my $ctnt = join ' ', $curbuf->Get(1..$curbuf->Count());
     utf8::decode($ctnt);
     my $hanzi = 0 + $ctnt =~ s/\p{Han}/ i /g;
     my $count = () = $ctnt =~ /\b\w[\w'.]*\b/g;
-    my $res = "$count WD";
+    $last = "$count WD";
     if ($hanzi != 0) {
-        $res = $res . ", $hanzi HZ";
+        $last = $last . ", $hanzi HZ";
     }
-    VIM::DoCommand("return '$res'");
+    return $last;
+}
 EOF
+def WordCount(): string
+    if !IsWide() || index(wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", false)
+        return ''
+    endif
+    return perleval("WordCount " .. b:changedtick)
 enddef
 # }}} End components
 
