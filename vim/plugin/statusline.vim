@@ -56,29 +56,29 @@ enddef
 
 const wordcounted_filetypes = ["markdown", "mail", "text"]
 perl <<EOF
-my $tick = 0;
-my $last = "";
 sub WordCount {
-    if (@_[0] == $tick) {
-        return $last;
-    }
-    $tick = @_[0];
     my $ctnt = join ' ', $curbuf->Get(1..$curbuf->Count());
     utf8::decode($ctnt);
     my $hanzi = 0 + $ctnt =~ s/\p{Han}/ i /g;
     my $count = () = $ctnt =~ /\b\w[\w'.]*\b/g;
-    $last = "$count WD";
+    my $res = "$count WD";
     if ($hanzi != 0) {
-        $last = $last . ", $hanzi HZ";
+        $res = $res . ", $hanzi HZ";
     }
-    return $last;
+    return $res;
 }
 EOF
+var changedtick = 0
+var last_wordcount = ""
 def WordCount(): string
     if !IsWide() || index(wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", false)
         return ''
     endif
-    return perleval("WordCount " .. b:changedtick)
+    if b:changedtick == changedtick
+        return last_wordcount
+    endif
+    changetick = b:changedtick
+    return last_wordcount = perleval("WordCount " .. b:changedtick)
 enddef
 # }}} End components
 
