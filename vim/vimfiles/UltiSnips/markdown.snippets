@@ -81,16 +81,20 @@ snippet \rt "Math pow root" i
 \sqrt{$1}$0
 endsnippet
 
-# {{{ Differential and integrate
+# {{{ Differential, integrate, sum, etc.
 context "in_mathenv()"
 snippet \lim "lim" i
 \lim_{${1:x}\to $2}$0
 endsnippet
 context "in_mathenv()"
+snippet \sum "sum" i
+\sum_{${1:i}=$2}^$0
+endsnippet
+context "in_mathenv()"
 snippet \int "Integrate" i
 \int_{$1}^{$2}$0
 endsnippet
-# }}} End differencial and integrate
+# }}} End differential, integrate, sum, etc.
 
 # {{{ Math fonts
 context "in_mathenv()"

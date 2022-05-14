@@ -10,8 +10,9 @@ let b:spacecheck_disabled = v:true
 " Preview composed HTML
 import "ftext.vim"
 if s:ftext.CanCmd("Compile")
-    command! -buffer -bar Compile w | exec "AsyncRun -mode=term -pos=bottom "
-                \ . s:config_dir . "/mutt/gen_multipart_alternative.sh < %" | set ft=html
+    command! -buffer -bar -nargs=* Compile w | exec "AsyncRun -mode=term -pos=bottom "
+                \ .. s:config_dir .. "/mutt/gen_multipart_alternative.sh < %" .. <args>
+                \ | set ft=html
     let b:compile_overridable = 0
 endif
 
