@@ -1,0 +1,10 @@
+CompileFlags:
+    Add: [-std=c++20, -Wall, -Wextra, -Weffc++, -pedantic]
+
+---
+
+If:
+    PathMatch: .*\.c
+    CompileFlags:
+        Add: [-std=c99]
+        Remove: [-std=c++20]
