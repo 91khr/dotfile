@@ -14,12 +14,15 @@ var hlprops = {
     ok_exit: "String",
     }
 var lnlist: list<string> = []
-var popupid = -1
+var [popupid, popup_timerid] = [-1, -1]
 
 def ClosePopup()
     if popupid != -1
         popup_close(popupid)
         popupid = -1
+    elseif popup_timerid != -1
+        timer_stop(popup_timerid)
+        popup_timerid = -1
     endif
 enddef
 
@@ -29,9 +32,9 @@ def PopStatus()
     if ln >= len(packlist) || bufnr() != infobuf || empty(packlist[lnlist[ln]].output)
         return
     endif
-    popupid = popup_atcursor(packlist[lnlist[ln]].output, {
-        moved: "any",
-        })
+    timer_start(500, () => {
+        popupid = popup_atcursor(packlist[lnlist[ln]].output, { moved: "any", })
+    })
 enddef
 
 export def Show(packages: list<string>)

@@ -12,10 +12,7 @@ const statusmap = {
 #   status: "latest" | "outdated" | "diverged" | "missing" } ]
 var packconf: list<dict<string>>
 var hasinit = false
-var max_job = 3
-var cur_job = 0
-var pending_jobs: list<func()> = []
-export const packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/packager/"
+export var packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/packager/"
 var processing = false
 # for all opts arg: { force: bool?, silent: bool? }
 
@@ -62,14 +59,14 @@ def InitPack(opts: dict<any>)
 enddef
 # }}} End InitPack
 
+# {{{ ChainJob
+const max_job = 3
+var cur_job = 0
+var pending_jobs: list<func()> = []
 # post return: non empty list for execute that command, empty list for head to next post
 #   1 for exit and status was set, 0 for succeed exit, -1 for error exit
 #   (due to vim limitations, it is wrapped in a list)
 def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
-    if cur_job >= max_job
-        pending_jobs->add(function(ChainJob, [name, cmd, post]))
-        return
-    endif
     var hasexit = false
     var code: number
     # {{{ Helpers
@@ -109,6 +106,11 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
         endif
     enddef
     # }}} End helpers
+    if cur_job >= max_job
+        pending_jobs->add(function(ChainJob, [name, cmd, post]))
+        info.Update(name, { status: "pending" })
+        return
+    endif
     cur_job += 1
     job_start(cmd, {
         out_mode: "raw", err_mode: "raw",
@@ -120,6 +122,7 @@ def ChainJob(name: string, cmd: list<string>, post: list<func(number): any>)
             },
         })
 enddef
+# }}} End ChainJob
 
 def Status_Callback(pack: dict<string>, opts: dict<any>, res: number): any
     if res != 0
