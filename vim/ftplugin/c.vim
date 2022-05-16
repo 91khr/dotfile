@@ -9,7 +9,7 @@ if has("win32")
     endif
 else
     exec s:ftext.MakeRun("cpp", "Compile",
-                \ "'g++ % -std=c++20 -o %:h/a.out -Wall -Wextra -Weffc++ -Wpedantic -g ' .. {args}")
+                \ "'g++ % -std=c++2b -o %:h/a.out -Wall -Wextra -Weffc++ -Wpedantic -g ' .. {args}")
 endif
 
 function! s:Run(args)

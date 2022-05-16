@@ -11,7 +11,7 @@ let b:spacecheck_disabled = v:true
 import "ftext.vim"
 if s:ftext.CanCmd("Compile")
     command! -buffer -bar -nargs=* Compile w | exec "AsyncRun -mode=term -pos=bottom "
-                \ .. s:config_dir .. "/mutt/gen_multipart_alternative.sh < %" .. <args>
+                \ .. s:config_dir .. "/mutt/gen_multipart_alternative.sh < %" .. <q-args>
                 \ | set ft=html
     let b:compile_overridable = 0
 endif

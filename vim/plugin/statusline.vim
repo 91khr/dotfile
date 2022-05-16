@@ -7,6 +7,13 @@ enddef
 def Func(name: string): string
     return '<SNR>' .. matchstr(expand('<stack>'), '<SNR>\zs\d\+\ze_Func') .. '_' .. name
 enddef
+def CacheChange(name: string, Update: func(): string): string
+    var b = b:  # Cache the dict, or it would be a syntax error (?)
+    if get(b, name, [0, ''])[0] != b:changedtick
+        b[name] = [b:changedtick, Update()]
+    endif
+    return b[name][1]
+enddef
 # }}} End helpers
 
 # {{{ Components
@@ -35,23 +42,20 @@ def CocStatus(): string
 enddef
 
 def SpaceStatus(): string
-    if !IsWide() || get(b:, "spacecheck_disabled", false) || &bt == 'terminal'
+    return CacheChange("spacestatus", () => {
+        if !IsWide() || get(b:, "spacecheck_disabled", false) || &bt == 'terminal'
+            return ''
+        endif
+        var trailing = search('\s\+$', 'ncw')
+        if trailing != 0
+            return 'Trailing: ' .. trailing
+        endif
+        var mixing = search('^ \+', 'ncw') != 0 ? search('^\s*\t', 'ncw') : 0
+        if mixing != 0
+            return 'Mixed indent: ' .. mixing
+        endif
         return ''
-    endif
-    var pos = getcurpos()
-    cursor(1, 1)
-    var trailing = search('\s\+$', 'ncw')
-    if trailing != 0
-        cursor(pos[1:])
-        return 'Trailing: ' .. trailing
-    endif
-    var mixing = search('^ \+', 'ncw') ? search('^\s*\t', 'ncw') : 0
-    if mixing != 0
-        cursor(pos[1:])
-        return 'Mixed indent: ' .. mixing
-    endif
-    cursor(pos[1:])
-    return ''
+    })
 enddef
 
 const wordcounted_filetypes = ["markdown", "mail", "text"]
@@ -68,17 +72,13 @@ sub WordCount {
     return $res;
 }
 EOF
-var changedtick = 0
-var last_wordcount = ""
 def WordCount(): string
-    if !IsWide() || index(wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", false)
-        return ''
-    endif
-    if b:changedtick == changedtick
-        return last_wordcount
-    endif
-    changetick = b:changedtick
-    return last_wordcount = perleval("WordCount " .. b:changedtick)
+    return CacheChange("wordcount", () => {
+        if !IsWide() || index(wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", false)
+            return ''
+        endif
+        return perleval("WordCount")
+    })
 enddef
 # }}} End components
 
