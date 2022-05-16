@@ -1,8 +1,11 @@
 ---
 BasedOnStyle: Microsoft
 IndentWidth: 4
+
 ---
 Language: Cpp
+Standard: Latest
+
 BreakBeforeBraces: Custom
 BraceWrapping:
     AfterCaseLabel: true
@@ -20,11 +23,24 @@ BraceWrapping:
     SplitEmptyFunction: true
     SplitEmptyRecord: true
     SplitEmptyNamespace: true
+AlwaysBreakTemplateDeclarations: Yes
+AllowShortFunctionsOnASingleLine: All
+AllowShortLambdasOnASingleLine: All
 BreakBeforeConceptDeclarations: true
-IncludeBlocks: Regroup
-AccessModifierOffset: -4
-#PackConstructorInitializers: NextLine
+
 SpaceBeforeCpp11BracedList: true
 SpacesBeforeTrailingComments: 2
+SpaceAfterTemplateKeyword: false
+#IndentRequiresClause: true
+IndentRequires: true
+#RequiresClausePosition: WithPreceding
+
+#SpaceBeforeParensOptions:
+    #AfterRequiresInClause: true
+
+#PackConstructorInitializers: NextLine
+AccessModifierOffset: -4
+
+IncludeBlocks: Regroup
 Cpp11BracedListStyle: false
-Standard: Latest
+FixNamespaceComments: false
