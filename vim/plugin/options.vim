@@ -1,7 +1,4 @@
 " {{{ Settings
-" ======================================================================================================================
-" Settings
-" ======================================================================================================================
 set nocp  | " Vi is old
 set display=truncate,uhex
 set incsearch
@@ -52,12 +49,20 @@ set switchbuf=usetab,split,uselast
 " Status line :)
 set laststatus=2  | " Ensure that status line is shown
 set noshowmode  | " The mode will be shown in status line
+" Formatting ><
+set formatoptions+=/
+
+" Color scheme
+import "plgext.vim"
+if s:plgext.Installed("start/vim-solarized8")
+    colo solarized8
+    let g:solarized_menu = 0  | " In tested versions, this is an erroneous option
+else
+    colo desert
+endif
 " }}} End settings
 
 " {{{ Mappings
-" ======================================================================================================================
-" Mappings
-" ======================================================================================================================
 " Reset the leader
 let mapleader=' '
 " Fast fold code
@@ -113,14 +118,6 @@ vmap \= <Plug>(coc-format-selected)
 " Gui settings
 " ======================================================================================================================
 if has("gui_running")
-    " Color scheme
-    import "plgext.vim"
-    if s:plgext.Installed("start/vim-solarized8")
-        colo solarized8
-        let g:solarized_menu = 0  | " In tested versions, this is an erroneous option
-    else
-        colo desert
-    endif
     " Ban the annoying bell(cant be seen on Linux gui)
     set vb
     " I dont need the controls
@@ -128,11 +125,7 @@ if has("gui_running")
     " Use a larger default size x_x
     set columns=120 lines=40
 else  | " GUI ^^^ Term vvv
-    " Color scheme
-    set background=dark
-    colo desert
-    " GUI colors ><
-    "set termguicolors
+    set bg=dark
 endif
 
 " ======================================================================================================================

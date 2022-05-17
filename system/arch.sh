@@ -5,14 +5,14 @@ ls /root > /dev/null 2>&1 || exec sudo bash $0 $USER $@
 
 # Pacman conf
 sed -i 's/#Color/Color/' /etc/pacman.conf
-cat <<EOF > /etc/pacman.conf
+cat <<EOF >> /etc/pacman.conf
 [archlinuxcn]
 Server = https://mirrors.tuna.tsinghua.edu.cn/archlinuxcn/$arch
 Include = /etc/pacman.d/archlinuxcn-mirrorlist
 EOF
 
 # Install essential packages
-sed 's/#.*$//' <<EOF | sudo pacman -Syu --noconfirm -
+sed 's/#.*$//' <<EOF | pacman -Syu --noconfirm -
 # Fonts
 adobe-source-han-sans-cn-fonts
 adobe-source-han-serif-cn-fonts
@@ -26,7 +26,7 @@ fcitx5-im fcitx5-rime fcitx5-mozc
 zsh
 zsh-syntax-highlighting
 firefox
-gvim
+gvim-lily
 xterm
 # Graphics environment
 lightdm
@@ -34,11 +34,11 @@ lightdm-gtk-greeter
 xorg-server
 awesome
 xorg-xrdb
+picom
 # Extra packaging tool
-yay
+paru
 EOF
-sudo -u $1 yay -S --noconfirm - <<EOF
-transset-df
+sudo -u $1 paru -S --noconfirm - <<EOF
 EOF
 
 # Unmute alsa
