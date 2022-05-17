@@ -216,9 +216,9 @@ public:
 struct ConfigInfo
 {
 public:
-    inline static const char *OSName[] = { "UNIX", "Win", "All" };
+    inline static const char *OSName[] = { "", "UNIX", "Win", "All" };
     enum OSCatalog {
-        UNIX, Win, AllOS,
+        UNIX = 0x1, Win, AllOS,
     };
 
     const char *name;
@@ -429,63 +429,67 @@ int main(int, char **argv)
     for (auto id = 0uz; id != conf_list.size(); ++id)
         config_id[conf_list[id].name] = id;
 
+    bool force = false;
+    std::vector<bool> is_selected(conf_list.size(), false);
+    size_t selected_size = 0;
     // {{{ Parse the arguments
     enum Action : int {
         Unset, List, Install, Help, ACTION_MAX,
     } action = Unset;
-    struct
-    {
-        string alias[2];
-    } optnames[] = {
-        { "", "" },
-        { "l", "list" },
-        { "i", "install" },
-        { "h", "help" },
+    std::vector<std::pair<string, Action>> longopts = {
+        { "list", List },
+        { "install", Install },
+        { "help", Help },
     };
-    bool force = false;
-    std::vector<bool> is_selected(conf_list.size(), false);
-    size_t selected_size = 0;
+    std::unordered_map<char, Action> shortopts = {
+        { 'l', List },
+        { 'i', Install },
+        { 'h', Help },
+    };
     for (string arg; *++argv;)
     {
         arg = *argv;
-        if (arg.starts_with("-"))  // Options
+        if (arg.starts_with("--"))  // Long options
         {
-            std::string_view ctnt = arg;
-            int aliasid;
-            if (arg.starts_with("--"))
-            {
-                ctnt = ctnt.substr(2);
-                aliasid = 1;
-            }
+            arg = arg.substr(2);
+            if (arg == "force")
+                force = true;
+            else if (action != Unset)
+                logger.log(logger.Error, "cannot specify multiple actions at the same time");
             else
             {
-                ctnt = ctnt.substr(1);
-                aliasid = 0;
-            }
-            if (ctnt == "f" || ctnt == "force")
-            {
-                force = true;
-                continue;
-            }
-            for (int i = 0; i < ACTION_MAX; ++i)
-                if (optnames[i].alias[aliasid].starts_with(ctnt))
-                {
-                    if (action != Unset)
+                for (auto it : longopts)
+                    if (it.first.starts_with(arg))
                     {
-                        logger.log(logger.Error, "duplicate actions in arguments");
-                        return 1;
+                        action = it.second;
+                        break;
                     }
-                    action = static_cast<Action>(i);
-                    break;
-                }
+                if (action == Unset)  // Specifying multiple actions is not considered
+                    logger.log(logger.Error, "unrecognized option: %o", arg);
+            }
+        }
+        else if (arg.starts_with("-"))  // Short options
+        {
+            for (auto &c : arg.substr(1))
+                if (c == 'f')
+                    force = true;
+                else if (action != Unset)
+                    logger.log(logger.Error, "cannot specify multiple actions at the same time");
+                else if (auto it = shortopts.find(c); it != shortopts.end())
+                    action = it->second;
+                else
+                    logger.log(logger.Error, "unrecognized option: %o", c);
         }
         else  // Ordinary config name
         {
             ++selected_size;
-            if (auto it = config_id.find(arg); it != config_id.end())
+            if (auto it = config_id.find(arg); it == config_id.end())
+                logger.log(logger.Error, "unknown config: %o", arg);
+            else if (conf_list[it->second].os & (1 << env.iswin))
                 is_selected[it->second] = true;
             else
-                logger.log(logger.Error, "unknown config: %o", arg);
+                logger.log(logger.Hint, "not selecting %o, its target os is %o", arg,
+                           ConfigInfo::OSName[conf_list[it->second].os]);
         }
     }
     // }}} End parsing the arguments
@@ -501,10 +505,9 @@ int main(int, char **argv)
 
     // Deal with selections
     if (selected_size == 0)
-    {
-        std::fill(is_selected.begin(), is_selected.end(), true);
-        selected_size = is_selected.size();
-    }
+        for (auto i = 0uz; i != is_selected.size(); ++i)
+            if (conf_list[i].os & (1 << env.iswin))
+                is_selected[i] = true;
     std::vector<std::pair<InstallerBox, size_t>> installers;
     installers.reserve(is_selected.size());
     for (auto id = 0uz; id != conf_list.size(); ++id)
