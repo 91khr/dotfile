@@ -1,12 +1,15 @@
 #if 0
 dotpath=$(readlink -f $(dirname $0))
 cd $dotpath
-flags='-std=c++20 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\""'
+[ ! -z "$DEBUG" ] && \
+        flags='-Wall -Wextra -Weffc++ -Wpedantic -O0 -DDEBUG -ggdb -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -lrt -fno-sanitize-recover -fstack-protector -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -std=c++2b -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\""' \
+        || flags='-std=c++2b -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\""'
 CXXFLAGS="$flags" make -sf <(echo -e '.install:install.cpp; $(CXX) $< $(CXXFLAGS)') .install || exit $?
 exec ./.install $@
 #endif
 // {{{ Premable
 #include <cstdio>
+#include <cassert>
 #include <fstream>
 #include <cstdlib>
 #include <string>
@@ -22,6 +25,7 @@ exec ./.install $@
 using std::string;
 using std::to_string;
 using std::move;
+using std::string_literals::operator""s;
 namespace fs = std::filesystem;
 // }}} End premable
 
@@ -55,6 +59,102 @@ and 'everything' stands for all config
 
 
 
+// {{{1 General helpers
+struct Logger
+{
+    enum Level : unsigned {
+        Error,
+        InternalError,
+        Warn,
+        Output,  // Required output
+        Progress,  // The main progress of a process
+        Info,  // Information that may be useful
+        Hint,  // Small hints
+        ProgressDetail,  // The detailed progress of a process
+        LV_MAX_,
+    };
+    unsigned curlv = ProgressDetail, depth = 0;
+    inline static const char *LevelMsg[] = {
+        "[ERROR] ",
+        "[INTERNAL ERROR] ",
+        "[Warn] ",
+        "",  // Required output shouldn't be logged
+        ":: ",
+        "[Info] ",
+        "[Hint] ",
+        "-> ",
+    };
+    static_assert(sizeof(LevelMsg) / sizeof(*LevelMsg) == Level::LV_MAX_,
+                  "There should be exactly one message for each of the log levels");
+
+    void log(Level lv, const char *fmt, const auto &...args);
+    auto withstage(Level lv, const char *fmt, const auto &...args)
+    {
+        log(lv, fmt, args...);
+        return [this] (auto f) { ++depth; f(); --depth; };
+    }
+} logger;
+
+// {{{ fn format
+string to_string(string s) { return s; }
+string to_string(char c) { return string(1, c); }
+string format(string pat, auto ...args)
+{
+    // Stringfy the args
+    std::vector<string> argstr { to_string(args)... };
+    // Iterate and replace format patterns
+    auto argit = argstr.begin();
+    for (auto pos = pat.find('%'); pos != pat.npos; pos = pat.find('%', pos))
+        if (++pos < pat.size())
+            switch (pat[pos])
+            {
+            case 'D':
+                pat.replace(pos - 1, 2, env.dotpath);
+                break;
+            case 'H':
+                pat.replace(pos - 1, 2, env.homepath);
+                break;
+            case 'o':
+                if (argit == argstr.end())
+                {
+                    logger.log(logger.InternalError, "Too few arguments for format");
+                    exit(3);
+                }
+                pat.replace(pos - 1, 2, *argit++);
+                break;
+            case '%':
+                pat.replace(pos, 1, "");
+                break;
+            default:
+                logger.log(logger.InternalError, "Unrecognized pattern '%o'", pat[pos]);
+                exit(3);
+            }
+        else
+        {
+            logger.log(logger.InternalError, "Trailing %% in pattern string");
+            exit(3);
+        }
+    if (argit != argstr.end())
+    {
+        logger.log(logger.InternalError, "Too much arguments for format");
+        exit(3);
+    }
+    return pat;
+}
+// }}} End fn format
+
+void Logger::log(Level lv, const char *fmt, const auto &...args)
+{
+    if (lv > curlv)
+        return;
+    auto target = lv == Error || lv == InternalError ? stderr : stdout;
+    string msg = format(fmt, args...);
+    fprintf(target, "%s%s%s\n", string(depth * 2, ' ').c_str(), LevelMsg[lv], msg.c_str());
+}
+// }}}1 End general helpers
+
+
+
 // {{{1 Config helpers
 template<class T>
 concept ConfigInstaller = requires(const T a) {
@@ -63,68 +163,80 @@ concept ConfigInstaller = requires(const T a) {
     a.install();
 } && std::move_constructible<T> && std::destructible<T>;
 
+// {{{ Config info and box
+
+// `Box<dyn ConfigInstaller>`, use fat pointer to implement polymorphism
+struct InstallerBox
+{
+private:
+    struct VTable_t
+    {
+        void (*install)(void*);
+        bool (*is_installed)(const void *);
+        void (*destructor)(void*);
+    };
+    template<ConfigInstaller T>
+    inline static const VTable_t VTable_v {
+        [] (void *p) { static_cast<T*>(p)->install(); },
+        [] (const void *p) { return static_cast<const T*>(p)->is_installed(); },
+        [] (void *p) { static_cast<T*>(p)->~T(); },
+    };
+    const VTable_t *vt;
+    void *data;
+
+public:
+    // Explicitly exclude self to make clang happy
+    template<class T> requires (!std::same_as<InstallerBox, T>) && ConfigInstaller<T>
+    InstallerBox(T &&inst) : vt(&VTable_v<T>), data(std::aligned_alloc(alignof(T), sizeof(T)))
+    {
+        new(data) T(move(inst));
+    }
+    ~InstallerBox()
+    {
+        if (data)
+        {
+            vt->destructor(data);
+            std::free(data);
+        }
+    }
+    InstallerBox(const InstallerBox &) = delete;
+    InstallerBox &operator=(const InstallerBox &) = delete;
+    InstallerBox(InstallerBox &&o) : vt(o.vt), data(o.data) { o.data = nullptr; }
+    InstallerBox &operator=(InstallerBox &&o)
+    {
+        assert(this != &o && "There shouldn't be self-assigning");
+        this->~InstallerBox();
+        new(this) InstallerBox(move(o));
+        return *this;
+    }
+    void install() { vt->install(data); }
+    bool is_installed() const { return vt->is_installed(data); }
+};
+
 struct ConfigInfo
 {
 public:
     inline static const char *OSName[] = { "UNIX", "Win", "All" };
-    enum OSType {
+    enum OSCatalog {
         UNIX, Win, AllOS,
     };
 
     const char *name;
-    OSType os;
+    OSCatalog os;
     const char *description;
-
-private:
-    struct Data
-    {
-        std::function<void(void*)> constructor;
-        void (*install)(void*) = [] (auto) {};
-        bool (*is_installed)(void*) = [] (auto) { return false; };
-        void (*destructor)(void*) = [] (auto) {};
-    };
-    char *data;
+    std::function<InstallerBox()> gen;
 
 public:
-    // {{{ Constructors and destructors
-    template<class T>
-    ConfigInfo(const char *n, OSType o, const char *desc, T inst)
-        requires ConfigInstaller<decltype(inst())>
-        : name(n), os(o), description(desc),
-          data(new char[sizeof(Data) + sizeof(decltype(inst()))])
+    template<class F, ConfigInstaller T = std::invoke_result_t<F>>
+    ConfigInfo(const char *n, OSCatalog o, const char *desc, F &&instgen)
+        : name(n), os(o), description(desc), gen([instgen = move(instgen)] { return instgen(); })
     {
-        using InstallerT = decltype(inst());
-        new(data) Data {
-            [inst=move(inst)] (void *data) { new(data) InstallerT(inst()); },
-            [] (void *data) { static_cast<InstallerT*>(data)->install(); },
-            [] (void *data) { return static_cast<InstallerT*>(data)->is_installed(); },
-            [] (void *data) { static_cast<InstallerT*>(data)->~InstallerT(); },
-        };
     }
     ConfigInfo(const ConfigInfo &) = delete;
     ConfigInfo &operator=(const ConfigInfo &) = delete;
-    ConfigInfo(ConfigInfo &&o)
-        : name(o.name), os(o.os), description(o.description), data(o.data)
-    { o.data = nullptr; }
-    ConfigInfo &operator=(ConfigInfo &&o)
-    {
-        this->~ConfigInfo();
-        new(this) ConfigInfo(move(o));
-        return *this;
-    }
-    ~ConfigInfo()
-    {
-        if (data)
-        {
-            reinterpret_cast<Data*>(data)->destructor(data + sizeof(Data));
-            delete data;
-        }
-    }
-    // }}} End constructors and destructors
-
-    void init() { reinterpret_cast<Data*>(data)->constructor(data + sizeof(Data)); }
-    void install() { reinterpret_cast<Data*>(data)->install(data + sizeof(Data)); }
-    bool is_installed() { return reinterpret_cast<Data*>(data)->is_installed(data + sizeof(Data)); }
+    ConfigInfo(ConfigInfo &&o) = default;
+    ConfigInfo &operator=(ConfigInfo &&o) = default;
+    ~ConfigInfo() = default;
 };
 
 template<ConfigInstaller T, ConfigInstaller U>
@@ -138,12 +250,15 @@ auto operator&(T &&a, U &&b)
     return res;
 }
 
-std::unordered_map<string, ConfigInfo> conf_list;
-#define add_conf_impl(ln) struct AddConf##ln { \
-    AddConf##ln(ConfigInfo &&info) { conf_list.insert(std::pair { info.name, move(info) }); } \
-} addconf_var##ln = ConfigInfo
+std::vector<ConfigInfo> conf_list;
+struct ConfigAdder
+{
+    ConfigAdder(ConfigInfo &&conf) { conf_list.push_back(move(conf)); }
+};
+#define add_conf_impl(ln) ConfigAdder add_conf_var_##ln = ConfigInfo
 #define add_conf_2(ln) add_conf_impl(ln)
 #define add_conf add_conf_2(__LINE__)
+// }}} End config info and box
 
 // {{{ BindFnConfig
 class BindFnConfig
@@ -182,6 +297,7 @@ public:
           commands(cmd) { if (commands.back() != '\n') commands.push_back('\n'); }
     void install()
     {
+        logger.log(logger.ProgressDetail, "[invoker %o] installing invoker", file);
         auto ctnt = readfile();
         auto insertion = begline + "\n" + commands + endline;
         auto beg = std::find(ctnt.begin(), ctnt.end(), begline);
@@ -209,11 +325,17 @@ public:
         auto beg = std::find(ctnt.begin(), ctnt.end(), begline);
         auto end = std::find(beg, ctnt.end(), endline);
         if (end == ctnt.end())
+        {
+            logger.log(logger.Hint, "[invoker %o] not found invoking line", file);
             return false;
+        }
+        else if (std::accumulate(++beg, end, string(), [](auto a, auto b) { return a + b + "\n"; }) != commands)
+        {
+            logger.log(logger.Hint, "[invoker %o] invoke commands differ", file);
+            return false;
+        }
         else
-            return std::accumulate(++beg, end, string(), [] (auto a, auto b) {
-                return a + b + "\n";
-            }) == commands;
+            return true;
     }
 };
 // }}} End InvokerConfig
@@ -228,24 +350,33 @@ public:
         : src(env.dotpath / s), dst(env.homepath / d) {}
     void install()
     {
+        auto link_file = [this] (fs::path src, fs::path dst) {
+            if (fs::exists(dst))
+            {
+                if (fs::is_symlink(dst))
+                {
+                    logger.log(logger.ProgressDetail, "[symlink %o] removing target %o", this->src, dst);
+                    fs::remove(dst);
+                }
+                else
+                {
+                    logger.log(logger.Warn, "[symlink %o] target %o is not a symlink, skipping", this->src, dst);
+                    return;
+                }
+            }
+            logger.log(logger.ProgressDetail, "[symlink %o] making symlink: %o -> %o", this->src, dst, src);
+            fs::create_directories(dst.parent_path());
+            fs::create_symlink(src, dst);
+        };
         if (fs::is_directory(src))
-        {
             for (fs::recursive_directory_iterator it { src, fs::directory_options::follow_directory_symlink };
                     it != decltype(it)(); ++it)
             {
-                auto dstpath = dst / it->path().lexically_relative(src);
-                if (it->is_directory())
-                    fs::create_directories(dstpath);
-                else if (!fs::exists(dstpath))
-                    fs::create_symlink(*it, dstpath);
-                else
-                    fprintf(stderr, "%s already exists\n", dstpath.c_str());
+                if (!it->is_directory())
+                    link_file(*it, dst / it->path().lexically_relative(src));
             }
-        }
-        else if (!fs::exists(dst))
-            fs::create_symlink(src, dst);
         else
-            fprintf(stderr, "%s already exists\n", dst.c_str());
+            link_file(src, dst);
     }
     bool is_installed() const
     {
@@ -253,62 +384,23 @@ public:
         {
             for (fs::recursive_directory_iterator it { src, fs::directory_options::follow_directory_symlink };
                     it != decltype(it)(); ++it)
-                if (!fs::exists(dst / it->path().lexically_relative(src)))
+                if (auto target = dst / it->path().lexically_relative(src); !fs::exists(target))
+                {
+                    logger.log(logger.Hint, "[symlink: %o] target %o not exist", src, target);
                     return false;
+                }
             return true;
         }
+        else if (!fs::exists(dst))
+        {
+            logger.log(logger.Hint, "[symlink: %o] target %o not exist", src, dst);
+            return false;
+        }
         else
-            return fs::exists(dst);
+            return true;
     }
 };
 // }}} End SymlinkConfig
-
-string to_string(string s) { return s; }
-// {{{ fn format
-string format(string pat, auto ...args)
-{
-    // Stringfy the args
-    std::vector<string> argstr { to_string(args)... };
-    // Iterate and replace format patterns
-    auto argit = argstr.begin();
-    for (auto pos = pat.find('%'); pos != pat.npos; pos = pat.find('%', pos))
-        if (++pos < pat.size())
-            switch (pat[pos])
-            {
-            case 'D':
-                pat.replace(pos - 1, 2, env.dotpath);
-                break;
-            case 'H':
-                pat.replace(pos - 1, 2, env.homepath);
-                break;
-            case 'o':
-                if (argit == argstr.end())
-                {
-                    fprintf(stderr, "Too few arguments for format\n");
-                    exit(3);
-                }
-                pat.replace(pos - 1, 2, *argit++);
-                break;
-            case '%':
-                pat.replace(pos, 1, "");
-                break;
-            default:
-                fprintf(stderr, "Unrecognized pattern %c\n", pat[pos]);
-                exit(3);
-            }
-        else
-        {
-            fprintf(stderr, "Trailing %% in pattern string\n");
-            exit(3);
-        }
-    if (argit != argstr.end())
-    {
-        fprintf(stderr, "Too much arguments for format\n");
-        exit(3);
-    }
-    return pat;
-}
-// }}} End fn format
 // }}}1 End config helpers
 
 
@@ -323,131 +415,139 @@ int main(int, char **argv)
 #else
         DOTPATH;
 #endif  // DOTPATH
-        ;  // Resume the Vim indent ><
     env.homepath =
 #ifndef HOMEPATH
-        std::getenv(env.iswin ? "USERPROFILE" : "HOME")
+        std::getenv(env.iswin ? "USERPROFILE" : "HOME");
 #else
-        HOMEPATH
+        HOMEPATH;
 #endif  // HOMEPATH
-        ;  // Resume the Vim indent ><
     // }}} End process default parameters
 
     fs::current_path(fs::path(argv[0]).remove_filename());
 
-    // {{{ Process command-line arguments
-    enum {
-        Unset, Install, List, Reached, Pending,
-    } operation(Unset);
+    std::unordered_map<string, size_t> config_id;
+    for (auto id = 0uz; id != conf_list.size(); ++id)
+        config_id[conf_list[id].name] = id;
+
+    // {{{ Parse the arguments
+    enum Action : int {
+        Unset, List, Install, Help, ACTION_MAX,
+    } action = Unset;
+    struct
+    {
+        string alias[2];
+    } optnames[] = {
+        { "", "" },
+        { "l", "list" },
+        { "i", "install" },
+        { "h", "help" },
+    };
     bool force = false;
-    std::unordered_map<string, std::function<void()>> longopt_fns;
-    std::unordered_map<char, std::function<void()>> shortopt_fns;
-    std::unordered_set<string> selected_config;
-    auto check_operation = [&] {
-        if (operation != Unset)
-        {
-            fprintf(stderr, "Duplicate actions!\n");
-            exit(1);
-        }
-    };
-    auto copyall = [&] (bool everything) {
-        selected_config.clear();
-        for (auto &it : conf_list)
-            if (everything || it.second.os == ConfigInfo::AllOS ||
-                    ((it.second.os == ConfigInfo::Win) == env.iswin))
-                selected_config.insert(it.first);
-    };
-    for (auto it : std::initializer_list<std::tuple<const char*, char, std::function<void()>>> {
-        { "help", 'h', [&] { printf(env.helpmsg, argv[0]); exit(0); }, },
-        { "install", 'i', [&] { check_operation(); operation = Install; }, },
-        { "list", 'l', [&] { check_operation(); operation = List; }, },
-        { "reached", 'r', [&] { check_operation(); operation = Reached; copyall(false); }, },
-        { "pending", 'u', [&] { check_operation(); operation = Pending; copyall(false); }, },
-        { "force", 'f', [&] { force = true; }, },
-    })
+    std::vector<bool> is_selected(conf_list.size(), false);
+    size_t selected_size = 0;
+    for (string arg; *++argv;)
     {
-        longopt_fns[std::get<0>(it)] = std::get<2>(it);
-        shortopt_fns[std::get<1>(it)] = std::get<2>(it);
-    }
-    for (char **arg = argv + 1; *arg; ++arg)
-    {
-        string curarg = *arg;
-        if (curarg.starts_with("--"))  // Long option
+        arg = *argv;
+        if (arg.starts_with("-"))  // Options
         {
-            bool ok = false;
-            for (auto it : longopt_fns)
-                if (it.first.starts_with(curarg.substr(2)))
+            std::string_view ctnt = arg;
+            int aliasid;
+            if (arg.starts_with("--"))
+            {
+                ctnt = ctnt.substr(2);
+                aliasid = 1;
+            }
+            else
+            {
+                ctnt = ctnt.substr(1);
+                aliasid = 0;
+            }
+            if (ctnt == "f" || ctnt == "force")
+            {
+                force = true;
+                continue;
+            }
+            for (int i = 0; i < ACTION_MAX; ++i)
+                if (optnames[i].alias[aliasid].starts_with(ctnt))
                 {
-                    it.second();
-                    ok = true;
+                    if (action != Unset)
+                    {
+                        logger.log(logger.Error, "duplicate actions in arguments");
+                        return 1;
+                    }
+                    action = static_cast<Action>(i);
                     break;
                 }
-            if (!ok)
-                fprintf(stderr, "Error: unrecognized option %s\n", *argv);
         }
-        else if (curarg.starts_with("-"))  // Short arg
+        else  // Ordinary config name
         {
-            for (auto ch : curarg.substr(1))
-                if (auto it = shortopt_fns.find(ch); it != shortopt_fns.end())
-                    it->second();
-                else
-                    fprintf(stderr, "Error: unrecognized option %c\n", ch);
-        }
-        else  // Ordinary config
-        {
-            if (curarg == "everything" || curarg == "available")
-                copyall(curarg == "everything");
-            else if (!selected_config.contains(curarg))
-            {
-                if (conf_list.find(curarg) != conf_list.end())
-                    selected_config.insert(curarg);
-                else
-                    fprintf(stderr, "Unrecognized config: %s\n", curarg.c_str());
-            }
+            ++selected_size;
+            if (auto it = config_id.find(arg); it != config_id.end())
+                is_selected[it->second] = true;
+            else
+                logger.log(logger.Error, "unknown config: %o", arg);
         }
     }
-    // }}} End processing command-line arguments
-    for (auto &conf : conf_list)
-        conf.second.init();
+    // }}} End parsing the arguments
 
-    // Perform operation
-    if (operation == Unset)
-        operation = selected_config.empty() ? List : Install;
-    if (operation == List && selected_config.empty())
-        copyall(true);
-    std::list<ConfigInfo> installed, pending;
-    for (auto &name : selected_config)
+    // Process actions
+    if (action == Help)
     {
-        auto &it = conf_list.find(name)->second;
-        (it.is_installed() ? installed : pending).push_back(move(it));
+        logger.log(logger.Output, "%o", env.helpmsg);
+        return 0;
     }
-    switch (operation)
+    if (action == Unset)
+        action = selected_size == 0 ? List : Install;
+
+    // Deal with selections
+    if (selected_size == 0)
     {
-    case Unset:  // Impossible ><
-    case List:
-        puts("Installed:");
-        for (auto &it : installed)
-            printf("  %s(%s): %s\n", it.name, it.OSName[it.os], it.description);
-        puts("Not yet installed:");
-        for (auto &it : pending)
-            printf("  %s(%s): %s\n", it.name, it.OSName[it.os], it.description);
-        break;
-    case Reached:
-    case Pending:
-        for (auto &it : operation == Reached ? installed : pending)
-            printf("%s ", it.name);
-        puts("");
-        break;
-    case Install:
+        std::fill(is_selected.begin(), is_selected.end(), true);
+        selected_size = is_selected.size();
+    }
+    std::vector<std::pair<InstallerBox, size_t>> installers;
+    installers.reserve(is_selected.size());
+    for (auto id = 0uz; id != conf_list.size(); ++id)
+        if (is_selected[id])
+            installers.push_back({ conf_list[id].gen(), id });
+
+    if (action == List)
+    {
         if (force)
-            std::move(installed.begin(), installed.end(), std::back_inserter(pending));
-        for (auto &it : pending)
-        {
-            printf("Installing %s\n", it.name);
-            it.install();
-        }
-        break;
+            logger.log(logger.Hint, "force is set but not effect in list operations");
+        std::vector<size_t> colle[2];
+        for (auto &&inst : installers)
+            colle[inst.first.is_installed()].push_back(inst.second);
+        auto print_conf = [&] (int &&which) {
+            return [&] {
+                for (auto id : colle[which])
+                {
+                    auto &conf = conf_list[id];
+                    logger.log(logger.Output, "%o(%o): %o", conf.name, ConfigInfo::OSName[conf.os], conf.description);
+                }
+            };
+        };
+        logger.withstage(logger.Output, "Installed configs:")(print_conf(1));
+        logger.withstage(logger.Output, "Not installed configs:")(print_conf(0));
     }
+    if (action == Install)
+        logger.withstage(logger.Progress, "Installing configs...")([&] {
+            std::vector<size_t> done;
+            for (auto &&inst : installers)
+                if (force || !inst.first.is_installed())
+                    logger.withstage(logger.Progress, "Installing %o",
+                                     conf_list[inst.second].name)([&] { inst.first.install(); });
+                else
+                    done.push_back(inst.second);
+            if (!done.empty())
+            {
+                string names;
+                for (auto id : done)
+                    names += conf_list[id].name + " "s;
+                names.pop_back();
+                logger.log(logger.ProgressDetail, "Already installed: %o", names);
+            }
+        });
 }
 // }}} End main
 
@@ -487,10 +587,10 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
         return InvokerConfig { ".profile", "#", "profile", format("source %D/profile/profile") } &
             InvokerConfig { ".xprofile", "#", "profile", format("source %D/profile/xprofile") } &
             InvokerConfig { ".Xresources", "!", "profile", format(
-                    R"(#include "%D/profile/Xresources")"
+                    R"(#include "%D/profile/Xresources")""\n"
                     R"(#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
-            SymlinkConfig { "profile/clang-format", ".clang-format" } &
-            SymlinkConfig { "profile/compile_flags.txt", "compile_flags.txt" };
+            SymlinkConfig { "profile/clang-format.yaml", ".clang-format" } &
+            SymlinkConfig { "profile/clangd.yaml", ".config/clangd/config.yaml" };
     },
 };
 
