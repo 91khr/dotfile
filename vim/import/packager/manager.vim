@@ -14,6 +14,7 @@ var packconf: list<dict<string>>
 var hasinit = false
 export var packpath = expand(has("win32") ? "$USERPROFILE" : "$HOME") .. "/.vim/pack/packager/"
 var processing = false
+var max_job = 3
 # for all opts arg: { force: bool?, silent: bool? }
 
 
@@ -60,7 +61,6 @@ enddef
 # }}} End InitPack
 
 # {{{ ChainJob
-const max_job = 3
 var cur_job = 0
 var pending_jobs: list<func()> = []
 # post return: non empty list for execute that command, empty list for head to next post
@@ -199,7 +199,7 @@ def Helptags(pack: dict<any>, res: number): any
     endif
 enddef
 
-export def Sync(opts: dict<any> = { force: false, silent: false })
+export def Sync(opts: dict<any> = { force: false, silent: false, packs: [] })
     if processing
         echohl Error
         echom "Another operation is processing, halting..."
@@ -208,9 +208,18 @@ export def Sync(opts: dict<any> = { force: false, silent: false })
     endif
     InitPack(opts)
     processing = true
-    if !opts->get("silent", false)
-        info.Show(packconf->mapnew("v:val.name"))
+
+    var selected = {}
+    if get(opts, "packs", [])->empty()
+        opts.packs = packconf->mapnew("v:val.name")
     endif
+    for pack in opts.packs
+        selected[pack] = true
+    endfor
+    if !opts->get("silent", false)
+        info.Show(packconf->mapnew("v:val.name")->filter((k, v) => get(selected, v, false)))
+    endif
+
     def ProcPack(pack: dict<string>)
         if pack->get("status", "") == "missing"
             ChainJob(pack.name, ["git", "clone", pack.url, pack.path], [(res): any => Helptags(pack, res)])
@@ -227,6 +236,9 @@ export def Sync(opts: dict<any> = { force: false, silent: false })
         endif
     enddef
     for pack in packconf
+        if !get(selected, pack.name, false)
+            continue
+        endif
         if pack->has_key("status") && index(["diverged", "latest"], pack.status) != -1
             info.Update(pack.name, statusmap[pack.status])
             continue

@@ -20,21 +20,32 @@ def ClosePopup()
     if popupid != -1
         popup_close(popupid)
         popupid = -1
-    elseif popup_timerid != -1
-        timer_stop(popup_timerid)
-        popup_timerid = -1
     endif
 enddef
 
+var prev_ln = -1
 def PopStatus()
     var ln = line('.') - 1
     ClosePopup()
-    if ln >= len(packlist) || bufnr() != infobuf || empty(packlist[lnlist[ln]].output)
-        return
+    def DoPop(...a: list<any>)
+        if ln >= len(packlist) || bufnr() != infobuf || empty(packlist[lnlist[ln]].output)
+            return
+        endif
+        popupid = popup_atcursor(packlist[lnlist[ln]].output, { moved: [0, 0, 0], })
+        popup_timerid = -1
+    enddef
+    if ln == prev_ln
+        if popup_timerid == -1
+            DoPop()
+        endif
+    else
+        if popup_timerid != -1
+            timer_stop(popup_timerid)
+            popup_timerid = -1
+        endif
+        popup_timerid = timer_start(500, DoPop)
     endif
-    timer_start(500, () => {
-        popupid = popup_atcursor(packlist[lnlist[ln]].output, { moved: "any", })
-    })
+    prev_ln = ln
 enddef
 
 export def Show(packages: list<string>)
