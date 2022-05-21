@@ -17,23 +17,35 @@ enddef
 # }}} End helpers
 
 # {{{ Components
-def FileName(): string
-    if &ft == 'help' | return expand('%:t') | endif
-    if expand('%:t') == ''
-        if &buftype == 'quickfix'
-            return getwininfo()[winnr() - 1].loclist ? '[Location List]' : '[Quickfix List]'
+def FileName(win: number, wide: bool): string
+    var buf = winbufnr(win)
+    if getbufvar(buf, '&ft') == 'help' && getbufvar(buf, '&ro') && !getbufvar(buf, '&modifiable')
+        return expand('%:t')
+    endif
+    var fname = bufname(buf)
+    if empty(fname)
+        var bt = getbufvar(buf, '&bt')
+        if bt == 'quickfix'
+            return getwininfo(win)[0].loclist ? '[Location List]' : '[Quickfix List]'
         endif
         var btlist = {
                     \     nofile: '[Scratch]',
                     \     prompt: '[Prompt]',
                     \     popup: '[Popup]',
                     \ }
-        return btlist->has_key(&bt) ? btlist[&bt] : '[No Name]'
+        return btlist->has_key(bt) ? btlist[bt] : '[No Name]'
     endif
-    var relpath = fnamemodify(expand('%'), ':.')
-    var pathsep = has("win32") ? '\' : '\/'
-    return IsWide() ? relpath :
-                \ substitute(relpath, '\v([^/])([^/]*)' .. pathsep, '\1' .. pathsep, 'g')
+    var relpath = fnamemodify(fname, ':.')
+    return wide ? relpath :
+                \ substitute(relpath, '\v([^/])([^/]*)' .. '/', '\1' .. '/', 'g')
+enddef
+
+def StatusFileName(): string
+    return FileName(winnr(), IsWide())
+enddef
+
+def TabFileName(n: number): string
+    return FileName(win_getid(tabpagewinnr(n), n), false)
 enddef
 
 def CocStatus(): string
@@ -85,8 +97,11 @@ enddef
 g:lightline = {
             \     colorscheme: 'solarized',
             \     component_function: {
-            \         filename: Func('FileName'),
+            \         status_filename: Func('StatusFileName'),
             \         cocstatus: Func('CocStatus'),
+            \     },
+            \     tab_component_function: {
+            \         tab_filename: Func('TabFileName'),
             \     },
             \     component_expand: {
             \         spacestatus: Func('SpaceStatus'),
@@ -102,7 +117,7 @@ g:lightline = {
             \     },
             \     active: {
             \         left: [ [ 'mode', 'paste', 'spell' ],
-            \                 [ 'readonly', 'filename', 'modified' ],
+            \                 [ 'readonly', 'status_filename', 'modified' ],
             \                 [ 'cocstatus' ],
             \         ],
             \         right: [ [ 'lineinfo' ],
@@ -110,6 +125,10 @@ g:lightline = {
             \                  [ 'spacestatus', 'wordcount' ],
             \                  [ 'fileformat', 'fileencoding', 'filetype' ],
             \         ],
+            \     },
+            \     tab: {
+            \         active: [ 'tabnum', 'tab_filename', 'modified' ],
+            \         inactive: [ 'tabnum', 'tab_filename', 'modified' ],
             \     },
             \ }
 

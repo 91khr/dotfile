@@ -10,11 +10,13 @@ if exists("g:vimrc_load_option")
     set packpath+=~/.vim
     " Reload the options loaded as plugins
     function! s:ReloadPlugins(header)
-        for l:file in readdir(a:header, { -> v:val !~# '^\..*' })
-            execute "source " . a:header . '/' . l:file
+        for l:file in glob(a:header .. "/**/*.vim", v:true, v:true)
+            execute "source " .. l:file
         endfor
     endfunction
-    call s:ReloadPlugins(s:config_dir . "/plugin")
+    for loc in [ "plugin", "import" ]
+        call s:ReloadPlugins(s:config_dir .. "/" .. loc)
+    endfor
     delfunction s:ReloadPlugins
 endif
 let g:vimrc_load_option = 1

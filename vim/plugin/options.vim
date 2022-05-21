@@ -40,6 +40,8 @@ set viminfofile=NONE
 " Width for line breaking and vertical prompt line
 set textwidth=120
 set colorcolumn=+0
+" Break more humanitily
+set linebreak
 " Use LF by default
 set fileformat=unix
 set fileformats=unix,dos
@@ -50,7 +52,7 @@ set switchbuf=usetab,split,uselast
 set laststatus=2  | " Ensure that status line is shown
 set noshowmode  | " The mode will be shown in status line
 " Formatting ><
-set formatoptions+=/
+set formatoptions+=/j
 
 " Color scheme
 import "plgext.vim"
