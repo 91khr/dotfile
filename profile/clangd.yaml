@@ -1,8 +1,6 @@
 CompileFlags:
     Add: [-std=c++2b, -Wall, -Wextra, -Weffc++, -pedantic]
 
----
-
 If:
     PathMatch: .*\.c
     CompileFlags:
