@@ -19,14 +19,11 @@ enddef
 # {{{ Components
 def FileName(win: number, wide: bool): string
     var buf = winbufnr(win)
-    if getbufvar(buf, '&ft') == 'help' && getbufvar(buf, '&ro') && !getbufvar(buf, '&modifiable')
-        return expand('%:t')
-    endif
     var fname = bufname(buf)
     if empty(fname)
         var bt = getbufvar(buf, '&bt')
         if bt == 'quickfix'
-            return getwininfo(win)[0].loclist ? '[Location List]' : '[Quickfix List]'
+            return !!getwininfo(win)[0].loclist ? '[Location List]' : '[Quickfix List]'
         endif
         var btlist = {
                     \     nofile: '[Scratch]',
@@ -35,13 +32,16 @@ def FileName(win: number, wide: bool): string
                     \ }
         return btlist->has_key(bt) ? btlist[bt] : '[No Name]'
     endif
-    var relpath = fnamemodify(fname, ':.')
+    if getbufvar(buf, '&ft') == 'help' && getbufvar(buf, '&ro') && !getbufvar(buf, '&modifiable')
+        return fnamemodify(fname, ":t")
+    endif
+    var relpath = fnamemodify(fname, ":.")
     return wide ? relpath :
                 \ substitute(relpath, '\v([^/])([^/]*)' .. '/', '\1' .. '/', 'g')
 enddef
 
 def StatusFileName(): string
-    return FileName(winnr(), IsWide())
+    return FileName(win_getid(winnr()), IsWide())
 enddef
 
 def TabFileName(n: number): string
