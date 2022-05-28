@@ -104,16 +104,28 @@ call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
 call s:AddPackCmd('MarkdownPreview', 'packadd markdown-preview.nvim | MarkdownPreview', {})
 call s:AddPackCmd('Coc', 'packadd coc.nvim | CocStart', {})
-nnoremap <F5> <Cmd>packadd vimspector<CR><Plug>VimspectorContinue
+nnoremap <F5> <Cmd>packadd vimspector<CR>
 " }}} End package list and setup
+
+function! s:ListPacks(...)
+    let res = []
+    for pack in g:packager_config.packs
+        if type(pack) == v:t_string
+            let res += [pack]
+        else
+            let res += [pack.name]
+        endif
+    endfor
+    return join(res, "\n")
+endfunction
 
 " Package commands
 command! -bang -bar PackClean call packager#manager#clean(#{
             \ force: <bang>v:false, silent: stridx("<mods>", "silent") != -1 })
 command! -bang -bar PackStatus call packager#manager#status(#{
             \ force: <bang>v:false, silent: stridx("<mods>", "silent") != -1 })
-command! -bang -bar PackSync call packager#manager#sync(#{
-            \ force: <bang>v:false, silent: stridx("<mods>", "silent") != -1 })
+command! -bang -bar -nargs=* -complete=custom,s:ListPacks PackSync call packager#manager#sync(#{
+            \ force: <bang>v:false, silent: stridx("<mods>", "silent") != -1, packs: split(<q-args>, " ") })
 
 " }}} End packages
 

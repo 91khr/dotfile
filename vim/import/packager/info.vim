@@ -59,6 +59,13 @@ export def Show(packages: list<string>)
         setlocal nonu bt=nofile bufhidden=delete noswapfile nobuflisted
         infobuf = bufnr()
     else
+        # Clear the previous highlight
+        for id in range(len(packages))
+            var lasthl = packlist[packages[id]].lasthl
+            if lasthl != -1
+                matchdelete(lasthl, bufwinid(infobuf))
+            endif
+        endfor
         packlist = {}
         setbufvar(infobuf, "&modifiable", true)
         deletebufline(infobuf, 1, "$")
