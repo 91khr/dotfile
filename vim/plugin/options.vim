@@ -103,7 +103,9 @@ snoremap <silent><expr><Tab> <Esc>:call UltiSnips#ExpandSnippet()<CR>
 " Confirm completion
 inoremap <silent><expr><CR> pumvisible() ? "<C-Y>" : "<CR>"
 " LSP actions
-noremap \a <Cmd>CocAction<CR>
+nmap \a <plug>(coc-codeaction-cursor)
+vmap \a <plug>(coc-codeaction-selected)
+nmap \f <plug>(coc-fix-current)
 noremap \? <Cmd>CocDiagnostics<CR>
 nnoremap \\ <Cmd>call CocAction('doHover')<CR>
 nmap gd <Plug>(coc-definition)
