@@ -39,6 +39,7 @@ alias ls="ls --color=auto"
 alias grep="grep --color=auto --line-number"
 export EDITOR=vim
 export PATH=${PATH}
+export GPG_TTY=$(tty)
 
 # Utils
 if [ $WSL_DISTRO_NAME ]; then
