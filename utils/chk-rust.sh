@@ -8,14 +8,16 @@ function progexec() {
     eval $*
 }
 
-progexec cargo t --all || exit $?
-progexec cargo clippy --all || exit $?
+progexec cargo check --all-features --all-targets || exit $?
+progexec cargo test --all-features || exit $?
+progexec cargo clippy --all-targets --all-features || exit $?
 progexec cargo fmt --check --all || exit $?
+progexec cargo doc --all-features || exit $?
 
-progress find escaping unwraps...
+progress looking for unbounded unwraps...
 res=1
-for f in $(find -name '*.rs'); do
-    sed '/#\[cfg(test)\]/q' $f | grep --color=auto --label="$f" -nHF unwrap
+for f in $(find src -name '*.rs'); do
+    sed '/#\[cfg(test)\]/q' $f | grep --color=auto --label="$f" -nH '::unwrap\|unwrap()'
     res=$(( $res && $? ))
 done
 (( $res == 0 )) && exit 1
