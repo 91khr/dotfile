@@ -22,6 +22,6 @@ function Reader(input, opts)
             end
         end,
     })
-    return pandoc.read(src, "gfm+raw_tex+tex_math_dollars"):walk(filter)
+    return pandoc.read(src, "gfm+tex_math_dollars"):walk(filter)
 end
 

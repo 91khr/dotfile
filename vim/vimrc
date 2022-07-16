@@ -65,6 +65,8 @@ let g:packager_config = #{
             "\         Latex
             "\          'lervag/vimtex',
             \          '91khr/vim-latex-live-preview',
+            "\         Slint
+            \          #{ name: 'slint-ui/vim-slint', location: 'start' },
             \
             "\         Zen mode :)
             "\          'junegunn/goyo.vim',
