@@ -6,7 +6,7 @@
 (package-initialize)
 (when (not (boundp 'package-list))
   (setq package-list
-        '(powerline neotree use-package markdown-mode solarized-theme evil)))
+        '(powerline neotree use-package markdown-mode solarized-theme evil racket-mode company)))
 
 ;; Check for uninstalled packages and install them
 (let ((package-install-list '())
@@ -20,4 +20,19 @@
     (cl-loop for p in package-install-list do (package-install p))))
 
 (require 'use-package)
+
+;; Individual package config
+(use-package markdown-mode
+             :ensure t
+             :mode (("README\\.md\\'" . gfm-mode)
+                    ("\\.md\\'" . markdown-mode)
+                    ("\\.markdown\\'" . markdown-mode))
+             :init (progn
+                     (setq markdown-command "pandoc")))
+
+(use-package evil
+             :config (load-file (concat dotdir "pkgconf/evil.el")))
+
+(use-package racket-mode
+             :config (load-file (concat dotdir "pkgconf/racket.el")))
 

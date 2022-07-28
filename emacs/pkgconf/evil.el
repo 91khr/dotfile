@@ -1,6 +1,3 @@
-;; Evil settings
-(evil-mode)
-
 ;; gj and gk
 (evil-define-key 'normal 'global (kbd "j") 'evil-next-visual-line)
 (evil-define-key 'normal 'global (kbd "k") 'evil-previous-visual-line)
@@ -21,4 +18,6 @@
 ;; Info
 (define-key Info-mode-map (kbd "C-n") 'Info-forward-node)
 (define-key Info-mode-map (kbd "C-p") 'Info-backward-node)
+
+(setq evil-undo-system 'undo-redo)
 
