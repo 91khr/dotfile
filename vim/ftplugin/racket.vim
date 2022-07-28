@@ -2,12 +2,12 @@ import "ftext.vim"
 
 if s:ftext.CanCmd("Compile")
     command! -buffer -bar Compile w | eval s:ftext.TermRun([ "racket", "-ie",
-                \     printf("(enter! (file \"%s\"))", expand("%")) ],
+                \     printf("(enter! (file \"%s\"))", expand("%:p")) ],
                 \     #{ persist: v:false, unique: v:true })
     let b:compile_overridable = 0
 endif
 if s:ftext.CanCmd("Run")
-    command! -buffer -bar Run w | botright term racket %
+    command! -buffer -bar Run w | botright term racket %:p
     let b:run_overridable = 0
 endif
 
