@@ -36,23 +36,42 @@ function split_str(str)
 end
 
 lastlang = "zh"
+quotes = {}
 function replace_punct(str)
-    local quotes = {}
     local res = str:gsub("([^%p%d%s]?)([().,:;?!\"' \t]+)", function(lead, punct)
         if lead:match("%a") or (lead == "" and lastlang == "en") then
             lastlang = "en"
-            return lead .. punct
         elseif lead:len() > 0 then
             lastlang = "zh"
         end
         if punct:match("^%s+$") then return lead .. punct end
-        return lead .. punct:gsub(".", function(punct)
+        local function mkquote(punct)
+            if #quotes == 0 or punct ~= quotes[#quotes].value then
+                table.insert(quotes, { value = punct == "(" and ")" or punct, lang = lastlang })
+                return lastlang == "zh" and
+                        ({ ["\""] = "「", ["'"] = "「", ["("] =  "（" })[punct] or
+                        punct
+            else
+                local res = quotes[#quotes].lang == "zh" and
+                        ({ ["\""] = "」", ["'"] = "」", [")"] = "）" })[punct] or
+                        quotes[#quotes].value
+                lastlang = quotes[#quotes].lang
+                table.remove(quotes)
+                return res
+            end
+        end
+        local function entrans(punct)
+            if punct:match("[\"'()]") then
+                return mkquote(punct)
+            else
+                return punct
+            end
+        end
+        local function zhtrans(punct)
             if punct:match("%s") then
-                return ''
-            elseif punct ~= '"' and punct ~= "'" then
+                return ""
+            elseif not punct:match("[\"'()]") then
                 return ({
-                    ["("] = "（",
-                    [")"] = "）",
                     ["."] = "。",
                     [","] = "，",
                     [":"] = "：",
@@ -60,13 +79,12 @@ function replace_punct(str)
                     ["?"] = "？",
                     ["!"] = "！",
                 })[punct]
-            elseif punct == quotes[#quotes] then
-                table.remove(quotes)
-                return "」"
             else
-                table.insert(quotes, punct)
-                return "「"
+                return mkquote(punct)
             end
+        end
+        return lead .. punct:gsub(".", function(punct)
+            return lastlang == "zh" and zhtrans(punct) or entrans(punct)
         end)
     end)
     return res
