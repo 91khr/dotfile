@@ -90,6 +90,9 @@ nnoremap <leader>: :term ++shell<space>
 " Quick compile & Run
 nnoremap <silent><leader>cc <Cmd>Compile<CR>
 nnoremap <silent><leader>cr <Cmd>Run<CR>
+" Expand snippets
+xnoremap <silent><Tab> :call UltiSnips#SaveLastVisualSelection()<CR>gvs
+snoremap <silent><expr><Tab> <Esc>:call UltiSnips#ExpandSnippet()<CR>
 " Autoselect suggest in completion & expand snippets
 inoremap <silent><expr><Tab>
             \ UltiSnips#CanExpandSnippet() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
@@ -98,10 +101,27 @@ inoremap <silent><expr><Tab>
 inoremap <silent><expr><S-Tab>
             \ pumvisible() ? "<C-P>" :
             \ UltiSnips#CanJumpBackwards() ? "<C-R>=UltiSnips#JumpBackwards()<CR>" : "<Tab>"
-xnoremap <silent><Tab> :call UltiSnips#SaveLastVisualSelection()<CR>gvs
-snoremap <silent><expr><Tab> <Esc>:call UltiSnips#ExpandSnippet()<CR>
 " Confirm completion
 inoremap <silent><expr><CR> pumvisible() ? "<C-Y>" : "<CR>"
+autocmd User CocNvimInit {
+    echom "QWQ"
+    iunmap <Tab>
+    iunmap <S-Tab>
+    iunmap <CR>
+    inoremap <silent><expr><Tab>
+                \ UltiSnips#CanExpandSnippet() ? "<C-R>=UltiSnips#ExpandSnippet()<CR>" :
+                \ pumvisible() ? "<C-N>" :
+                \ coc#pum#visible() ? coc#pum#next(1) :
+                \ UltiSnips#CanJumpForwards() ? "<C-R>=UltiSnips#JumpForwards()<CR>" : "<Tab>"
+    inoremap <silent><expr><S-Tab>
+                \ pumvisible() ? "<C-P>" :
+                \ coc#pum#visible() ? coc#pum#prev(1) :
+                \ UltiSnips#CanJumpBackwards() ? "<C-R>=UltiSnips#JumpBackwards()<CR>" : "<Tab>"
+    inoremap <silent><expr><CR>
+                \ pumvisible() ? "<C-Y>" :
+                \ coc#pum#visible() ? coc#_select_confirm() :
+                \ "<CR>"
+}
 " LSP actions
 nmap \a <plug>(coc-codeaction-cursor)
 vmap \a <plug>(coc-codeaction-selected)
