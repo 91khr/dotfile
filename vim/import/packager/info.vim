@@ -84,6 +84,7 @@ export def Show(packages: list<string>)
     # Add popup for status
     autocmd CursorMoved <buffer> PopStatus()
     autocmd BufHidden <buffer> packlist = {}
+    autocmd BufLeave <buffer> ClosePopup()
 enddef
 
 export def Hide()
