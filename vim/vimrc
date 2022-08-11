@@ -105,7 +105,7 @@ call s:AddPackCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args':
 call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
 call s:AddPackCmd('MarkdownPreview', 'packadd markdown-preview.nvim | MarkdownPreview', {})
-call s:AddPackCmd('Coc', 'packadd coc.nvim | CocStart', {})
+call s:AddPackCmd('Coc', 'packadd coc.nvim | doautocmd User BeforeCocNvimInit | CocStart', {})
 nnoremap <F5> <Cmd>packadd vimspector<CR>
 " }}} End package list and setup
 

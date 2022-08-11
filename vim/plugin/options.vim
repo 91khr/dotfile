@@ -103,8 +103,7 @@ inoremap <silent><expr><S-Tab>
             \ UltiSnips#CanJumpBackwards() ? "<C-R>=UltiSnips#JumpBackwards()<CR>" : "<Tab>"
 " Confirm completion
 inoremap <silent><expr><CR> pumvisible() ? "<C-Y>" : "<CR>"
-autocmd User CocNvimInit {
-    echom "QWQ"
+autocmd User BeforeCocNvimInit {
     iunmap <Tab>
     iunmap <S-Tab>
     iunmap <CR>
@@ -185,6 +184,11 @@ let g:rainbow_conf = #{
             \     separately: #{
             \         c: #{ inherit: '', parentheses: [ "start=/{/ end=/}/ fold" ] },
             \         cpp: #{ inherit: 'c', parentheses: [] },
+            \         typescript: #{ contains_prefix: '', parentheses: [
+            \             "start=/(/ end=/)/ containedin=TOP contains=typescriptDecorator,@typescriptParameterList,@typescriptComments nextgroup=typescriptTypeAnnotation,typescriptBlock skipwhite skipnl",
+            \             'start=/\[/ end=/]/ containedin=TOP contains=@typescriptValue,@typescriptComments nextgroup=@typescriptSymbols,typescriptDotNotation skipwhite skipempty',
+            \             ],
+            \         },
             \     }
             \ }
 
