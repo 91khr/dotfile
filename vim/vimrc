@@ -48,6 +48,8 @@ let g:packager_config = #{
             \         'scrooloose/nerdtree',
             "\        Run shell asyncly
             \         'skywind3000/asyncrun.vim',
+            "\        Git support
+            \         'tpope/vim-fugitive',
             \
             "\        Language server
             \         #{ name: 'neoclide/coc.nvim', branch: 'release' },
@@ -106,6 +108,7 @@ call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
 call s:AddPackCmd('MarkdownPreview', 'packadd markdown-preview.nvim | MarkdownPreview', {})
 call s:AddPackCmd('Coc', 'packadd coc.nvim | doautocmd User BeforeCocNvimInit | CocStart', {})
+call s:AddPackCmd('Git', 'packadd vim-fugitive | Git <args>', {'args': '*'})
 nnoremap <F5> <Cmd>packadd vimspector<CR>
 " }}} End package list and setup
 

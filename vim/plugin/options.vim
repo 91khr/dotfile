@@ -184,11 +184,7 @@ let g:rainbow_conf = #{
             \     separately: #{
             \         c: #{ inherit: '', parentheses: [ "start=/{/ end=/}/ fold" ] },
             \         cpp: #{ inherit: 'c', parentheses: [] },
-            \         typescript: #{ contains_prefix: '', parentheses: [
-            \             "start=/(/ end=/)/ containedin=TOP contains=typescriptDecorator,@typescriptParameterList,@typescriptComments nextgroup=typescriptTypeAnnotation,typescriptBlock skipwhite skipnl",
-            \             'start=/\[/ end=/]/ containedin=TOP contains=@typescriptValue,@typescriptComments nextgroup=@typescriptSymbols,typescriptDotNotation skipwhite skipempty',
-            \             ],
-            \         },
+            \         typescript: #{ parentheses: [] },
             \     }
             \ }
 
