@@ -21,3 +21,16 @@
 
 (setq evil-undo-system 'undo-redo)
 
+;; Other hooks
+(defun cfg-evil-get-imstate ()
+  (string-to-number (string-trim (shell-command-to-string "fcitx5-remote"))))
+(setq cfg-evil-last-imstate (cfg-evil-get-imstate))
+(add-hook 'evil-insert-state-exit-hook
+	  (lambda ()
+	    (setq cfg-evil-last-imstate (cfg-evil-get-imstate))
+	    (call-process "fcitx5-remote" nil nil nil "-c")))
+(add-hook 'evil-insert-state-entry-hook
+	  (lambda ()
+	    (if (= cfg-evil-last-imstate 2)
+		(call-process "fcitx5-remote" nil nil nil "-o"))))
+
