@@ -7,6 +7,7 @@
  '(evil-undo-system 'undo-redo)
  '(inhibit-startup-screen t)
  '(make-backup-files nil)
+ '(markdown-enable-highlighting-syntax t)
  '(markdown-enable-math t)
  '(markdown-fontify-code-blocks-natively t)
  '(markdown-header-scaling t)
@@ -22,6 +23,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(markdown-code-face ((t (:inherit normal))))
  '(markdown-header-face-1 ((t (:inherit markdown-header-face :height 2.0))))
  '(markdown-header-face-2 ((t (:inherit markdown-header-face :height 1.6))))
  '(markdown-header-face-3 ((t (:inherit markdown-header-face :height 1.2)))))

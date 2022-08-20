@@ -27,8 +27,7 @@
              :mode (("README\\.md\\'" . gfm-mode)
                     ("\\.md\\'" . markdown-mode)
                     ("\\.markdown\\'" . markdown-mode))
-             :init (progn
-                     (setq markdown-command "pandoc")))
+             :config (load-file (concat dotdir "pkgconf/markdown.el")))
 
 (use-package evil
              :config (load-file (concat dotdir "pkgconf/evil.el")))
