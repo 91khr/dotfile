@@ -12,9 +12,16 @@
 (global-linum-mode t)
 (show-paren-mode)
 
+(setq indent-tabs-mode nil)
+(setq-default fill-column 120)
+(setq-default auto-fill-function 'do-auto-fill)
+
 (use-package powerline)
 (powerline-default-theme)
 
-(evil-mode)
+;;(evil-mode)
+(require 'meow)
+(meow-setup)
+(meow-global-mode 1)
 (global-company-mode)
 

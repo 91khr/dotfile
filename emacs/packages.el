@@ -1,12 +1,13 @@
 ;; Init packages
 (require 'package)
 (setq package-archives
-      '(("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-        ("melpa" . "https://melpa.org/packages/")))
+      '(("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
+        ))
+        ;;("melpa" . "https://melpa.org/packages/")))
 (package-initialize)
 (when (not (boundp 'package-list))
   (setq package-list
-        '(powerline neotree use-package markdown-mode solarized-theme evil racket-mode company)))
+        '(powerline neotree use-package markdown-mode solarized-theme evil racket-mode company meow)))
 
 ;; Check for uninstalled packages and install them
 (let ((package-install-list '())
@@ -31,6 +32,9 @@
 
 (use-package evil
              :config (load-file (concat dotdir "pkgconf/evil.el")))
+
+(use-package meow
+             :config (load-file (concat dotdir "pkgconf/meow.el")))
 
 (use-package racket-mode
              :config (load-file (concat dotdir "pkgconf/racket.el")))
