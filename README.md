@@ -20,8 +20,14 @@ so that the source can be automatically compiled and executed),
 or compile and execute it.
 Specific document can be find in the source or by `install.cpp --help`.
 
+Some folders may contain a `dependencies.ini`,
+in which the section name is the OS, and the lines are the package names.
+The dependencies should be installed in order for the configuration to work properly.
+Unfortunately, the installer has no ability to install the dependencies automatically yet.
+
 ## TODO
 
 - [ ] Split Awesome and Emacs config into separate files
-- [ ] Add zsh autoload
+- [x] Add zsh autoload
+- [ ] Add dependencies installer
 

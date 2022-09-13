@@ -1,6 +1,7 @@
 local beautiful = require("beautiful")
 local gears = require("gears")
 local awful = require("awful")
+local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
 local hotkeys_popup = ...
 
@@ -72,7 +73,13 @@ local globalkeys = gears.table.join(
     awful.key({ }, "XF86MonBrightnessUp", function () brightness_widget:inc() end,
               {description = "increase brightness", group = "media"}),
     awful.key({ }, "XF86MonBrightnessDown", function () brightness_widget:dec() end,
-              {description = "decrease brightness", group = "media"})
+              {description = "decrease brightness", group = "media"}),
+    awful.key({ }, "XF86AudioRaiseVolume", function () volume_widget:inc() end,
+              {description = "increase volume", group = "media"}),
+    awful.key({ }, "XF86AudioLowerVolume", function () volume_widget:dec() end,
+              {description = "decrease volume", group = "media"}),
+    awful.key({ }, "XF86AudioMute", function () volume_widget:toggle() end,
+              {description = "toggle mute", group = "media"})
 )
 
 local clientkeys = gears.table.join(
