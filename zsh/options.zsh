@@ -1,7 +1,11 @@
 # Auto generated
 HISTFILE=~/.zsh_history
 HISTSIZE=500
-SAVEHIST=500
+SAVEHIST=2000
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_FIND_NO_DUPS
+setopt HIST_SAVE_NO_DUPS
 bindkey -e
 
 zstyle ':completion:*' completer _complete _ignored _correct _approximate
@@ -21,7 +25,7 @@ autoload zed
 
 # Syntax highlighting
 HIGHLIGHT_FILE=/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-if test -r $HIGHLIGHT_FILE; then source $HIGHLIGHT_FILE; fi
+test -r "$HIGHLIGHT_FILE" && source "$HIGHLIGHT_FILE"
 unset HIGHLIGHT_FILE
 # Enable comments
 setopt interactivecomments
@@ -38,5 +42,5 @@ unset HNAME
 alias ls="ls --color=auto"
 alias grep="grep --color=auto --line-number"
 export EDITOR=vim
-export PATH=${PATH}
-export GPG_TTY=$(tty)
+export PATH="${PATH}"
+export GPG_TTY="$(tty)"
