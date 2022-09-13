@@ -4,3 +4,6 @@
 [submodule "profile/Solarizedxterm"]
 	path = profile/Solarizedxterm
 	url = https://github.com/maniat1k/Solarizedxterm
+[submodule "awesome/awesome-wm-widgets"]
+	path = awesome/awesome-wm-widgets
+	url = git@github.com:streetturtle/awesome-wm-widgets.git
