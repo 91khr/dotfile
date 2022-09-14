@@ -70,7 +70,6 @@ editor_cmd = editor
 -- I suggest you to remap Mod4 to another key using xmodmap or other tools.
 -- However, you can use another modifier like Mod1, but it may interact with others.
 modkey = "Mod4"
-modkey_cycle = modkey == "Mod4" and "Super_L" or "Alt_L"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
@@ -128,10 +127,10 @@ screen.connect_signal("request::wallpaper", set_wallpaper)
 
 -- {{{ Wibar controls
 -- Create a textclock widget and its calendar
-local mytextclock = wibox.widget.textclock()
+local mytextclock = wibox.widget.textclock("%b %d, %H:%M")
 local mycalendar = awful.widget.calendar_popup.month()
 local mybrightness_widget = brightness_widget({
-    type = "icon_and_text",
+    type = "arc",
     path_to_icon = confpath .. "/awesome-wm-widgets/brightness-widget/brightness.svg",
     program = "xbacklight",
     timeout = 4294967,
@@ -139,14 +138,18 @@ local mybrightness_widget = brightness_widget({
     percentage = true,
 })
 local myvolume_widget = volume_widget({
-    widget_type = "icon_and_text",
+    widget_type = "arc",
     icon_dir = confpath .. "/awesome-wm-widgets/volume-widget/icons/",
+    mixer_cmd = "pavucontrol-qt",
     device = "default",
+    use_mute_icon = true,
+    refresh_rate = 4294967,  -- No other program would refresh the volume
 })
 local mybattery_widget = battery_widget({
     show_current_level = true,
     font = "Monaco 5",
     arc_thickness = 1,
+    --timeout = 10,  -- This is the default value
 })
 mycalendar:attach(mytextclock, 'tr')
 
@@ -262,14 +265,11 @@ awful.screen.connect_for_each_screen(function(s)
         s.mytasklist, -- Middle widget
         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
+            spacing = 5,
             wibox.widget.systray(),
-            {
-                layout = wibox.layout.fixed.horizontal,
-                spacing = 5,
-                mybrightness_widget,
-                myvolume_widget,
-                mybattery_widget,
-            },
+            mybrightness_widget,
+            myvolume_widget,
+            mybattery_widget,
             mytextclock,
             s.mylayoutbox,
         },
