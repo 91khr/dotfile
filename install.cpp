@@ -593,7 +593,8 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
                     R"(#include "%D/profile/Xresources")""\n"
                     R"(#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
             SymlinkConfig { "profile/clang-format.yaml", ".clang-format" } &
-            SymlinkConfig { "profile/clangd.yaml", ".config/clangd/config.yaml" };
+            SymlinkConfig { "profile/clangd.yaml", ".config/clangd/config.yaml" } &
+            SymlinkConfig { "profile/gitignore", ".config/git/ignore" };
     },
 };
 
