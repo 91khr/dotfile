@@ -51,9 +51,17 @@ export def MakeRun(ft: string, cmd: string, pat: string, options: dict<bool> = {
         return varlist[v]
     enddef
     exec "b:" .. tolower(cmd) .. "_overridable = 0"
+    var cmdctnt: string
+    const cmdinput = substitute(pat, '\v(\{\w+\})', Var, 'g')
+    if cmd == "Compile"
+        cmdctnt = "Compile exec 'AsyncRun ' .. " .. cmdinput
+    elseif cmd == "Run"
+        cmdctnt = "Run Compile | autocmd User AsyncRunStop ++once if g:asyncrun_code == 0 | " ..
+                    \ cmdinput .. " | endif"
+    else
+        cmdctnt = cmd .. " " .. cmdinput
+    endif
     return "command! -buffer " .. (options->get("bar", true) ? "-bar " : "") .. "-nargs=? " ..
-                \ (cmd == "Compile" ? "Compile exec 'AsyncRun ' .. " :
-                \     "Run Compile | autocmd User AsyncRunStop ++once ") ..
-                \ substitute(pat, '\v(\{\w+\})', Var, 'g')
+                \ cmdctnt
 enddef
 
