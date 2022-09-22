@@ -17,6 +17,8 @@ def UpdateChangedCache(_, pat: string)
     endfor
 enddef
 
+const wide_threshold = 80
+
 # {{{ Listeners and dispatcher
 var leaving = false
 def LeavingRefresh(..._)
@@ -24,7 +26,7 @@ def LeavingRefresh(..._)
     lines9.Refresh({ scope: "window" })
 enddef
 
-conf.autocmds += ["FileType", "TextChanged", "InsertLeave"]
+conf.autocmds += ["FileType", "TextChanged", "InsertLeave", "WinScrolled"]
 conf.listeners->extend({
     "autocmd:WinLeave": { 0: [LeavingRefresh] },
     "autocmd:FileType": {
@@ -37,6 +39,17 @@ conf.listeners->extend({
     },
     "autocmd:TextChanged": { 2: [UpdateChangedCache] },
     "autocmd:InsertLeave": { 2: [UpdateChangedCache] },
+    "autocmd:WinScrolled": {
+        0: [(_, winstr) => {
+            const win = str2nr(winstr)
+            const iswide = winwidth(win) >= wide_threshold
+            if win->getwinvar("lines9_prev_iswide", null) != iswide
+                setwinvar(win, "lines9_prev_iswide", iswide)
+                lines9.Update({ type: "statusline" })
+                lines9.Refresh({ scope: "window" })
+            endif
+        }]
+    },
 })
 
 def DispatchWin(loc: any): string
@@ -45,7 +58,10 @@ def DispatchWin(loc: any): string
     else
         const prefix = (leaving || win_getid() != loc.winid) ? "inactive" : "active"
         const ft = getwinvar(loc.winid, "&ft")
-        const ftspec = (ft == "nerdtree" || ft == "coc-explorer") ? "_tree" : ""
+        var ftspec = (ft == "nerdtree" || ft == "coc-explorer") ? "_tree" : ""
+        if ftspec == "" && winwidth(loc.winid) < wide_threshold
+            ftspec = "_narrow"
+        endif
         leaving = false
         return prefix .. ftspec
     endif
@@ -104,9 +120,6 @@ conf.components.spacestatus = utils.MakeComponent((win) => {
 })
 # }}} End space status
 
-conf.components.asyncrun_status = utils.MakeComponent(
-            \ color.Highlight("Keyword") .. "%{get(g:, 'asyncrun_status', '') == 'running' ? '(async running)' : ''}")
-
 conf.components.cocstatus = utils.MakeComponent((win) => {
     if exists(":CocInfo") == 2
         return color.Highlight("CursorLine") .. "%{coc#status()}"
@@ -115,10 +128,15 @@ conf.components.cocstatus = utils.MakeComponent((win) => {
     endif
 })
 
+conf.components.trunc = components.Trunc
+conf.components.fname_short = color.HlComponent(components.FileName({ full: false }), "StatusLineNC")
+
 conf.schemes.inactive_tree = ["fname_inactive", "sep", "index_inactive"]
 conf.schemes.active_tree = ["fname", "sep", "index"]
-conf.schemes.active = ["mode", "fname", "modified", "asyncrun_status", "cocstatus",
+conf.schemes.active = ["mode", "paste", "spell", "fname", "modified", "cocstatus",
             \ "sep", "fileinfo", "spacestatus", "wordcount", "percentage", "index"]
+conf.schemes.active_narrow = ["mode", "fname_short", "modified", "trunc", "sep", "percentage", "index"]
+conf.schemes.inactive_narrow = conf.schemes.inactive
 
 lines9.Init(conf)
 lines9.Enable()
