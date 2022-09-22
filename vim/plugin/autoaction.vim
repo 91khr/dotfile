@@ -93,10 +93,3 @@ autocmd User AsyncRunStop {
     echohl Normal
 }
 
-# Automatically update status line when something changes
-import "plgext.vim"
-if plgext.Installed("start/lightline.vim")
-    autocmd TextChanged,InsertLeave * call lightline#update()
-    autocmd User CocStatusChange,CocDiagnosticChange call lightline#update()
-endif
-

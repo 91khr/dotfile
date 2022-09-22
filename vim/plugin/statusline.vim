@@ -1,75 +1,59 @@
 vim9script
 
-# {{{ Helpers
-def IsWide(): bool
-    return winwidth(0) > 70
+import "lines9.vim"
+import "lines9/color.vim"
+import "lines9/utils.vim"
+import "lines9/components.vim"
+
+final conf = lines9.GetPreset("default")
+
+var cached_val = {}
+def UpdateChangedCache(_, pat: string)
+    final bvar = b:
+    for [name, Update] in cached_val->items()
+        if b:changedtick > bvar->get("cache_" .. name, [0, ""])[0]
+            bvar["cache_" .. name] = [b:changedtick, Update()]
+        endif
+    endfor
 enddef
-def Func(name: string): string
-    return '<SNR>' .. matchstr(expand('<stack>'), '<SNR>\zs\d\+\ze_Func') .. '_' .. name
+
+# {{{ Listeners and dispatcher
+var leaving = false
+def LeavingRefresh(..._)
+    leaving = true
+    lines9.Refresh({ scope: "window" })
 enddef
-def CacheChange(name: string, Update: func(): string): string
-    var b = b:  # Cache the dict, or it would be a syntax error (?)
-    if get(b, name, [0, ''])[0] != b:changedtick
-        b[name] = [b:changedtick, Update()]
+
+conf.autocmds += ["FileType", "TextChanged", "InsertLeave"]
+conf.listeners->extend({
+    "autocmd:WinLeave": { 0: [LeavingRefresh] },
+    "autocmd:FileType": {
+        0: [(..._) => lines9.Refresh({ scope: "window" })],
+        1: [(..._) => lines9.Update({ type: "statusline" })],
+    },
+    "autocmd:CocNvimInit": {
+        0: [(..._) => lines9.Refresh({ scope: "window" })],
+        1: [(..._) => lines9.Update({ type: "statusline" })]
+    },
+    "autocmd:TextChanged": { 2: [UpdateChangedCache] },
+    "autocmd:InsertLeave": { 2: [UpdateChangedCache] },
+})
+
+def DispatchWin(loc: any): string
+    if loc.type == "tabline"
+        return "tabline"
+    else
+        const prefix = (leaving || win_getid() != loc.winid) ? "inactive" : "active"
+        const ft = getwinvar(loc.winid, "&ft")
+        const ftspec = (ft == "nerdtree" || ft == "coc-explorer") ? "_tree" : ""
+        leaving = false
+        return prefix .. ftspec
     endif
-    return b[name][1]
 enddef
-# }}} End helpers
+conf.dispatch = DispatchWin
+# }}} End listeners and dispatcher
 
-# {{{ Components
-def FileName(win: number, wide: bool): string
-    var buf = winbufnr(win)
-    var fname = bufname(buf)
-    if empty(fname)
-        var bt = getbufvar(buf, '&bt')
-        if bt == 'quickfix'
-            return !!getwininfo(win)[0].loclist ? '[Location List]' : '[Quickfix List]'
-        endif
-        var btlist = {
-                    \     nofile: '[Scratch]',
-                    \     prompt: '[Prompt]',
-                    \     popup: '[Popup]',
-                    \ }
-        return btlist->has_key(bt) ? btlist[bt] : '[No Name]'
-    endif
-    if getbufvar(buf, '&ft') == 'help' && getbufvar(buf, '&ro') && !getbufvar(buf, '&modifiable')
-        return fnamemodify(fname, ":t")
-    endif
-    var relpath = fnamemodify(fname, ":.")
-    return wide ? relpath :
-                \ substitute(relpath, '\v([^/])([^/]*)' .. '/', '\1' .. '/', 'g')
-enddef
-
-def StatusFileName(): string
-    return FileName(win_getid(winnr()), IsWide())
-enddef
-
-def TabFileName(n: number): string
-    return FileName(win_getid(tabpagewinnr(n), n), false)
-enddef
-
-def CocStatus(): string
-    if !exists(":CocInfo") || !IsWide() | return '' | endif
-    return coc#status()
-enddef
-
-def SpaceStatus(): string
-    return CacheChange("spacestatus", () => {
-        if !IsWide() || get(b:, "spacecheck_disabled", false) || &bt == 'terminal'
-            return ''
-        endif
-        var trailing = search('\s\+$', 'ncw')
-        if trailing != 0
-            return 'Trailing: ' .. trailing
-        endif
-        var mixing = search('^ \+', 'ncw') != 0 ? search('^\s*\t', 'ncw') : 0
-        if mixing != 0
-            return 'Mixed indent: ' .. mixing
-        endif
-        return ''
-    })
-enddef
-
+# {{{ Wordcount
 const wordcounted_filetypes = ["markdown", "mail", "text"]
 perl <<EOF
 sub WordCount {
@@ -84,68 +68,58 @@ sub WordCount {
     return $res;
 }
 EOF
-def WordCount(): string
-    return CacheChange("wordcount", () => {
-        if !IsWide() || index(wordcounted_filetypes, &ft) == -1 || get(b:, "wordcount_disabled", false)
-            return ''
-        endif
-        return perleval("WordCount")
-    })
-enddef
-# }}} End components
-
-g:lightline = {
-            \     colorscheme: 'solarized',
-            \     component_function: {
-            \         status_filename: Func('StatusFileName'),
-            \         cocstatus: Func('CocStatus'),
-            \     },
-            \     tab_component_function: {
-            \         tab_filename: Func('TabFileName'),
-            \     },
-            \     component_expand: {
-            \         spacestatus: Func('SpaceStatus'),
-            \         wordcount: Func('WordCount'),
-            \     },
-            \     component: { },
-            \     component_type: {
-            \         spacestatus: 'error',
-            \         wordcount: '',
-            \     },
-            \     component_visible_condition: {
-            \         spell: '&spell',
-            \     },
-            \     active: {
-            \         left: [ [ 'mode', 'paste', 'spell' ],
-            \                 [ 'readonly', 'status_filename', 'modified' ],
-            \                 [ 'cocstatus' ],
-            \         ],
-            \         right: [ [ 'lineinfo' ],
-            \                  [ 'percent' ],
-            \                  [ 'spacestatus', 'wordcount' ],
-            \                  [ 'fileformat', 'fileencoding', 'filetype' ],
-            \         ],
-            \     },
-            \     tab: {
-            \         active: [ 'tabnum', 'tab_filename', 'modified' ],
-            \         inactive: [ 'tabnum', 'tab_filename', 'modified' ],
-            \     },
-            \ }
-
-var wideonly_component = {
-            \     fileformat: '&ff',
-            \     fileencoding: '&fenc!=#""?&fenc:&enc',
-            \     filetype: '&ft!=#""?&ft:"no ft"',
-            \     spell: '&spell?&spelllang:""',
-            \ }
-var wide_condition = "winwidth(0) > 70"
-for [name, exp] in items(wideonly_component)
-    g:lightline.component[name] = printf("%%{%s ? (%s) : ''}", wide_condition, exp)
-    var cond = g:lightline.component_visible_condition
-    if cond->has_key(name)
-        cond[name] = printf("(%s)&&(%s)", cond[name], wide_condition)
+cached_val.wordcount = () => perleval("WordCount")
+conf.components.wordcount = utils.MakeComponent((win) => {
+    const buf = winbufnr(win)
+    if index(wordcounted_filetypes, buf->getbufvar("&ft")) == -1 || buf->getbufvar("wordcount_disabled", false)
+        return ""
     else
-        cond[name] = wide_condition
+        setbufvar(buf, "cache_wordcount", [0, perleval("WordCount")])
+        return color.Highlight("StatusLine") .. " %{b:cache_wordcount[1]} "
     endif
-endfor
+})
+# }}} End wordcount
+
+# {{{ Space status
+def UpdateSpace(): string
+    var trailing = search('\s\+$', 'ncw')
+    if trailing != 0
+        return " Trailing: " .. trailing .. " "
+    endif
+    var mixing = search('^ \+', 'ncw') != 0 ? search('^\s*\t', 'ncw') : 0
+    if mixing != 0
+        return " Mixed indent: " .. mixing .. " "
+    endif
+    return ""
+enddef
+cached_val.spacestatus = UpdateSpace
+conf.components.spacestatus = utils.MakeComponent((win) => {
+    final bvar = winbufnr(win)->getbufvar("")
+    if bvar->get("spacecheck_disabled", false) || bvar->get("&bt", "") == "terminal"
+        return ""
+    else
+        bvar.cache_spacestatus = [0, ""]
+        return color.Highlight("ErrorMsg") .. "%{get(b:, 'cache_spacestatus', [0, ''])[1]}"
+    endif
+})
+# }}} End space status
+
+conf.components.asyncrun_status = utils.MakeComponent(
+            \ color.Highlight("Keyword") .. "%{get(g:, 'asyncrun_status', '') == 'running' ? '(async running)' : ''}")
+
+conf.components.cocstatus = utils.MakeComponent((win) => {
+    if exists(":CocInfo") == 2
+        return color.Highlight("CursorLine") .. "%{coc#status()}"
+    else
+        return ""
+    endif
+})
+
+conf.schemes.inactive_tree = ["fname_inactive", "sep", "index_inactive"]
+conf.schemes.active_tree = ["fname", "sep", "index"]
+conf.schemes.active = ["mode", "fname", "modified", "asyncrun_status", "cocstatus",
+            \ "sep", "fileinfo", "spacestatus", "wordcount", "percentage", "index"]
+
+lines9.Init(conf)
+lines9.Enable()
 
