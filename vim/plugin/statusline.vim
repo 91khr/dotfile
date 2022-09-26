@@ -11,7 +11,7 @@ var cached_val = {}
 def UpdateChangedCache(_, pat: string)
     final bvar = b:
     for [name, Update] in cached_val->items()
-        if b:changedtick > bvar->get("cache_" .. name, [0, ""])[0]
+        if bvar->has_key("cache_" .. name) && b:changedtick > bvar["cache_" .. name][0]
             bvar["cache_" .. name] = [b:changedtick, Update()]
         endif
     endfor
