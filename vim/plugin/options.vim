@@ -143,8 +143,8 @@ vmap \= <Plug>(coc-format-selected)
 if has("gui_running")
     " Ban the annoying bell(cant be seen on Linux gui)
     set vb
-    " Only need the internal terminal
-    set go=!
+    " No special options to workaround the bug infecting packager >_<
+    set go=
     " Use a larger default size x_x
     set columns=120 lines=40
 else  | " GUI ^^^ Term vvv

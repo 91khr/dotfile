@@ -36,7 +36,6 @@ let &packpath ..= ',' .. s:config_dir
 let g:packager_config = #{
             \     packs: [
             "\        Status line
-            \         #{ name: 'itchyny/lightline.vim', location: 'start' },
             \         #{ name: '91khr/lines9', location: 'start' },
             "\        Color scheme
             \         #{ name: 'lifepillar/vim-solarized8', location: 'start' },
@@ -70,6 +69,8 @@ let g:packager_config = #{
             \          '91khr/vim-latex-live-preview',
             "\         Slint
             \          #{ name: 'slint-ui/vim-slint', location: 'start' },
+            "\          Idris2
+            \          #{ name: 'edwinb/idris2-vim', location: 'start' },
             \
             "\         Zen mode :)
             "\          'junegunn/goyo.vim',
