@@ -6,3 +6,7 @@ if ftext.CanCmd("Compile")
     b:compile_overridable = 0
 endif
 
+if bufname() == "idris-response"
+    set wfh
+endif
+
