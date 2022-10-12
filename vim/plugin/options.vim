@@ -148,7 +148,7 @@ if has("gui_running")
     " Use a larger default size x_x
     set columns=120 lines=40
 else  | " GUI ^^^ Term vvv
-    set bg=dark
+    set bg=dark termguicolors
 endif
 
 " ======================================================================================================================
