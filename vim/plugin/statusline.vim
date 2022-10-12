@@ -71,29 +71,34 @@ conf.dispatch = DispatchWin
 
 # {{{ Wordcount
 const wordcounted_filetypes = ["markdown", "mail", "text"]
-perl <<EOF
-sub WordCount {
-    my $ctnt = join ' ', $curbuf->Get(1..$curbuf->Count());
-    utf8::decode($ctnt);
-    my $hanzi = 0 + $ctnt =~ s/\p{Han}/ i /g;
-    my $count = () = $ctnt =~ /\b\w[\w'.]*\b/g;
-    my $res = "$count WD";
-    if ($hanzi != 0) {
-        $res = $res . ", $hanzi HZ";
-    }
-    return $res;
-}
-EOF
+var loaded_wordcount = false
 cached_val.wordcount = () => perleval("WordCount")
-conf.components.wordcount = utils.MakeComponent((win) => {
+def WordCount(win: number): string
     const buf = winbufnr(win)
     if index(wordcounted_filetypes, buf->getbufvar("&ft")) == -1 || buf->getbufvar("wordcount_disabled", false)
         return ""
     else
+        if !loaded_wordcount
+            loaded_wordcount = true
+            perl <<EOF
+            sub WordCount {
+                my $ctnt = join ' ', $curbuf->Get(1..$curbuf->Count());
+                utf8::decode($ctnt);
+                my $hanzi = 0 + $ctnt =~ s/\p{Han}/ i /g;
+                my $count = () = $ctnt =~ /\b\w[\w'.]*\b/g;
+                my $res = "$count WD";
+                if ($hanzi != 0) {
+                    $res = $res . ", $hanzi HZ";
+                }
+                return $res;
+            }
+EOF
+        endif
         setbufvar(buf, "cache_wordcount", [0, perleval("WordCount")])
         return color.Highlight("StatusLine") .. " %{b:cache_wordcount[1]} "
     endif
-})
+enddef
+conf.components.wordcount = utils.MakeComponent(WordCount)
 # }}} End wordcount
 
 # {{{ Space status
