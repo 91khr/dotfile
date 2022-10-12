@@ -122,7 +122,7 @@ conf.components.spacestatus = utils.MakeComponent((win) => {
 
 conf.components.cocstatus = utils.MakeComponent((win) => {
     if exists(":CocInfo") == 2
-        return color.Highlight("CursorLine") .. "%{coc#status()}"
+        return color.Highlight("CursorLine") .. " %{coc#status()}"
     else
         return ""
     endif
