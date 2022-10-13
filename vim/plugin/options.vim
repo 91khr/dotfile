@@ -30,7 +30,7 @@ if get(g:, 'vimpager', 0) == 0 | set number | endif
 " Show entered commands
 set showcmd
 " Set the width of indent and tab
-set shiftwidth=4 tabstop=4 expandtab
+set shiftwidth=4 tabstop=4 expandtab softtabstop=-1
 " Let backspace more friendly
 set bs=3
 " Open code folding
