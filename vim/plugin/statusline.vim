@@ -26,14 +26,14 @@ def LeavingRefresh(..._)
     lines9.Refresh({ scope: "window" })
 enddef
 
-conf.autocmds += ["FileType", "TextChanged", "InsertLeave", "WinScrolled"]
+conf.autocmds += ["FileType", "TextChanged", "InsertLeave", "WinScrolled", ["User", "CocNvimInit"]]
 conf.listeners->extend({
     "autocmd:WinLeave": { 0: [LeavingRefresh] },
     "autocmd:FileType": {
         0: [(..._) => lines9.Refresh({ scope: "window" })],
         1: [(..._) => lines9.Update({ type: "statusline" })],
     },
-    "autocmd:CocNvimInit": {
+    "autocmd:User:CocNvimInit": {
         0: [(..._) => lines9.Refresh({ scope: "window" })],
         1: [(..._) => lines9.Update({ type: "statusline" })]
     },
