@@ -594,6 +594,7 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
                     R"(#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
             SymlinkConfig { "profile/clang-format.yaml", ".clang-format" } &
             SymlinkConfig { "profile/clangd.yaml", ".config/clangd/config.yaml" } &
+            SymlinkConfig { "profile/zathurarc", ".config/zathura/zathurarc" } &
             SymlinkConfig { "profile/gitignore", ".config/git/ignore" };
     },
 };
