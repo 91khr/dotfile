@@ -20,6 +20,7 @@ local hotkeys_popup = require("awful.hotkeys_popup")
 local battery_widget = require("awesome-wm-widgets.batteryarc-widget.batteryarc")
 local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
+local touchpad_widget = require("widgets.touchpad_widget")
 -- }}}
 
 -- {{{ Error handling
@@ -151,6 +152,9 @@ local mybattery_widget = battery_widget({
     arc_thickness = 1,
     --timeout = 10,  -- This is the default value
 })
+local mytouchpad_widget = touchpad_widget({
+    icon_dir = confpath .. "/widgets/icons/",
+})
 mycalendar:attach(mytextclock, 'tr')
 
 -- Create a wibox for each screen and add it
@@ -267,6 +271,7 @@ awful.screen.connect_for_each_screen(function(s)
             layout = wibox.layout.fixed.horizontal,
             spacing = 5,
             wibox.widget.systray(),
+            mytouchpad_widget,
             mybrightness_widget,
             myvolume_widget,
             mybattery_widget,
