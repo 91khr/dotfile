@@ -7,7 +7,8 @@
 (package-initialize)
 (when (not (boundp 'package-list))
   (setq package-list
-        '(powerline neotree use-package markdown-mode solarized-theme evil racket-mode company meow)))
+        '(powerline neotree use-package markdown-mode solarized-theme racket-mode company meow
+                    switch-window)))
 
 ;; Check for uninstalled packages and install them
 (let ((package-install-list '())
@@ -29,9 +30,6 @@
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
   :config (load-file (concat dotdir "pkgconf/markdown.el")))
-
-(use-package evil
-  :config (load-file (concat dotdir "pkgconf/evil.el")))
 
 (use-package meow
   :config (load-file (concat dotdir "pkgconf/meow.el")))

@@ -19,9 +19,14 @@
 (use-package powerline)
 (powerline-default-theme)
 
-;;(evil-mode)
+;;(meow-mode)
 (require 'meow)
 (meow-setup)
 (meow-global-mode 1)
+
+;; switch-window
+(require 'switch-window)
+(global-set-key (kbd "C-x o") 'switch-window)
+
 (global-company-mode)
 

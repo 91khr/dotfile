@@ -15,7 +15,7 @@
    '(:foreground default :background default :scale 2.0 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
 		 ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
-   '(powerline neotree use-package markdown-mode solarized-theme evil racket-mode company meow))
+   '(switch-window magit-section lsp-mode flycheck f dash powerline neotree use-package markdown-mode solarized-theme evil racket-mode company meow))
  '(truncate-lines nil)
  '(truncate-partial-width-windows 30))
 (custom-set-faces
