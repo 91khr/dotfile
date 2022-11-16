@@ -31,6 +31,33 @@ local default_modes = {
         exec = function (args)
             awful.util.eval(args)
         end,
+        completion_callback = function (cmd, pos, ncomp)
+            local pre, final = cmd:sub(1, pos):match("([%w_.:]-)([%w_]*)$")
+            if not pre and not final then return cmd, pos, {} end
+            local env = _ENV
+            for cur in (pre or ""):gmatch("([%w_]+)[.:]") do
+                if type(env[cur]) ~= "table" then
+                    return cmd, pos, {}
+                else
+                    env = env[cur]
+                end
+            end
+            local res = {}
+            for k, _ in pairs(env) do
+                if k:sub(1, final:len()) == final then
+                    res[#res + 1] = k
+                end
+            end
+            table.sort(res, function (a, b) return a < b end)
+            prompt_widget:set_complist(res, ncomp)
+            if #res > 0 then
+                ncomp = (ncomp - 1) % #res + 1
+                return cmd:sub(1, pos - final:len() - 1) .. res[ncomp] .. cmd:sub(pos + 1),
+                    pos + res[ncomp]:len(), res
+            else
+                return cmd, pos, res
+            end
+        end,
         prompt = "Lua exec: ",
         history_path = gears.filesystem.get_cache_dir() .. "/history_eval",
     },
@@ -103,6 +130,10 @@ local function worker(widget_args)
             local ncomp = (raw_ncomp - 1) % #matches + 1
             local width = 0
             for i, v in ipairs(matches) do
+                if width == 7 then
+                    width = 0
+                    markup = markup .. "\n"
+                end
                 if i == ncomp then
                     markup = markup .. '<span background="' .. beautiful.bg_focus .. '">' .. v .. "</span>"
                 else
@@ -110,10 +141,6 @@ local function worker(widget_args)
                 end
                 markup = markup .. " "
                 width = width + 1
-                if width == 7 then
-                    width = 0
-                    markup = markup .. "\n"
-                end
             end
         end
         self.widget.widget.mymainlayout.mycompletion.markup = markup
