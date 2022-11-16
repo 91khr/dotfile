@@ -70,7 +70,7 @@ function ToggleTouchpad()
 end
 
 return setmetatable(touchpad_widget, {
-	__call = function(_, ...)
-		return worker(...)
-	end,
+    __call = function(_, ...)
+        return worker(...)
+    end,
 })

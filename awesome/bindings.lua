@@ -1,9 +1,12 @@
 local beautiful = require("beautiful")
 local gears = require("gears")
 local awful = require("awful")
+local hotkeys_popup = ...
+
+-- Shared widgets
+local prompt_widget = require("widgets.prompt_widget")
 local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
-local hotkeys_popup = ...
 
 -- {{{ Mouse bindings
 root.buttons(gears.table.join(
@@ -51,22 +54,10 @@ local globalkeys = gears.table.join(
 
     -- Prompt
     awful.key({ modkey },            "r", function ()
-            awful.screen.focused().mycenterprompt.visible = true
-            awful.screen.focused().mypromptbox:run {}
+            prompt_widget:run(awful.screen.focused(), "shell")
         end, {description = "run prompt", group = "launcher"}),
     awful.key({ modkey }, ";", function ()
-            local prompt = awful.screen.focused().mycenterprompt
-            prompt.visible = true
-            awful.prompt.run {
-                prompt        = "Lua eval: ",
-                textbox       = awful.screen.focused().mypromptbox.widget,
-                done_callback = function() prompt.visible = false end,
-                exe_callback = function(args)
-                    prompt.visible = false
-                    awful.util.eval(args)
-                end,
-                history_path = awful.util.get_cache_dir() .. "/history_eval"
-            }
+            prompt_widget:run(awful.screen.focused(), "lua")
         end, {description = "run lua command", group = "awesome"}),
 
     -- Media keys

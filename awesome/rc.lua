@@ -21,6 +21,7 @@ local battery_widget = require("awesome-wm-widgets.batteryarc-widget.batteryarc"
 local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
 local touchpad_widget = require("widgets.touchpad_widget")
+local prompt_widget = require("widgets.prompt_widget")
 -- }}}
 
 -- {{{ Error handling
@@ -49,10 +50,19 @@ end
 -- }}}
 
 -- {{{ Helper functions
-function notify_info(text)
-    naughty.notify({ preset = naughty.config.presets.info,
-                   title = "Info",
-                   text = tostring(text) })
+function notify_info(ctnt)
+    local function table_tostring(t)
+        local res = "{\n"
+        for k, v in pairs(t) do
+            res = res .. tostring(k) .. " = " .. tostring(v) .. "\n"
+        end
+        return res .. "}"
+    end
+    naughty.notify({
+        preset = naughty.config.presets.info,
+        title = "Info",
+        text = type(ctnt) == "table" and table_tostring(ctnt) or tostring(ctnt)
+    })
 end
 -- }}}
 
@@ -104,22 +114,7 @@ local function set_wallpaper(s)
     if type(wallpaper) == "function" then
         wallpaper = wallpaper(s)
     end
-    if awful.wallpaper then
-        awful.wallpaper {
-            screen = s,
-            widget = {
-                image = wallpaper,
-                resize = true,
-                widget = wibox.widget.imagebox,
-            },
-            valign = "center",
-            halign = "center",
-            tiled  = false,
-            widget = wibox.container.tile,
-        }
-    else
-        gears.wallpaper.maximized(wallpaper, s, true)
-    end
+    gears.wallpaper.maximized(wallpaper, s, true)
 end
 
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
@@ -155,6 +150,8 @@ local mybattery_widget = battery_widget({
 local mytouchpad_widget = touchpad_widget({
     icon_dir = confpath .. "/widgets/icons/",
 })
+-- Create the widget
+prompt_widget({})
 mycalendar:attach(mytextclock, 'tr')
 
 -- Create a wibox for each screen and add it
@@ -188,50 +185,6 @@ local tasklist_buttons = gears.table.join(
                                           end))
 -- }}}
 
--- {{{ Prompt box
-local function make_promptbox(s)
-    s.mypromptbox = awful.widget.prompt {
-        done_callback = function() s.mycenterprompt.visible = false end,
-        exe_callback = function(args)
-            s.mycenterprompt.visible = false
-            local res = awful.spawn(args)
-            if type(res) == type("") then
-                naughty.notify({ preset = naughty.config.presets.critical,
-                title = "Command execution error",
-                timeout = 4,
-                text = res })
-            end
-        end,
-    }
-    s.mycenterprompt = awful.popup {
-        widget = {
-            {
-                s.mypromptbox,
-                {
-                    markup = '<span foreground="cyan">(Completion, WIP)</span>',
-                    width  = s.workarea.width,
-                    widget = wibox.widget.textbox,
-                },
-                spacing_widget = wibox.widget.separator,
-                layout         = wibox.layout.flex.vertical,
-            },
-            margins = 3,
-            widget  = wibox.container.margin
-        },
-        border_color = beautiful.border_marked,
-        border_width = beautiful.border_width / 2,
-        screen       = s,
-        ontop        = true,
-        visible      = false,
-        placement    = function(d)
-            local f = awful.placement.center_horizontal + awful.placement.top
-            f(d, { offset = { y = s.workarea.height * 0.3 } })
-        end,
-        shape        = gears.shape.rounded_rect
-    }
-end
--- }}} End prompt box
-
 awful.screen.connect_for_each_screen(function(s)
     -- Wallpaper
     set_wallpaper(s)
@@ -255,9 +208,6 @@ awful.screen.connect_for_each_screen(function(s)
 
     -- Create the wibox
     s.mywibox = awful.wibar({ position = "top", screen = s })
-
-    -- Create a promptbox for each screen
-    make_promptbox(s)
 
     -- Add widgets to the wibox
     s.mywibox:setup {
