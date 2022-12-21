@@ -66,16 +66,24 @@ local default_modes = {
 local function worker(widget_args)
     prompt_widget.widget = awful.popup {
         widget = {
+            -- TODO: Refactor the whole component to support better completion
             {
                 {
                     id = "mypromptbox",
                     widget = wibox.widget.textbox,
                 },
                 {
-                    markup = '(Completion textbox, initial)',
-                    --width = ?,
-                    id = "mycompletion",
-                    widget = wibox.widget.textbox,
+                    {
+                        markup = '(Completion textbox, initial)',
+                        --width = ?,
+                        id = "mycompl",
+                        widget = wibox.widget.textbox,
+                    },
+                    direction = "v",
+                    fps = 0.1,
+                    step_function = function() return 0 end,
+                    id = "mycompl_cont",
+                    layout = wibox.container.scroll.horizontal,
                 },
                 spacing = 1,
                 spacing_widget = {
@@ -83,13 +91,13 @@ local function worker(widget_args)
                     widget = wibox.widget.separator,
                 },
                 id = "mymainlayout",
-                layout         = wibox.layout.fixed.vertical,
+                layout = wibox.layout.fixed.vertical,
             },
             margins = 3,
             widget  = wibox.container.margin
         },
         border_color = beautiful.border_marked,
-        border_width = beautiful.border_width / 2,
+        border_width = beautiful.border_width * 2 / 3,
         ontop        = true,
         opacity      = 0.9,
         visible      = false,
@@ -111,6 +119,7 @@ local function worker(widget_args)
 
     function prompt_widget:run(scr, mode)
         self:set_complist(nil)
+        self.widget.widget.mymainlayout.mycompl_cont:set_max_size(scr.workarea.height * 0.6)
         self.widget.placement = function(d)
             local f = awful.placement.center_horizontal + awful.placement.top
             f(d, { offset = { y = scr.workarea.height * 0.3 } })
@@ -122,7 +131,6 @@ local function worker(widget_args)
 
     function prompt_widget:set_complist(matches, raw_ncomp)
         local markup = "(This message means an error)"
-        self.widget.widget.mymainlayout.mycompletion.markup = markup
         if not matches or #matches == 0 then
             markup = '<span foreground="cyan">(No completion)</span>'
         else
@@ -143,7 +151,7 @@ local function worker(widget_args)
                 width = width + 1
             end
         end
-        self.widget.widget.mymainlayout.mycompletion.markup = markup
+        self.widget.widget.mymainlayout.mycompl_cont.mycompl.markup = markup
     end
 
     return prompt_widget.widget
