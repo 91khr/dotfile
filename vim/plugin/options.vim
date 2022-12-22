@@ -149,6 +149,7 @@ if has("gui_running")
     set columns=120 lines=40
 else  | " GUI ^^^ Term vvv
     set bg=dark termguicolors
+    set term=xterm  | " Ignore the differences, just treat everything as xterm ><
 endif
 
 " ======================================================================================================================
