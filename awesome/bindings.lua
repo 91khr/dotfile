@@ -4,7 +4,7 @@ local awful = require("awful")
 local hotkeys_popup = ...
 
 -- Shared widgets
-local prompt_widget = require("widgets.prompt_widget")
+local prompt_widget = require("widgets.prompt")
 local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
 
