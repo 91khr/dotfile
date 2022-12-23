@@ -14,7 +14,6 @@ local wibox = require("wibox")
 local beautiful = require("beautiful")
 -- Notification library
 local naughty = require("naughty")
-local hotkeys_popup = require("awful.hotkeys_popup")
 
 -- Widgets library
 local battery_widget = require("awesome-wm-widgets.batteryarc-widget.batteryarc")
@@ -70,11 +69,6 @@ end
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(loadfile(confpath .. '/theme.lua')(confpath))
-
--- This is used later as the default terminal and editor to run.
-terminal = os.getenv("TERMINAL") or "xterm"
-editor = os.getenv("EDITOR") or "gvim"
-editor_cmd = editor
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
@@ -238,7 +232,12 @@ end)
 -- }}}
 
 -- Load the bindings
-loadfile(confpath .. "/bindings.lua")(hotkeys_popup)
+loadfile(confpath .. "/bindings.lua")()
+
+-- Grab notifications
+function naughty.config.notify_callback(args)
+    return notification_widget:on_notification(args)
+end
 
 -- {{{ Post tasks
 -- Start some programs

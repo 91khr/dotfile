@@ -1,10 +1,11 @@
 local beautiful = require("beautiful")
 local gears = require("gears")
 local awful = require("awful")
-local hotkeys_popup = ...
+local hotkeys_popup = require("awful.hotkeys_popup")
 
 -- Shared widgets
 local prompt_widget = require("widgets.prompt")
+local notification_widget = require("widgets.notification")
 local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
 
@@ -19,10 +20,14 @@ root.buttons(gears.table.join(
 local globalkeys = gears.table.join(
     awful.key({ modkey,           }, "s", hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
-    awful.key({ modkey,           }, "i", function() notify_info(client.focus.class) end,
+    awful.key({ modkey, "Control" }, "i", function() notify_info(client.focus.class) end,
               {description="get window class", group="awesome"}),
 
     -- Layout manipulation
+    awful.key({ modkey,           }, "i", function ()
+        local c = client.focus
+        if c then c:raise() end
+        end, {description = "raise focused client", group = "client"}),
     awful.key({ modkey,           }, "l", function ()
         awful.client.focus.byidx(1)
         end, {description = "focus next client", group = "client"}),
@@ -35,10 +40,6 @@ local globalkeys = gears.table.join(
     awful.key({ modkey, "Shift"   }, "h", function ()
         awful.client.swap.byidx(-1)
         end, {description = "swap client with previous", group = "client"}),
-    awful.key({ modkey, "Control" }, "i", function ()
-        local c = client.focus
-        if c then c:raise() end
-        end, {description = "raise focused client", group = "client"}),
     awful.key({ modkey, "Control" }, "l", function ()
         client.focus = awful.client.next(1)
         end, {description = "focus next client without raising", group = "client"}),
@@ -59,6 +60,10 @@ local globalkeys = gears.table.join(
     awful.key({ modkey }, ";", function ()
             prompt_widget:run(awful.screen.focused(), "lua")
         end, {description = "run lua command", group = "awesome"}),
+
+    -- Notifications
+    awful.key({ modkey,           }, "n", function () notification_widget:toggle_list() end ,
+        {description = "toggle notification list", group = "awesome"}),
 
     -- Media keys
     awful.key({ }, "XF86MonBrightnessUp", function () brightness_widget:inc() end,
@@ -86,8 +91,6 @@ local clientkeys = gears.table.join(
               {description = "move to screen", group = "client"}),
     awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end,
               {description = "toggle keep on top", group = "client"}),
-    awful.key({ modkey,           }, "n", function (c) c.minimized = true end ,
-        {description = "minimize", group = "client"}),
     awful.key({ modkey,           }, "m", function (c) c.maximized = not c.maximized; c:raise() end ,
         {description = "(un)maximize", group = "client"})
 )
