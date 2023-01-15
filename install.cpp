@@ -592,6 +592,7 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
             InvokerConfig { ".Xresources", "!", "profile", format(
                     R"(#include "%D/profile/Xresources")""\n"
                     R"(#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
+            InvokerConfig { ".ssh/config", "#", "ssh config", format("Include %D/profile/ssh_config") } &
             SymlinkConfig { "profile/picom.conf", ".config/picom.conf" } &
             SymlinkConfig { "profile/clang-format.yaml", ".clang-format" } &
             SymlinkConfig { "profile/clangd.yaml", ".config/clangd/config.yaml" } &
