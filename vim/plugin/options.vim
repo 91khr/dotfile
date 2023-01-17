@@ -26,7 +26,7 @@ syntax on
 " Highlight corrent line
 set cursorline
 " Open the line number when is not pager
-if get(g:, 'vimpager', 0) == 0 | set number | endif
+set number
 " Show entered commands
 set showcmd
 " Set the width of indent and tab
@@ -238,5 +238,15 @@ let g:netrw_liststyle=3
 let g:goyo_width = '80%'
 let g:goyo_height = '95%'
 let g:goyo_linenr = 1
+
+" ==================================================================================================================
+" Vimpager
+" ==================================================================================================================
+if has_key(g:, 'vimpager')
+    set nonumber nocursorline
+    let g:less = #{ enabled: 0 }
+    " Go to last line when loaded
+    autocmd BufReadPost * ++once normal L
+endif
 " }}} End package options
 
