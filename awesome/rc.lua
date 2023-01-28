@@ -1,5 +1,6 @@
 -- {{{ Premable
-local confpath = ... .. "/awesome"
+local argv = ...
+local confpath = argv[1] .. "/awesome"
 -- Local module paths
 package.path = package.path .. ';' .. confpath .. '/?.lua'
 
@@ -75,7 +76,7 @@ beautiful.init(loadfile(confpath .. '/theme.lua')(confpath))
 -- If you do not like this or do not have such a key,
 -- I suggest you to remap Mod4 to another key using xmodmap or other tools.
 -- However, you can use another modifier like Mod1, but it may interact with others.
-modkey = "Mod4"
+modkey = argv.modkey or "Mod4"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
@@ -243,9 +244,11 @@ end
 -- Start some programs
 -- Transparency, maybe not needed currently><
 awful.spawn("picom")
--- Input method and key binding
-awful.spawn("fcitx5")
-awful.spawn("xmodmap " .. confpath .. "/../.Xmodmap")
+if not argv.nospawn then
+    -- Input method and key binding
+    awful.spawn("fcitx5")
+    --awful.spawn("xmodmap " .. confpath .. "/../.Xmodmap")
+end
 -- }}}
 
 -- vim: fdm=marker

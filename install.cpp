@@ -558,7 +558,9 @@ int main(int, char **argv)
 
 add_conf { "awesome", ConfigInfo::UNIX, "AwesomeWM config",
     [] { return InvokerConfig { ".config/awesome/rc.lua", "--", "awesome",
-        format(R"(loadfile("%D/awesome/rc.lua")("%D"))") }; },
+        format(R"(local args = args or {}
+args[1] = "%D"
+loadfile("%D/awesome/rc.lua")(args))") }; },
 };
 
 add_conf { "emacs", ConfigInfo::AllOS, "Emacs config",
