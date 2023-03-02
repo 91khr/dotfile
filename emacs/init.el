@@ -4,7 +4,8 @@
 
 ;; Load local configs
 (setq dotdir (file-name-directory load-file-name))
-(load-file (concat dotdir "packages.el"))
+(dolist (f '("packages.el" "ftplugin.el"))
+         (load-file (concat dotdir f)))
 (load-file (concat dotdir (if (display-graphic-p) "gui.el" "tui.el")))
 
 ;; Configs
@@ -12,9 +13,10 @@
 (global-linum-mode t)
 (show-paren-mode)
 
-(setq indent-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
 (setq-default fill-column 120)
 (setq-default auto-fill-function 'do-auto-fill)
+(global-display-fill-column-indicator-mode t)
 
 (use-package powerline)
 (powerline-default-theme)
@@ -29,4 +31,3 @@
 (global-set-key (kbd "C-x o") 'switch-window)
 
 (global-company-mode)
-

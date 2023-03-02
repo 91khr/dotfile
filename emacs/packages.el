@@ -8,18 +8,13 @@
 (when (not (boundp 'package-list))
   (setq package-list
         '(powerline neotree use-package markdown-mode solarized-theme racket-mode company meow
-                    switch-window)))
+                    switch-window polymode poly-markdown)))
 
 ;; Check for uninstalled packages and install them
-(let ((package-install-list '())
-      (ensure-package
-        (lambda (name)
-          (unless (package-installed-p name)
-            (setq package-install-list (cons name package-install-list))))))
-  (cl-loop for p in package-list do (funcall ensure-package p))
+(let ((package-install-list (seq-remove #'package-installed-p package-list)))
   (unless (eq nil package-install-list)
     (package-refresh-contents)
-    (cl-loop for p in package-install-list do (package-install p))))
+    (dolist (p package-install-list) (package-install p))))
 
 (require 'use-package)
 
@@ -35,5 +30,7 @@
   :config (load-file (concat dotdir "pkgconf/meow.el")))
 
 (use-package racket-mode
+  :defer t
+  :mode (("\\.rkt\\'" . racket-mode))
   :config (load-file (concat dotdir "pkgconf/racket.el")))
 

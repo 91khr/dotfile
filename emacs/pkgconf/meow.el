@@ -1,7 +1,8 @@
 (defun meow-setup ()
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
   (meow-define-keys 'insert
-    '("C-[" . meow-insert-exit))
+    '("C-[" . meow-insert-exit)
+    '("C-h" . delete-backward-char))
   (meow-motion-overwrite-define-key
    '("j" . meow-next)
    '("k" . meow-prev)
@@ -83,18 +84,31 @@
    '("y" . meow-save)
    '("Y" . meow-sync-grab)
    '("z" . meow-pop-selection)
+   '("=" . cfg-meow-indent)
    '("'" . repeat)
-   '("<escape>" . keyboard-quit)))
+   '("<escape>" . keyboard-quit))
+  (meow-define-keys 'keypad
+   '("<c-w>" . switch-window)))
+
+(defun cfg-meow-indent (&optional start end) (interactive)
+       (letrec ((sel (if (region-active-p)
+                         `(,(point-marker) ,(mark-marker))
+                       `(,(point-at-bol) ,(point-at-eol))))
+                (start (or start (min (car sel) (cadr sel))))
+                (end (or end (max (car sel) (cadr sel)))))
+         (indent-region start end)))
 
 (defun cfg-meow-get-imstate ()
   (string-to-number (string-trim (shell-command-to-string "fcitx5-remote"))))
 (setq cfg-meow-last-imstate (cfg-meow-get-imstate))
 (add-hook 'meow-insert-exit-hook
-	  (lambda ()
-	    (setq cfg-meow-last-imstate (cfg-meow-get-imstate))
-	    (call-process "fcitx5-remote" nil nil nil "-c")))
+          (lambda ()
+            (setq cfg-meow-last-imstate (cfg-meow-get-imstate))
+            (call-process "fcitx5-remote" nil nil nil "-c")))
 (add-hook 'meow-insert-enter-hook
-	  (lambda ()
-	    (when (= cfg-meow-last-imstate 2)
-		(call-process "fcitx5-remote" nil nil nil "-o"))))
-
+          (lambda ()
+            (when (= cfg-meow-last-imstate 2)
+              (call-process "fcitx5-remote" nil nil nil "-o"))))
+(add-hook 'meow-normal-mode-hook
+          (lambda ()
+            (delete-trailing-whitespace (point-at-bol) (point-at-eol))))
