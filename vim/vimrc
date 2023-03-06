@@ -39,6 +39,7 @@ let g:packager_config = #{
             \         #{ name: '91khr/lines9', location: 'start' },
             "\        Color scheme
             \         #{ name: 'lifepillar/vim-solarized8', location: 'start' },
+            \         #{ name: 'sainnhe/everforest', location: 'start' },
             "\        Make quotes colorful, for lisp :)
             \         #{ name: '91khr/rainbow', location: 'start' },
             "\        Show the marks

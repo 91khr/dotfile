@@ -53,12 +53,18 @@ set laststatus=2  | " Ensure that status line is shown
 set noshowmode  | " The mode will be shown in status line
 " Formatting ><
 set formatoptions+=/j
+" Search
+if executable("rg")
+    let &grepprg = "rg --vimgrep"
+endif
+" Better spliting
+let &fillchars .= ",vert:\u2502,fold:\u2500"
 
 " Color scheme
 import "plgext.vim"
 if s:plgext.Installed("start/vim-solarized8")
-    colo solarized8
-    let g:solarized_menu = 0  | " In tested versions, this is an erroneous option
+    colo everforest
+    "colo solarized8_flat
 else
     colo desert
 endif
@@ -76,6 +82,8 @@ nnoremap <silent><leader>/ <Cmd>let @/=''<CR>
 " Make cursor move in the virtual lines
 noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
 noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
+noremap <silent> gj j
+noremap <silent> gk k
 " Emacs style motion in cmdline mode(q: may be better)
 cnoremap <C-B> <Left>
 cnoremap <C-F> <Right>
@@ -87,6 +95,8 @@ set cedit=\<C-]>
 " Run shell commands -- :! is considered not useful
 nnoremap <leader>; :AsyncRun<space>
 nnoremap <leader>: :term ++shell<space>
+nnoremap <C-w>gt <Cmd>eval execute("q\|"..(v:count == 0 ? "." : v:count).."tabnew\|"..bufnr().."b")<CR>
+nnoremap <C-w>gT <Cmd>eval execute("q\|"..(v:count == 0 ? "-" : v:count - 1).."tabnew\|"..bufnr().."b")<CR>
 " Quick compile & Run
 nnoremap <silent><leader>cc <Cmd>Compile<CR>
 nnoremap <silent><leader>cr <Cmd>Run<CR>
@@ -148,8 +158,8 @@ if has("gui_running")
     " Use a larger default size x_x
     set columns=120 lines=40
 else  | " GUI ^^^ Term vvv
-    set bg=dark termguicolors
-    set term=xterm  | " Ignore the differences, just treat everything as xterm ><
+    set termguicolors
+    "set term=xterm  | " Ignore the differences, just treat everything as xterm ><
 endif
 
 " ======================================================================================================================
