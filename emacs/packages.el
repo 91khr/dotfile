@@ -26,9 +26,6 @@
          ("\\.markdown\\'" . markdown-mode))
   :config (load-file (concat dotdir "pkgconf/markdown.el")))
 
-(use-package meow
-  :config (load-file (concat dotdir "pkgconf/meow.el")))
-
 (use-package racket-mode
   :defer t
   :mode (("\\.rkt\\'" . racket-mode))

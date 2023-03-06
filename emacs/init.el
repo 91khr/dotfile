@@ -4,7 +4,7 @@
 
 ;; Load local configs
 (setq dotdir (file-name-directory load-file-name))
-(dolist (f '("packages.el" "ftplugin.el"))
+(dolist (f '("packages.el" "ftplugin.el" "meow.el"))
          (load-file (concat dotdir f)))
 (load-file (concat dotdir (if (display-graphic-p) "gui.el" "tui.el")))
 
@@ -21,13 +21,9 @@
 (use-package powerline)
 (powerline-default-theme)
 
-;;(meow-mode)
-(require 'meow)
-(meow-setup)
-(meow-global-mode 1)
-
 ;; switch-window
 (require 'switch-window)
-(global-set-key (kbd "C-x o") 'switch-window)
-
+;; tab bar mode
+(tab-bar-mode t)
+;; company mode
 (global-company-mode)
