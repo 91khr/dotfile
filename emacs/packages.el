@@ -8,7 +8,7 @@
 (when (not (boundp 'package-list))
   (setq package-list
         '(powerline neotree use-package markdown-mode solarized-theme racket-mode company meow
-                    switch-window polymode poly-markdown)))
+                    switch-window polymode poly-markdown org-fragtog)))
 
 ;; Check for uninstalled packages and install them
 (let ((package-install-list (seq-remove #'package-installed-p package-list)))
@@ -30,4 +30,6 @@
   :defer t
   :mode (("\\.rkt\\'" . racket-mode))
   :config (load-file (concat dotdir "pkgconf/racket.el")))
+
+(add-hook 'org-mode-hook 'org-fragtog-mode)
 
