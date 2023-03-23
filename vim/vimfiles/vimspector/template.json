@@ -6,26 +6,10 @@
             "configuration": {
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceRoot}/src/vim",
-                "args": [
-                    "-f",
-                    "-u",
-                    "unix.vim",
-                    "-U",
-                    "NONE",
-                    "--noplugin",
-                    "--not-a-term",
-                    "-S",
-                    "runtest.vim",
-                    "${Test}.vim"
-                ],
-                "cwd": "${workspaceRoot}/src/testdir",
-                "environment": [
-                    {
-                        "name": "VIMRUNTIME",
-                        "value": "${workspaceRoot}/runtime"
-                    }
-                ],
+                "program": "${workspaceRoot}/a.out",
+                "args": [],
+                "cwd": "${workspaceRoot}",
+                "environment": [],
                 "externalConsole": true,
                 "stopAtEntry": true,
                 "MIMode": "gdb",

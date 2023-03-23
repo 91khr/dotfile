@@ -20,7 +20,7 @@ endfunction
 exec s:ftext.MakeRun("cpp", "Run", "call s:Run({args})")
 
 " Set C-style indent and options
-function! CppIndent()
+function! s:CppIndent()
     let l:prevline = prevnonblank(line('.') - 1)
     let l:prevctnt = getline(l:prevline)
     let l:indent = cindent('.')
@@ -29,6 +29,6 @@ function! CppIndent()
     endif
     return l:indent
 endfunction
-setlocal indentexpr=CppIndent()
-setlocal cinoptions+=L0.5s:0g0N-sj1
+let &l:indentexpr = expand("<SID>") .. "CppIndent()"
+setlocal cinoptions+=L0.5s,:0,g0,N-s,j1
 

@@ -20,9 +20,10 @@ BraceWrapping:
     BeforeCatch: true
     BeforeElse: true
     BeforeWhile: false
-    SplitEmptyFunction: true
+    SplitEmptyFunction: false
     SplitEmptyRecord: true
     SplitEmptyNamespace: true
+AllowAllArgumentsOnNextLine: true
 AlwaysBreakTemplateDeclarations: Yes
 AllowShortFunctionsOnASingleLine: All
 AllowShortLambdasOnASingleLine: All

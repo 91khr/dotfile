@@ -103,7 +103,7 @@ function! s:AddPackCmd(cmdname, exec, args)
 endfunction
 " }}} End helpers for loading packages
 
-call s:AddPackFT('md,markdown', ['tabular', 'vim-markdown'])
+call s:AddPackFT('md,markdown,mail', ['tabular', 'vim-markdown'])
 call s:AddPackFT('tex,plaintex', 'vimtex')
 call s:AddPackCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
 call s:AddPackCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})

@@ -5,5 +5,5 @@ path=$(dirname $(readlink -f $0))
 
 echo text/html
 echo
-pandoc -s -f ${path}/mail_reader.lua -t html --mathml --template ${path}/multipart_tmpl.html --metadata title=" "
+pandoc --embed-resources -s -f ${path}/mail_reader.lua -t html --mathml --template ${path}/multipart_tmpl.html --metadata title=" "
 
