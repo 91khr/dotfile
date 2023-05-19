@@ -1,17 +1,27 @@
+vim9script
 import "ftext.vim"
 
-function! s:CompileMarkdown(...)
-    execute ":AsyncRun pandoc % -s --mathml -o %:h/%:t:r.html " .. a:000->flattennew()->join(' ')
-endfunction
-if s:ftext.CanCmd("Compile")
-    command! -buffer -bar -nargs=* Compile w | call s:CompileMarkdown(<f-args>)
-    let b:compile_overridable = 0
-endif
-if s:ftext.CanCmd("Run")
-    command! -buffer -bar -nargs=* Run exec "!" .. (has("win32") ? "start" : "xdg-open")
-                \ .. " %:h/%:t:r.html " .. <q-args>
-    let b:run_overridable = 0
-endif
+var compile_flags: string
+def RenewCompiler()
+    if getline(1) == "---" && getline(2) =~ "^compile_flags:"
+        compile_flags = getline(2)["compile_flags:"->len() : ]
+    else
+        compile_flags = "-s --mathml -o %:h/%:t:r.html "
+    endif
+enddef
+RenewCompiler()
+autocmd BufWrite <buffer> RenewCompiler()
 
-let b:coc_suggest_disable = 1
+ftext.CmdEngine.new("Compile", (...args) => {
+    w
+    exec "AsyncRun pandoc % " .. compile_flags .. args->join(" ")
+}).Do()
+ftext.CmdEngine.new("Run", (...args) => {
+    exec "!" .. (has("win32") ? "start" : "xdg-open") .. " %:h/%:t:r.html " .. args->join(" ")
+}).Do()
 
+b:coc_suggest_disable = 1
+
+command! -buffer Debug {
+    echom "flags: " compile_flags
+}

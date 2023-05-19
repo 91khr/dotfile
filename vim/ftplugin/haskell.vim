@@ -1,12 +1,9 @@
 vim9script
 import "ftext.vim"
 
-exec ftext.MakeRun("haskell", "Compile",
-            \ "'ghc -dynamic %' .. {args}")
+ftext.CmdEngine.new("Compile", "AsyncRun ghc -dynamic % {args}").Do()
 
-def Run(args: any)
-    ftext.TermRun(["ghci", expand("%"), args], { persist: true, unique: false })
+ftext.CmdEngine.new("Run", (...args) => {
+    ftext.TermRun(["ghci", expand("%")] + args, { persist: true, unique: false })
     doautocmd WinEnter !.
-enddef
-exec ftext.MakeRun("haskell", "Run", "call Run({args})")
-
+}).Do()

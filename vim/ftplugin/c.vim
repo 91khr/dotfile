@@ -1,26 +1,29 @@
+vim9script
+
 import "ftext.vim"
 
-" Compile options
+# Compile options
 if has("win32")
     if s:ftext.CanCmd("Compile")
-        " Require VimOI
+        # Require VimOI
         command! -buffer -bar -nargs=* Compile CppCompile % <args>
-        let b:compile_overridable = 0
+        b:compile_overridable = 0
     endif
 else
-    exec s:ftext.MakeRun("cpp", "Compile",
-                \ "'g++ % -std=c++2b -o %:h/a.out -Wall -Wextra -Weffc++ -Wpedantic -g ' .. {args}")
+    ftext.CmdEngine.new("Compile",
+                \ "AsyncRun g++ % -std=c++2b -o %:h/a.out -Wall -Wextra -Weffc++ -Wpedantic -g {args}")
+                .Do()
 endif
 
-function! s:Run(args)
-    if g:asyncrun_code != 0 | return | endif
-    eval s:ftext.TermRun([expand("%:p:h") .. "/a.out", a:args], #{ persist: v:true, unique: v:false })
+const run_eng = ftext.CmdEngine.new("Run", (...args) => {
+    ftext.TermRun([expand("%:p:h") .. "/a.out", args->join(' ')], { persist: v:true, unique: v:false })
     doautocmd WinEnter !.
-endfunction
-exec s:ftext.MakeRun("cpp", "Run", "call s:Run({args})")
+})
+run_eng.WaitAsyncCmd()
+run_eng.Do()
 
-" Set C-style indent and options
-function! s:CppIndent()
+# Set C-style indent and options
+function CppIndent()
     let l:prevline = prevnonblank(line('.') - 1)
     let l:prevctnt = getline(l:prevline)
     let l:indent = cindent('.')
@@ -29,6 +32,6 @@ function! s:CppIndent()
     endif
     return l:indent
 endfunction
-let &l:indentexpr = expand("<SID>") .. "CppIndent()"
+&l:indentexpr = expand("<SID>") .. "CppIndent()"
 setlocal cinoptions+=L0.5s,:0,g0,N-s,j1
 

@@ -1,21 +1,22 @@
+vim9script
 import "ftext.vim"
 
-if s:ftext.CanCmd("Compile")
-    command! -buffer -bar Compile w | eval s:ftext.TermRun([ "racket", "-ie",
+ftext.CmdEngine.new("Compile", (...args) => {
+    w
+    ftext.TermRun([ "racket", "-ie",
                 \     printf("(enter! (file \"%s\"))", expand("%:p")) ],
-                \     #{ persist: v:false, unique: v:true })
-    let b:compile_overridable = 0
-endif
-if s:ftext.CanCmd("Run")
-    command! -buffer -bar Run w | botright term racket %:p
-    let b:run_overridable = 0
-endif
+                \     { persist: false, unique: true })
+}).Do()
+ftext.CmdEngine.new("Run", (...args) => {
+    w
+    botright term racket %:p
+}).Do()
 
-" Add some missing syntaxes ><
+# Add some missing syntaxes ><
 setlocal lispwords+=syntax-case,match
 setlocal lispwords+=for,for*,for/list,for/fold,for/or,for/sum
 setlocal lispwords+=generator
 
-" Only preserve the outmost fold ><
+# Only preserve the outmost fold ><
 autocmd BufEnter * ++once silent! %foldopen! | silent! %foldclose
 

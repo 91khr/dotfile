@@ -17,5 +17,6 @@ it will be executed before the new exrc is loaded.
 
 ## TODO
 
-- [x] Rewrite packager
+- [ ] Rewrite packager
+- [ ] Add more typings when vim9 supports that
 

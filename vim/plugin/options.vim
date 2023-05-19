@@ -79,9 +79,9 @@ map <leader><space> za
 tnoremap <C-\> <C-W>N
 " Clear search
 nnoremap <silent><leader>/ <Cmd>let @/=''<CR>
-" Make cursor move in the virtual lines
-noremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
-noremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
+" Make cursor move visually :)
+noremap <silent> j gj
+noremap <silent> k gk
 noremap <silent> gj j
 noremap <silent> gk k
 " Emacs style motion in cmdline mode(q: may be better)
@@ -159,6 +159,7 @@ if has("gui_running")
     set columns=120 lines=40
 else  | " GUI ^^^ Term vvv
     set termguicolors
+    set bg=dark
     "set term=xterm  | " Ignore the differences, just treat everything as xterm ><
 endif
 
@@ -183,8 +184,8 @@ endif
 " ==================================================================================================================
 set completeopt=menuone,popup,noinsert,noselect
 let g:UltiSnipsExpandTrigger = "<nop>"  | " The config will handle it ><
-let g:coc_global_extensions = [ "coc-clangd", "coc-explorer", "coc-rust-analyzer", "coc-lua", ]
-let g:vimspector_base_dir='/home/virginia/.vim/vimspector'
+let g:coc_global_extensions = [ "coc-clangd", "coc-explorer", "coc-rust-analyzer", "coc-lua", "coc-json", ]
+let g:vimspector_base_dir=expand("~")..'/.vim/vimspector'
 let g:vimspector_enable_mappings = 'HUMAN'
 
 " ==================================================================================================================

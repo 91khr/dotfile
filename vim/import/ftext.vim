@@ -34,34 +34,87 @@ export def CanCmd(cmd: string): bool
     return !exists(":" .. cmd) || get(b:, tolower(cmd) .. "_overridable", true)
 enddef
 
-export def MakeRun(ft: string, cmd: string, pat: string, options: dict<bool> = {}): string
-    if !CanCmd(cmd) && !options->get("force", false)
-        return ""
-    endif
-    var flagname = tolower(cmd) .. "_flags"
-    var varlist = {
-        args: "[get(g:, '" .. flagname .. "_" .. ft .. "') ?? "
-            .. "get(b:, '" .. flagname .. "') ?? [], trim(<q-args>) ?? []]->flattennew()->join(' ')",
-    }
-    def Var(name: list<string>): string
-        var v = name[1][1 : -2]
-        if !varlist->has_key(v)
-            throw "No such variable in compile pattern"
-        endif
-        return varlist[v]
-    enddef
-    exec "b:" .. tolower(cmd) .. "_overridable = 0"
-    var cmdctnt: string
-    const cmdinput = substitute(pat, '\v(\{\w+\})', Var, 'g')
-    if cmd == "Compile"
-        cmdctnt = "Compile exec 'AsyncRun ' .. " .. cmdinput
-    elseif cmd == "Run"
-        cmdctnt = "Run Compile | autocmd User AsyncRunStop ++once if g:asyncrun_code == 0 | " ..
-                    \ cmdinput .. " | endif"
-    else
-        cmdctnt = cmd .. " " .. cmdinput
-    endif
-    return "command! -buffer " .. (options->get("bar", true) ? "-bar " : "") .. "-nargs=? " ..
-                \ cmdctnt
-enddef
+export class CmdEngine
+    this.cmd: string
+    this.ft: string
+    public this.exec: func(...list<string>)
+    this.options: dict<any> = {}
 
+    def new(this.cmd, exec: any, this.options = v:none, ft: string = "")
+        this.ft = ft == "" ? &ft : ft
+        if type(exec) == v:t_string
+            this.exec = this.ExpandVar(exec)
+            if !this.options->has_key("compl")
+                this.options.compl = (prev, line, _) =>
+                    prev[0] == '+' ? ["+clear"] :
+                    line =~ "+clear" ? [] : ["+clear"] + getcompletion(prev, "file")
+            endif
+        elseif type(exec) == v:t_func
+            this.exec = exec
+        else
+            throw "E1272: Expected string or func, but got " .. type(exec)
+        endif
+    enddef
+    def ExpandVar(cmdpat: string): func(...list<string>)
+        const flagname = this.cmd->tolower() .. "_flags"
+        def Work(...args: list<string>)
+            var b = b:
+            if args->get(0, "") == "+clear"
+                b[flagname .. "_save"] = []
+            elseif !args->empty()
+                b[flagname .. "_save"] = args
+            endif
+            const varlist = {
+                args: [get(g:, $"{flagname}_{this.ft}") ?? get(b:, flagname) ?? [],
+                    b->get(flagname .. "_save", [])]->flattennew()->join(" "),
+            }
+            def Var(name: list<string>): string
+                if !varlist->has_key(name[1]) | throw "No such variable in compile pattern" | endif
+                return varlist[name[1]]
+            enddef
+            const cmdctnt = substitute(cmdpat, '\v\{(\w+)\}', Var, 'g')
+            exec cmdctnt
+        enddef
+        return Work
+    enddef
+
+    def Opt(opts: dict<any>): any
+        this.options->extend(opts)
+        return this
+    enddef
+    def Exec(Fn: func(...list<string>)): any
+        this.exec = Fn
+        return this
+    enddef
+    def WrapExec(Fn: func(func(...list<string>), ...list<string>)): any
+        const PreExec: func(...list<string>) = this.exec
+        this.exec = (...args) => {
+            call(Fn, [PreExec] + args)
+        }
+        return this
+    enddef
+
+    def Do()
+        if !CanCmd(this.cmd) && !this.options->get("force", false) | return | endif
+        final b = b:
+        b[tolower(this.cmd) .. "_overridable"] = 0
+        b[this.cmd] = this.exec
+        const bar = this.options->get("bar", true) ? "-bar" : ""
+        b[this.cmd .. "Compl"] = this.options->get("compl", (prev, _, _) => getcompletion(prev, "cmdline"))
+        exec $'command! -buffer -nargs=* -complete=customlist,b:{this.cmd}Compl {bar} {this.cmd} b:{this.cmd}(<f-args>)'
+    enddef
+
+    def AddFlags(): any
+        const flagname = this.cmd->tolower() .. "_flags"
+        return this.WrapExec((F, ...args) => {
+        })
+    enddef
+
+    def WaitAsyncCmd(waitcmd: string = "Compile"): any
+        return this.WrapExec((F, ...args) => {
+            exec waitcmd
+            b:after_asyncrun = () => call(F, args)
+            autocmd User AsyncRunStop ++once if g:asyncrun_code == 0 | call(b:after_asyncrun, []) | endif
+        })
+    enddef
+endclass

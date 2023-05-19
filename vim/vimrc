@@ -46,7 +46,7 @@ let g:packager_config = #{
             \         #{ name: 'kshenoy/vim-signature', location: 'start' },
             \
             "\        File explorer
-            \         'scrooloose/nerdtree',
+            \         'lambdalisue/fern.vim',
             "\        Run shell asyncly
             \         'skywind3000/asyncrun.vim',
             "\        Git support
@@ -72,6 +72,8 @@ let g:packager_config = #{
             \          #{ name: 'slint-ui/vim-slint', location: 'start' },
             "\          Idris2
             \          #{ name: 'edwinb/idris2-vim', location: 'start' },
+            "\          QML
+            \          #{ name: 'peterhoeg/vim-qml', location: 'start' },
             \
             "\         Zen mode :)
             "\          'junegunn/goyo.vim',
@@ -105,7 +107,7 @@ endfunction
 
 call s:AddPackFT('md,markdown,mail', ['tabular', 'vim-markdown'])
 call s:AddPackFT('tex,plaintex', 'vimtex')
-call s:AddPackCmd('NERDTree', 'packadd nerdtree | NERDTree', {})
+call s:AddPackCmd('Fern', 'packadd fern.vim | fern .', {})
 call s:AddPackCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
 call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
