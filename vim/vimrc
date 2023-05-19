@@ -107,7 +107,7 @@ endfunction
 
 call s:AddPackFT('md,markdown,mail', ['tabular', 'vim-markdown'])
 call s:AddPackFT('tex,plaintex', 'vimtex')
-call s:AddPackCmd('Fern', 'packadd fern.vim | fern .', {})
+call s:AddPackCmd('Fern', 'packadd fern.vim | Fern . -drawer', {})
 call s:AddPackCmd('AsyncRun', 'packadd asyncrun.vim | AsyncRun <args>', {'args': '*'})
 call s:AddPackCmd('Goyo', 'packadd goyo.vim | Goyo <args>', {'args': '*'})
 call s:AddPackCmd('LLPStartPreview', 'packadd vim-latex-live-preview | LLPStartPreview', {})
