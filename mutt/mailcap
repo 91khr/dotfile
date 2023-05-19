@@ -1,4 +1,4 @@
-text/html; firefox %s; needsterminal;
+text/html; firefox %s; copiousoutput;
 text/html; pandoc %s -f html -t gfm; copiousoutput;
 application/*; xdg-open %s;
 image/*; xdg-open %s;

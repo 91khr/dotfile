@@ -1,11 +1,12 @@
 # User and password is configurated in the local muttrc()(
 source "$my_muttrc_path/detect_localrc.sh|"
+source "$my_muttrc_path/keybind.muttrc"
+
 # Receiving options
 set mbox_type = Maildir
 
 set imap_check_subscribed
 set imap_keepalive = 300
-unset imap_passive
 set mail_check = 120
 
 set header_cache = ~/.cache/mutt
@@ -17,24 +18,11 @@ set realname = "Virginia Senioria"
 
 set send_charset = "utf-8"
 
-# Key bindings
-bind pager j next-line
-bind pager k previous-line
-bind attach,index J next-page
-bind attach,index K previous-page
-bind pager J next-undeleted
-bind pager K previous-undeleted
-bind pager <Down> next-line
-bind pager <Up> previous-line
-bind pager gg top
-bind pager G bottom
-bind attach,index gg first-entry
-bind attach,index G last-entry
-
 # Viewing and editing options
 alternative_order text/plain text/html
 set mailcap_path = $my_muttrc_path/mailcap
 auto_view text/html
+set sleep_time = 0
 
 set editor="gvim --nofork"
 set text_flowed = yes
@@ -42,6 +30,7 @@ set reflow_wrap = 120
 
 set sort = threads
 set sort_aux = last-date-received
+set narrow_tree = yes
 
 set folder_format = "%2C %t%N %f"
 
