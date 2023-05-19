@@ -32,11 +32,15 @@ setopt interactivecomments
 
 # Prompt
 setopt PROMPT_SUBST
-HNAME=$([ -n "$SSH_CLIENT" -o -n "$SSH_TTY" ] && echo $HOST:)
-export PROMPT="%F{3}[$HNAME%~]%f %(?.%F{2}%?.%F{1}%?)%f \
-%(1j.%F{5}(%j job%(2j.s.))%f.)
+if [ -n "$TMUX" -a $SHLVL -gt 2 ]; then
+    LVLPROMPT="%F{5}(lv $SHLVL)%f "
+elif [ -z "$TMUX" -a $SHLVL -gt 1 ]; then
+    LVLPROMPT="%F{5}(lv $SHLVL)%f "
+fi
+export PROMPT="%F{3}[$([ -n "$SSH_CLIENT" -o -n "$SSH_TTY" ] && echo $HOST:)%~]\
+%f %(?.%F{2}%?.%F{1}%?)%f ${LVLPROMPT}%(1j.%F{5}(%j job%(2j.s.))%f.)
 %(#.%F{5}%n.%F{6}%n)%f%# "
-unset HNAME
+unset LVLPROMPT
 
 # Define commands and variables
 alias ls="ls --color=auto"

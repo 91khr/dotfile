@@ -1,3 +1,4 @@
 Host *
     ControlMaster auto
     ControlPath /tmp/ssh-ctrl-%r@%h:%p
+    ForwardX11 yes

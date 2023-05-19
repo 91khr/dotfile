@@ -24,8 +24,7 @@ exec ./.install $@
 #include <functional>
 using std::string;
 using std::to_string;
-using std::move;
-using std::string_literals::operator""s;
+using std::string_literals::operator""s;  // NOLINT
 namespace fs = std::filesystem;
 // }}} End premable
 
@@ -189,7 +188,7 @@ public:
     template<class T> requires (!std::same_as<InstallerBox, T>) && ConfigInstaller<T>
     InstallerBox(T &&inst) : vt(&VTable_v<T>), data(std::aligned_alloc(alignof(T), sizeof(T)))
     {
-        new(data) T(move(inst));
+        new(data) T(std::move(inst));
     }
     ~InstallerBox()
     {
@@ -206,7 +205,7 @@ public:
     {
         assert(this != &o && "There shouldn't be self-assigning");
         this->~InstallerBox();
-        new(this) InstallerBox(move(o));
+        new(this) InstallerBox(std::move(o));
         return *this;
     }
     void install() { vt->install(data); }
@@ -229,7 +228,7 @@ public:
 public:
     template<class F, ConfigInstaller T = std::invoke_result_t<F>>
     ConfigInfo(const char *n, OSCatalog o, const char *desc, F &&instgen)
-        : name(n), os(o), description(desc), gen([instgen = move(instgen)] { return instgen(); })
+        : name(n), os(o), description(desc), gen([instgen = std::move(instgen)] { return instgen(); })
     {
     }
     ConfigInfo(const ConfigInfo &) = delete;
@@ -253,7 +252,7 @@ auto operator&(T &&a, U &&b)
 std::vector<ConfigInfo> conf_list;
 struct ConfigAdder
 {
-    ConfigAdder(ConfigInfo &&conf) { conf_list.push_back(move(conf)); }
+    ConfigAdder(ConfigInfo &&conf) { conf_list.push_back(std::move(conf)); }
 };
 #define add_conf_impl(ln) ConfigAdder add_conf_var_##ln = ConfigInfo
 #define add_conf_2(ln) add_conf_impl(ln)
@@ -609,7 +608,7 @@ add_conf { "utils", ConfigInfo::AllOS, "Some utilities to make life better",
 
 add_conf { "vim", ConfigInfo::AllOS, "Vim config",
     [] {
-        return InvokerConfig { ".vimrc", "\"", "vimrc", format("source %D/vim/vimrc") } &
+        return InvokerConfig { env.iswin ? "_vimrc" : ".vimrc", "\"", "vimrc", format("source %D/vim/vimrc") } &
             SymlinkConfig { "vim/vimfiles", ".vim" };
     },
 };
