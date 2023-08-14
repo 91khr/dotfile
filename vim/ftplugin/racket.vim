@@ -1,11 +1,12 @@
 vim9script
 import "ftext.vim"
+import autoload "repl.vim"
 
 ftext.CmdEngine.new("Compile", (...args) => {
     w
     ftext.TermRun([ "racket", "-ie",
                 \     printf("(enter! (file \"%s\"))", expand("%:p")) ],
-                \     { persist: false, unique: true })
+                \     { persist: false, unique: true, termfn: repl.MkRepl })
 }).Do()
 ftext.CmdEngine.new("Run", (...args) => {
     w

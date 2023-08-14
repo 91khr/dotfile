@@ -95,8 +95,6 @@ set cedit=\<C-]>
 " Run shell commands -- :! is considered not useful
 nnoremap <leader>; :AsyncRun<space>
 nnoremap <leader>: :term ++shell<space>
-nnoremap <C-w>gt <Cmd>eval execute("q\|"..(v:count == 0 ? "." : v:count).."tabnew\|"..bufnr().."b")<CR>
-nnoremap <C-w>gT <Cmd>eval execute("q\|"..(v:count == 0 ? "-" : v:count - 1).."tabnew\|"..bufnr().."b")<CR>
 " Quick compile & Run
 nnoremap <silent><leader>cc <Cmd>Compile<CR>
 nnoremap <silent><leader>cr <Cmd>Run<CR>

@@ -1,6 +1,7 @@
 vim9script
 
-export def TermRun(cmd: list<string>, args: dict<bool> = { persist: false, unique: false }): number
+export def TermRun(cmd: list<string>, args_: dict<any> = v:none): number
+    const args = extend({ persist: false, unique: false, termfn: function("term_start") }, args_ ?? {})
     var realcmd = args->get("shell", false) ? ["zsh", "-c", join(cmd, " ")] : cmd
     def Post(nr: number): void
         if nr != bufnr() | return | endif
@@ -10,7 +11,8 @@ export def TermRun(cmd: list<string>, args: dict<bool> = { persist: false, uniqu
     enddef
     def Exec(): number
         var nr: number
-        belowright nr = term_start(realcmd, {
+        const Fn = args->get("termfn", function("term_start"))
+        belowright nr = Fn(realcmd, {
                           term_rows: float2nr(0.35 * winheight(0)),
                           term_finish: args.persist ? "open" : "close",
                           exit_cb: (_, _) => timer_start(10, (_) => Post(nr)),

@@ -3,7 +3,7 @@ import "ftext.vim"
 
 ftext.CmdEngine.new("Compile", (...args) => {
     w
-    ftext.TermRun(([ "idris2", expand("%"),
+    ftext.TermRun(([ "rlwrap", "idris2", expand("%"),
                 \         get(g:, "compile_flags_idris2", []), get(b:, "compile_flags_idris2", []) ] + args)
                 \     ->flattennew(),
                 \     { persist: false, unique: true })

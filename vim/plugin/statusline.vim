@@ -72,7 +72,42 @@ conf.dispatch = DispatchWin
 # {{{ Wordcount
 const wordcounted_filetypes = ["markdown", "mail", "text"]
 var loaded_wordcount = false
-cached_val.wordcount = () => perleval("WordCount")
+if has("perl")
+    cached_val.wordcount = () => " "..perleval("WordCount").." "
+    def LoadWordCount()
+        perl <<EOF
+        sub WordCount {
+            my $ctnt = join ' ', $curbuf->Get(1..$curbuf->Count());
+            utf8::decode($ctnt);
+            my $hanzi = 0 + $ctnt =~ s/\p{Han}/ i /g;
+            my $count = () = $ctnt =~ /\b\w[\w'.]*\b/g;
+            my $res = "$count WD";
+            if ($hanzi != 0) {
+                $res = $res . ", $hanzi HZ";
+            }
+            return $res;
+        }
+EOF
+    enddef
+elseif has("python3")
+    cached_val.wordcount = () => py3eval("WordCount()")
+    def LoadWordCount()
+        python3 <<EOF
+import re
+hanzi_re = re.compile(u"[\u4e00-\u9fff]")
+words_re = re.compile(r"\b\w[\w'.]*\b")
+def WordCount():
+    ctnt = "\n".join(vim.current.buffer[:])
+    ctnt, hanzi_cnt = hanzi_re.subn(' i ', ctnt)
+    tot_cnt = len(words_re.findall(ctnt))
+    return f" {tot_cnt} WD, {hanzi_cnt} HZ "
+EOF
+    enddef
+else
+    cached_val.wordcount = () => ""
+    def LoadWordCount()
+    enddef
+endif
 def WordCount(win: number): string
     const buf = winbufnr(win)
     if index(wordcounted_filetypes, buf->getbufvar("&ft")) == -1 || buf->getbufvar("wordcount_disabled", false)
@@ -80,22 +115,10 @@ def WordCount(win: number): string
     else
         if !loaded_wordcount
             loaded_wordcount = true
-            perl <<EOF
-            sub WordCount {
-                my $ctnt = join ' ', $curbuf->Get(1..$curbuf->Count());
-                utf8::decode($ctnt);
-                my $hanzi = 0 + $ctnt =~ s/\p{Han}/ i /g;
-                my $count = () = $ctnt =~ /\b\w[\w'.]*\b/g;
-                my $res = "$count WD";
-                if ($hanzi != 0) {
-                    $res = $res . ", $hanzi HZ";
-                }
-                return $res;
-            }
-EOF
+            LoadWordCount()
         endif
-        setbufvar(buf, "cache_wordcount", [0, perleval("WordCount")])
-        return color.Highlight("StatusLine") .. " %{b:cache_wordcount[1]} "
+        setbufvar(buf, "cache_wordcount", [0, call(cached_val.wordcount, [])])
+        return color.Highlight("StatusLine") .. "%{b:cache_wordcount[1]}"
     endif
 enddef
 conf.components.wordcount = utils.MakeComponent(WordCount)

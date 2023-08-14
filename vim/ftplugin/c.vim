@@ -15,12 +15,10 @@ else
                 .Do()
 endif
 
-const run_eng = ftext.CmdEngine.new("Run", (...args) => {
+ftext.CmdEngine.new("Run", (...args) => {
     ftext.TermRun([expand("%:p:h") .. "/a.out", args->join(' ')], { persist: v:true, unique: v:false })
     doautocmd WinEnter !.
-})
-run_eng.WaitAsyncCmd()
-run_eng.Do()
+}).WaitAsyncCmd().Do()
 
 # Set C-style indent and options
 function CppIndent()
