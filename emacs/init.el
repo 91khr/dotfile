@@ -4,13 +4,13 @@
 
 ;; Load local configs
 (setq dotdir (file-name-directory load-file-name))
-(dolist (f '("packages.el" "ftplugin.el" "meow.el"))
+(dolist (f '("packages.el" "ftplugin.el"))
          (load-file (concat dotdir f)))
 (load-file (concat dotdir (if (display-graphic-p) "gui.el" "tui.el")))
 
 ;; Configs
 (global-visual-line-mode)
-(global-linum-mode t)
+(global-display-line-numbers-mode t)
 (show-paren-mode)
 
 (setq-default indent-tabs-mode nil)
@@ -26,4 +26,7 @@
 ;; tab bar mode
 (tab-bar-mode t)
 ;; company mode
-(global-company-mode)
+;;(global-company-mode)
+
+;; Fuzzy completion
+(setq-default completion-styles '(flex orderless partial-completion))

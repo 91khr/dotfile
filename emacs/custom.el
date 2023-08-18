@@ -15,7 +15,9 @@
    '(:foreground default :background default :scale 2.0 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
                  ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
-   '(switch-window magit-section lsp-mode flycheck f dash powerline neotree use-package markdown-mode solarized-theme evil racket-mode company meow))
+   '(paredit slime marginalia corfu orderless vertico telega switch-window magit-section lsp-mode flycheck f dash powerline neotree use-package markdown-mode solarized-theme evil racket-mode company meow))
+ '(smtpmail-smtp-server "localhost")
+ '(smtpmail-smtp-service 1025)
  '(truncate-lines nil)
  '(truncate-partial-width-windows 30))
 (custom-set-faces
