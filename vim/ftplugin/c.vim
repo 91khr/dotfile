@@ -16,7 +16,7 @@ else
 endif
 
 ftext.CmdEngine.new("Run", (...args) => {
-    ftext.TermRun([expand("%:p:h") .. "/a.out", args->join(' ')], { persist: v:true, unique: v:false })
+    ftext.TermRun([expand("%:p:h") .. "/a.out"] + args, { persist: v:true, unique: v:false })
     doautocmd WinEnter !.
 }).WaitAsyncCmd().Do()
 
