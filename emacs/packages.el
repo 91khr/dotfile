@@ -7,7 +7,7 @@
 (package-initialize)
 (setq package-list
       '(powerline neotree use-package markdown-mode solarized-theme racket-mode company meow switch-window
-                  org-fragtog vertico orderless corfu marginalia slime paredit))
+                  org-fragtog vertico orderless corfu marginalia slime smartparens rime))
 
 ;; Check for uninstalled packages and install them
 (let ((package-install-list (seq-remove #'package-installed-p package-list)))
@@ -32,6 +32,14 @@
             (load-file (concat dotdir "pkgconf/racket.el"))
             (add-hook racket-mode-hook (lambda ()
                                          (setq eldoc-documentation-function #'racket-xp-eldoc-function)))))
+
+(use-package rime
+  :defer t
+  :hook (markdown-mode org-mode telega-load)
+  :config
+  (add-hook 'telega-chat-mode-hook
+            (lambda () (setq-local cfg-meow-last-imstate "rime"))))
+
 (use-package vertico
   :init (vertico-mode))
 (use-package marginalia
@@ -46,7 +54,7 @@
   (corfu-cycle t)
   (corfu-preselect 'first)
   (corfu-popupinfo-mode t)
-  :bind (:map corfu-map))
+  :bind (:map corfu-map ("C-[" . #'corfu-quit)))
 
 (use-package telega
   :defer t
@@ -64,8 +72,9 @@
   (setq slime-lisp-implementations '((sbcl ("/usr/bin/sbcl"))))
   (setq inferior-lisp-program "sbcl"))
 
-(use-package paredit
-  :hook (emacs-lisp-mode lisp-mode scheme-mode slime-repl-mode slime-mrepl-mode))
+(use-package smartparens
+  :hook (emacs-lisp-mode lisp-mode scheme-mode slime-repl-mode slime-mrepl-mode)
+  :config (load-file (concat dotdir "pkgconf/smartparens.el")))
 
 (use-package meow
   :config (load-file (concat dotdir "pkgconf/meow.el")))

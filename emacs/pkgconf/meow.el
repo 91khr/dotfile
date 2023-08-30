@@ -1,7 +1,10 @@
 ;; Default setup
 (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+(defun cfg-meow-insert-exit ()
+  (interactive)
+  (if smartparens-mode (meow-paren-mode) (meow-insert-exit)))
 (meow-define-keys 'insert
-  '("C-[" . meow-insert-exit)
+  '("C-[" . cfg-meow-insert-exit)
   '("C-h" . delete-backward-char))
 (meow-motion-overwrite-define-key
  '("j" . meow-next)
@@ -117,22 +120,27 @@
          (indent-region start end)))
 
 ;; Input method
-(defun cfg-meow-get-imstate ()
-  (string-to-number (string-trim (shell-command-to-string "fcitx5-remote"))))
-(setq cfg-meow-last-imstate (cfg-meow-get-imstate))
 (add-hook 'meow-insert-exit-hook
           (lambda ()
-            (setq cfg-meow-last-imstate (cfg-meow-get-imstate))
-            (call-process "fcitx5-remote" nil nil nil "-c")))
+            (delete-trailing-whitespace (pos-bol) (pos-eol))
+            (setq-local cfg-meow-last-sysimstate
+                        (string-to-number (string-trim (shell-command-to-string "fcitx5-remote"))))
+            (when (= cfg-meow-last-sysimstate 2)
+              (call-process "fcitx5-remote" nil nil nil "-c"))
+            (when current-input-method
+              (setq-local cfg-meow-last-imstate current-input-method)
+              (set-input-method nil))))
 (add-hook 'meow-insert-enter-hook
           (lambda ()
-            (when (= cfg-meow-last-imstate 2)
-              (call-process "fcitx5-remote" nil nil nil "-o"))))
+            (when (and (boundp cfg-meow-last-sysimstate) (= cfg-meow-last-sysimstate 2))
+              (call-process "fcitx5-remote" nil nil nil "-o"))
+            (when (bound-and-true-p cfg-meow-last-imstate)
+              (set-input-method cfg-meow-last-imstate))))
 
-;; Whitespace elimination
-(add-hook 'meow-normal-mode-hook
+;; Enable parens mode
+(add-hook 'meow-mode-hook
           (lambda ()
-            (delete-trailing-whitespace (point-at-bol) (point-at-eol))))
+            (when smartparens-mode (meow-paren-mode))))
 
 ;; Enable
 (meow-global-mode 1)
