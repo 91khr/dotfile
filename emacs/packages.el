@@ -37,8 +37,9 @@
   :defer t
   :hook (markdown-mode org-mode telega-load)
   :config
+  (setq default-input-method "rime")
   (add-hook 'telega-chat-mode-hook
-            (lambda () (setq-local cfg-meow-last-imstate "rime"))))
+            (lambda () (setq-local seni-meow-last-imstate "rime"))))
 
 (use-package vertico
   :init (vertico-mode))
