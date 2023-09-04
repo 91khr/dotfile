@@ -59,9 +59,6 @@ let g:packager_config = #{
             "\        Snippets
             \         #{ name: 'SirVer/ultisnips', location: 'start' },
             \
-            "\         Editor config
-            \         #{ name: 'editorconfig/editorconfig-vim', location: 'start' },
-            \
             "\         Markdown
             \          'godlygeek/tabular',
             \          'plasticboy/vim-markdown',
@@ -115,6 +112,7 @@ call s:AddPackCmd('MarkdownPreview', 'packadd markdown-preview.nvim | MarkdownPr
 call s:AddPackCmd('Coc', 'packadd coc.nvim | doautocmd User BeforeCocNvimInit | CocStart', {})
 call s:AddPackCmd('Git', 'packadd vim-fugitive | Git <args>', {'args': '*'})
 nnoremap <F5> <Cmd>packadd vimspector<CR>
+packadd editorconfig
 " }}} End package list and setup
 
 function! s:ListPacks(...)
