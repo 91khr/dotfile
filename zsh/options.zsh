@@ -32,10 +32,10 @@ setopt interactivecomments
 
 # Prompt
 setopt PROMPT_SUBST
-if [ -n "$TMUX" -a $SHLVL -gt 2 ]; then
-    LVLPROMPT="%F{5}(lv $SHLVL)%f "
-elif [ -z "$TMUX" -a $SHLVL -gt 1 ]; then
-    LVLPROMPT="%F{5}(lv $SHLVL)%f "
+if [ -n "$TMUX" -o "$VIM" ]; then
+    [ $SHLVL -gt 2 ] && LVLPROMPT="%F{5}(lv $SHLVL)%f "
+else
+    [ $SHLVL -gt 1 ] && LVLPROMPT="%F{5}(lv $SHLVL)%f "
 fi
 export PROMPT="%F{3}[$([ -n "$SSH_CLIENT" -o -n "$SSH_TTY" ] && echo $HOST:)%~]\
 %f %(?.%F{2}%?.%F{1}%?)%f ${LVLPROMPT}%(1j.%F{5}(%j job%(2j.s.))%f.)
