@@ -1,7 +1,5 @@
 #!/bin/env lua
 
-local all_zh = os.getenv("ALL_ZH") == "1"
-
 local function split_str(str)
     return function(cur, pos)
         cur = cur:sub(pos)
@@ -37,28 +35,37 @@ local function split_str(str)
     end, str, 1
 end
 
-local lastlang = "zh"
-local quotes = {}
-local function replace_punct(str)
+local ZhPunctReplacer = {
+    lastlang = "zh",
+    quotes = {},
+}
+function ZhPunctReplacer:new()
+    local res = {}
+    setmetatable(res, self)
+    self.__index = self
+    return res
+end
+
+function ZhPunctReplacer:replace_punct(str)
     local res = str:gsub("([^%p%d%s]?)([().,:;?!\"' \t]+)", function(lead, punct)
-        if not all_zh and (lead:match("%a") or (lead == "" and lastlang == "en")) then
-            lastlang = "en"
+        if not all_zh and (lead:match("%a") or (lead == "" and self.lastlang == "en")) then
+            self.lastlang = "en"
         elseif lead:len() > 0 then
-            lastlang = "zh"
+            self.lastlang = "zh"
         end
         if punct:match("^%s+$") then return lead .. punct end
         local function mkquote(punct)
-            if #quotes == 0 or punct ~= quotes[#quotes].value then
-                table.insert(quotes, { value = punct == "(" and ")" or punct, lang = lastlang })
-                return lastlang == "zh" and
+            if #self.quotes == 0 or punct ~= self.quotes[#self.quotes].value then
+                table.insert(self.quotes, { value = punct == "(" and ")" or punct, lang = self.lastlang })
+                return self.lastlang == "zh" and
                         ({ ["\""] = "「", ["'"] = "「", ["("] =  "（" })[punct] or
                         punct
             else
-                local res = quotes[#quotes].lang == "zh" and
+                local res = self.quotes[#self.quotes].lang == "zh" and
                         ({ ["\""] = "」", ["'"] = "」", [")"] = "）" })[punct] or
-                        quotes[#quotes].value
-                lastlang = quotes[#quotes].lang
-                table.remove(quotes)
+                        self.quotes[#self.quotes].value
+                self.lastlang = self.quotes[#self.quotes].lang
+                table.remove(self.quotes)
                 return res
             end
         end
@@ -74,28 +81,74 @@ local function replace_punct(str)
                 return ""
             elseif not punct:match("[\"'()]") then
                 return ({
-                    ["."] = "。",
-                    [","] = "，",
-                    [":"] = "：",
-                    [";"] = "；",
-                    ["?"] = "？",
-                    ["!"] = "！",
+                    ["."] = "。", [","] = "，",
+                    [":"] = "：", [";"] = "；",
+                    ["?"] = "？", ["!"] = "！",
                 })[punct]
             else
                 return mkquote(punct)
             end
         end
         return lead .. punct:gsub(".", function(punct)
-            return lastlang == "zh" and zhtrans(punct) or entrans(punct)
+            return self.lastlang == "zh" and zhtrans(punct) or entrans(punct)
         end)
     end)
     return res
 end
 
-local src = io.stdin:read("*all")
-for pos, ctnt, needy in split_str(src) do
-    if needy == "ordinary" then
-        ctnt = replace_punct(ctnt)
+local function to_enpunct(str)
+    local wantspc = false
+    local res = ""
+    for p, ch in utf8.codes(str) do
+        ch = utf8.char(ch)
+        if ('。，：；？！、“”‘’（）…'):find(ch, 1, true) then
+            io.stdout:flush()
+            ch = ({
+                ["。"] = ".", ["，"] = ",",
+                ["："] = ":", ["；"] = ";",
+                ["？"] = "?", ["！"] = "!",
+                ["、"] = ",", ["…"] = "...",
+                ["“"] = "\"", ["”"] = "\"",
+                ["‘"] = "'", ["’"] = "'",
+                ["（"] = "(", ["）"] = ")",
+            })[ch]
+            if ("\"'()"):find(ch, 1, true) then
+                ch = (wantspc and " " or "") .. ch
+                wantspc = false
+            else
+                wantspc = true
+            end
+            res = res .. ch
+        else
+            if wantspc and not ch:find("%s") then res = res .. " " end
+            wantspc = false
+            res = res .. ch
+        end
     end
-    io.stdout:write(ctnt)
+    return res
+end
+
+local modname = ...
+local all_zh = os.getenv("ALL_ZH")
+local detrans = os.getenv("DETRANS") == "1"
+
+if modname == nil then
+    local src = io.stdin:read("*all")
+    if detrans then
+        io.stdout:write(to_enpunct(src))
+    else
+        local repl = ZhPunctReplacer:new()
+        for pos, ctnt, needy in split_str(src) do
+            if needy == "ordinary" then
+                ctnt = repl:replace_punct(ctnt)
+            end
+            io.stdout:write(ctnt)
+        end
+    end
+else
+    return {
+        split_str = split_str,
+        ZhPunctReplacer = ZhPunctReplacer,
+        to_enpunct = to_enpunct,
+    }
 end
