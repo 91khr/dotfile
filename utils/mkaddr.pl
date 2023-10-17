@@ -24,7 +24,7 @@ sub parse_target {
         $target{$phrase} = $addr->format();
     }
 }
-parse_target(Mail::Address->parse($header->get($_))) for qw(To Cc Bcc);
+parse_target(Mail::Address->parse($header->get($_))) for qw(From To Cc Bcc);
 
 # Read and write back the aliases
 my $aliasfile = $ENV{ALIASFILE} || abs_path($ENV{HOME} . "/.mutt/aliases");
