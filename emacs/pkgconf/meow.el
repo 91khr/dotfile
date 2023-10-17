@@ -124,22 +124,24 @@
 ;; @seni-meow-last-sysimstate: Current system input method state in insert mode
 (setq-default seni-meow-last-imstate nil)
 (setq-default seni-meow-last-sysimstate nil)
-(add-hook 'meow-insert-exit-hook
-          (lambda ()
-            (delete-trailing-whitespace (pos-bol) (pos-eol))
-            (setq-local seni-meow-last-sysimstate
-                        (string-to-number (string-trim (shell-command-to-string "fcitx5-remote"))))
-            (when (= seni-meow-last-sysimstate 2)
-              (call-process "fcitx5-remote" nil nil nil "-c"))
-            (when current-input-method
-              (setq-local seni-meow-last-imstate current-input-method)
-              (set-input-method nil))))
-(add-hook 'meow-insert-enter-hook
-          (lambda ()
-            (when (and (boundp 'seni-meow-last-sysimstate) (= seni-meow-last-sysimstate 2))
-              (call-process "fcitx5-remote" nil nil nil "-o"))
-            (when (bound-and-true-p seni-meow-last-imstate)
-              (set-input-method seni-meow-last-imstate))))
+(defun seni-meow-record-im ()
+  (delete-trailing-whitespace (pos-bol) (pos-eol))
+  (setq-local seni-meow-last-sysimstate
+              (string-to-number (string-trim (shell-command-to-string "fcitx5-remote"))))
+  (when (= seni-meow-last-sysimstate 2)
+    (call-process "fcitx5-remote" nil nil nil "-c"))
+  (if current-input-method
+      (progn
+        (setq-local seni-meow-last-imstate current-input-method)
+        (set-input-method nil))
+    (setq-local seni-meow-last-imstate nil)))
+(add-hook 'meow-insert-exit-hook #'seni-meow-record-im)
+(defun seni-meow-recover-im ()
+  (when (and (boundp 'seni-meow-last-sysimstate) (equal seni-meow-last-sysimstate 2))
+    (call-process "fcitx5-remote" nil nil nil "-o"))
+  (when (bound-and-true-p seni-meow-last-imstate)
+    (set-input-method seni-meow-last-imstate)))
+(add-hook 'meow-insert-enter-hook #'seni-meow-recover-im)
 
 ;; Enable parens mode
 (add-hook 'meow-mode-hook
