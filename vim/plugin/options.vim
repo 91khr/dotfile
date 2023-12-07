@@ -154,7 +154,7 @@ if has("gui_running")
     " No special options to workaround the bug infecting packager >_<
     set go=
     " Use a larger default size x_x
-    set columns=120 lines=40
+    set columns=135 lines=46
 else  | " GUI ^^^ Term vvv
     set termguicolors
     set bg=dark
