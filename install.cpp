@@ -2,8 +2,8 @@
 dotpath=$(readlink -f $(dirname $0))
 cd $dotpath
 [ ! -z "$DEBUG" ] && \
-        flags='-Wall -Wextra -Weffc++ -Wpedantic -O0 -DDEBUG -ggdb -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -lrt -fno-sanitize-recover -fstack-protector -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -std=c++2b -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\""' \
-        || flags='-std=c++2b -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\""'
+        flags='-Wall -Wextra -Weffc++ -Wpedantic -O0 -DDEBUG -ggdb -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -lrt -fno-sanitize-recover -fstack-protector -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -std=c++23 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\"" -lstdc++_libbacktrace' \
+        || flags='-std=c++23 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\"" -lstdc++_libbacktrace'
 CXXFLAGS="$flags" make -sf <(echo -e '.install:install.cpp; $(CXX) $< $(CXXFLAGS)') .install || exit $?
 exec ./.install $@
 #endif
@@ -13,6 +13,7 @@ exec ./.install $@
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include <string_view>
 #include <filesystem>
 #include <concepts>
 #include <list>
@@ -22,9 +23,13 @@ exec ./.install $@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <version>
+#if __cpp_lib_stacktrace >= 202011L
+#  include <stacktrace>
+#endif  // __cpp_lib_stacktrace
 using std::string;
 using std::to_string;
-using std::string_literals::operator""s;  // NOLINT
+using std::string_literals::operator""s;
 namespace fs = std::filesystem;
 // }}} End premable
 
@@ -32,7 +37,7 @@ namespace fs = std::filesystem;
 
 // {{{ Environment & options
 struct {
-    string dotpath {}, homepath {};
+    string dotpath {}, homepath {}, datapath {};
     const bool iswin =
 #ifdef _WIN32
         true
@@ -40,7 +45,7 @@ struct {
         false
 #endif
         ;  // Resume the Vim indent ><
-    const char *helpmsg = R"(Usage: %s <options> <configs>
+    const char *helpmsg = R"(Usage: %o <options> <configs>
 A dotfile installation helper. If no option is specified, default to -i,
 if no config is specified either, default is -l.
 A special config 'available' stands for all config available on the system;
@@ -97,21 +102,24 @@ struct Logger
 // {{{ fn format
 string to_string(string s) { return s; }
 string to_string(char c) { return string(1, c); }
-string format(string pat, auto ...args)
+string format(std::string_view pat, auto ...args)
 {
     // Stringfy the args
     std::vector<string> argstr { to_string(args)... };
     // Iterate and replace format patterns
     auto argit = argstr.begin();
-    for (auto pos = pat.find('%'); pos != pat.npos; pos = pat.find('%', pos))
+    string res;
+    auto prev = 0uz, pos = pat.find('%');
+    for (res += pat.substr(prev, pos - prev); pos != pat.npos;
+         prev = pos + 1, pos = pat.find('%', pos), res += pat.substr(prev, pos - prev))
         if (++pos < pat.size())
             switch (pat[pos])
             {
             case 'D':
-                pat.replace(pos - 1, 2, env.dotpath);
+                res += env.dotpath;
                 break;
             case 'H':
-                pat.replace(pos - 1, 2, env.homepath);
+                res += env.homepath;
                 break;
             case 'o':
                 if (argit == argstr.end())
@@ -119,10 +127,10 @@ string format(string pat, auto ...args)
                     logger.log(logger.InternalError, "Too few arguments for format");
                     exit(3);
                 }
-                pat.replace(pos - 1, 2, *argit++);
+                res += *argit++;
                 break;
             case '%':
-                pat.replace(pos, 1, "");
+                res += '%';
                 break;
             default:
                 logger.log(logger.InternalError, "Unrecognized pattern '%o'", pat[pos]);
@@ -138,7 +146,7 @@ string format(string pat, auto ...args)
         logger.log(logger.InternalError, "Too much arguments for format");
         exit(3);
     }
-    return pat;
+    return res;
 }
 // }}} End fn format
 
@@ -149,6 +157,11 @@ void Logger::log(Level lv, const char *fmt, const auto &...args)
     auto target = lv == Error || lv == InternalError ? stderr : stdout;
     string msg = format(fmt, args...);
     fprintf(target, "%s%s%s\n", string(depth * 2, ' ').c_str(), LevelMsg[lv], msg.c_str());
+#if __cpp_lib_stacktrace >= 202011L
+    if (lv == Error || lv == InternalError)
+        //fprintf(stderr, "Trace: %s\n", std::to_string(std::stacktrace::current()).c_str());
+        throw;
+#endif  // __cpp_lib_stacktrace
 }
 // }}}1 End general helpers
 
@@ -346,7 +359,7 @@ private:
     fs::path src, dst;
 public:
     SymlinkConfig(fs::path s, fs::path d)
-        : src(env.dotpath / s), dst(env.homepath / d) {}
+        : src(env.dotpath / s), dst(fs::path(d).is_absolute() ? d : env.homepath / d) {}
     void install()
     {
         auto link_file = [this] (fs::path src, fs::path dst) {
@@ -420,6 +433,14 @@ int main(int, char **argv)
 #else
         HOMEPATH;
 #endif  // HOMEPATH
+    env.datapath =
+#ifndef DATAPATH
+        env.iswin ? std::getenv("APPDATA") : [](auto n) {
+            return n == nullptr ? (fs::path(std::getenv("HOME")) / ".local/share").string() : n;
+        }(std::getenv("XDG_DATA_HOME"));
+#else
+        DATAPATH;
+#endif  // DATAPATH
     // }}} End process default parameters
 
     fs::current_path(fs::path(argv[0]).remove_filename());
@@ -445,9 +466,9 @@ int main(int, char **argv)
         { 'i', Install },
         { 'h', Help },
     };
-    for (string arg; *++argv;)
+    for (char **argp = argv; *++argp;)
     {
-        arg = *argv;
+        string arg = *argp;
         if (arg.starts_with("--"))  // Long options
         {
             arg = arg.substr(2);
@@ -496,7 +517,7 @@ int main(int, char **argv)
     // Process actions
     if (action == Help)
     {
-        logger.log(logger.Output, "%o", env.helpmsg);
+        logger.log(logger.Output, env.helpmsg, argv[0]);
         return 0;
     }
     if (action == Unset)
@@ -584,6 +605,12 @@ add_conf { "kitty", ConfigInfo::UNIX, "Kitty terminal config",
 add_conf { "mutt", ConfigInfo::UNIX, "Mutt config",
     [] { return InvokerConfig { ".mutt/muttrc", "#", "mutt",
         format("set my_muttrc_path = %D/mutt\nsource %D/mutt/muttrc") }; },
+};
+
+add_conf { "pandoc", ConfigInfo::AllOS, "Pandoc assets",
+    [] {
+        return SymlinkConfig { "pandoc", fs::path(env.datapath) / "pandoc" };
+    },
 };
 
 add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
