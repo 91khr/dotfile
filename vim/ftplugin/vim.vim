@@ -9,4 +9,3 @@ ftext.CmdEngine.new("Compile", (...args) => {
 ftext.CmdEngine.new("Run", (...args) => {
     w | so %
 }).Do()
-

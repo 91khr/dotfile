@@ -7,3 +7,7 @@ abbrev sum\ Σ
 abbrev <\ ⟨
 abbrev >\ ⟩
 abbrev .\ ·
+abbrev and\ ∧
+abbrev or\ ∨
+abbrev not\ ¬
+abbrev to\ →

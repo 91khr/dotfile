@@ -12,6 +12,12 @@ def in_syntax(syn):
 def in_mathenv(): return in_syntax('mkdMath')
 def in_envbrace():
 	return re.match(r".*\\begin{[^}]+", snip.buffer[snip.line][:snip.column])
+
+def expand_interpolate(snip):
+	curline = snip.buffer[snip.line]
+	text = curline[snip.snippet_start[1]:snip.snippet_end[1]]
+	snip.buffer[snip.line] = curline[:snip.snippet_start[1]] + curline[snip.snippet_end[1]:]
+	snip.expand_anon(text)
 endglobal
 # }}} End helpers
 
@@ -81,6 +87,18 @@ snippet \rt "Math pow root" i
 \sqrt{$1}$0
 endsnippet
 
+context "in_mathenv()"
+post_jump "expand_interpolate(snip)"
+snippet /\\lr(\W\W?|\w+)/ "Math paired" ir
+`!p
+ctnt = match.group(1)
+if ctnt.isalnum():
+	snip.rv = r"\left\{0} $1\right\{0}$0".format(ctnt)
+else:
+	snip.rv = r"\left{} $1\right{}$0".format(ctnt[0], ctnt[0] if len(ctnt) == 0 else ctnt[1])
+`
+endsnippet
+
 # {{{ Differential, integrate, sum, etc.
 context "in_mathenv()"
 snippet \lim "lim" i
@@ -110,6 +128,16 @@ context "in_mathenv()"
 snippet \r "Mathrm full" i
 \mathrm{$1}$0
 endsnippet
+
+context "in_mathenv()"
+priority 2
+snippet /\\v(\w)/ "Mathbf abbreviated" ir
+\mathbf{`!p snip.rv=match.group(1)`}
+endsnippet
+context "in_mathenv()"
+snippet \bf "Mathbf full" i
+\mathbf{$1}$0
+endsnippet
 # }}} End math fonts
 
 # {{{ Subscript and superscript
@@ -118,6 +146,7 @@ _{$1}$0
 endsnippet
 
 context "in_mathenv()"
+priority 0
 snippet /([a-zA-Z])(\d)/ "Subscripted variables" ir
 `!p snip.rv=match.group(1) + '_' + match.group(2)`
 endsnippet

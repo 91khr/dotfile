@@ -10,7 +10,10 @@ if filereadable("Cargo.toml")  # Project
     }).WaitAsyncCmd().Do()
     compiler cargo
 else  # Single file
-    ftext.CmdEngine.new("Compile", "AsyncRun rustc %").Do()
+    ftext.CmdEngine.new("Compile", (...raw_args) => {
+        const args = raw_args->index("-o") == -1 ? raw_args + ["-o", expand("%:p:r")] : raw_args
+        exec "AsyncRun rustc % " .. args->join(" ")
+    }).Do()
     ftext.CmdEngine.new("Run", (...args) => {
         ftext.TermRun([expand("%:p:r")] + args, { persist: v:true, unique: v:false })
         doautocmd WinEnter !.

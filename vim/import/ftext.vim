@@ -37,10 +37,10 @@ export def CanCmd(cmd: string): bool
 enddef
 
 export class CmdEngine
-    this.cmd: string
-    this.ft: string
-    public this.exec: func(...list<string>)
-    this.options: dict<any> = {}
+    var cmd: string
+    var ft: string
+    public var exec: func(...list<string>)
+    var options: dict<any> = {}
 
     def new(this.cmd, exec: any, this.options = v:none, ft: string = "")
         this.ft = ft == "" ? &ft : ft

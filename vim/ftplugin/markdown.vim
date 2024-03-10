@@ -6,14 +6,16 @@ def RenewCompiler()
     if getline(1) == "---" && getline(2) =~ "^compile_flags:"
         compile_flags = getline(2)["compile_flags:"->len() : ]
     else
-        compile_flags = "-s --mathml -o %:h/%:t:r.html "
+        compile_flags = "-s --mathml --template default.html -L assets.lua -L diagram.lua -o %:h/%:t:r.html "
     endif
 enddef
 RenewCompiler()
 autocmd BufWrite <buffer> RenewCompiler()
 
 ftext.CmdEngine.new("Compile", (...args) => {
-    w
+    if !&ro
+        w
+    endif
     exec "AsyncRun pandoc % " .. compile_flags .. args->join(" ")
 }).Do()
 ftext.CmdEngine.new("Run", (...args) => {
@@ -22,6 +24,23 @@ ftext.CmdEngine.new("Run", (...args) => {
 
 b:coc_suggest_disable = 1
 
-command! -buffer Debug {
-    echom "flags: " compile_flags
-}
+augroup ft_markdown
+    au!
+    au FocusLost <buffer> if get(b:, "enable_autocompile", false) | exec "Compile" | endif
+augroup END
+
+command! -buffer -range TableFormat TableFormat(<line1>, <line2>)
+def TableFormat(lbeg: number, lend: number)
+    if getline(lbeg) =~ '\v^\+(\-|\=)*'
+        exec $':{lbeg},{lend}Tabularize /+\|\\\@<!|'
+        for lno in range(lbeg, lend + 1)
+            const ln = getline(lno)
+            if ln !~ '\v\+((\-|\=)*\+)*'
+                continue
+            endif
+            setline(lno, ln->substitute(' ', ln =~ '-' ? '-' : '=', 'g'))
+        endfor
+    else
+        echom "Unimpl"
+    endif
+enddef
