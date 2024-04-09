@@ -1,4 +1,6 @@
 Host *
+    SetEnv TERM=xterm-256color
+    ChannelTimeout session=2m
     ControlMaster auto
     ControlPath ~/.ssh/socket-master-%r@%h:%p
     ForwardX11 yes
