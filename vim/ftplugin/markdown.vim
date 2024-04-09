@@ -28,6 +28,7 @@ augroup ft_markdown
     au!
     au FocusLost <buffer> if get(b:, "enable_autocompile", false) | exec "Compile" | endif
 augroup END
+b:enable_autocompile = false
 
 command! -buffer -range TableFormat TableFormat(<line1>, <line2>)
 def TableFormat(lbeg: number, lend: number)

@@ -14,10 +14,14 @@ def in_envbrace():
 	return re.match(r".*\\begin{[^}]+", snip.buffer[snip.line][:snip.column])
 
 def expand_interpolate(snip):
+	return
 	curline = snip.buffer[snip.line]
-	text = curline[snip.snippet_start[1]:snip.snippet_end[1]]
-	snip.buffer[snip.line] = curline[:snip.snippet_start[1]] + curline[snip.snippet_end[1]:]
-	snip.expand_anon(text)
+	l, r = snip.snippet_start[1], snip.snippet_end[1]
+	text = curline[l:r]
+	snip.buffer[snip.line] = curline[:l]
+	snip.expand_anon(curline[l:r])
+	snip.buffer[snip.line] += curline[r:]
+	print(f"'{curline[:l]}' <-lr-> '{curline[r:]}'")
 endglobal
 # }}} End helpers
 
@@ -88,15 +92,18 @@ snippet \rt "Math pow root" i
 endsnippet
 
 context "in_mathenv()"
-post_jump "expand_interpolate(snip)"
-snippet /\\lr(\W\W?|\w+)/ "Math paired" ir
-`!p
-ctnt = match.group(1)
-if ctnt.isalnum():
-	snip.rv = r"\left\{0} $1\right\{0}$0".format(ctnt)
-else:
-	snip.rv = r"\left{} $1\right{}$0".format(ctnt[0], ctnt[0] if len(ctnt) == 0 else ctnt[1])
-`
+snippet /\\lr(\W\W?)/ "Math paired symbols" ir
+\\left`!p snip.rv=match.group(1)[0]`$1\\right`!p
+snip.rv=match.group(1)[0] if len(match.group(1)) == 1 else match.group(1)[1]
+`$0
+endsnippet
+context "in_mathenv()"
+snippet \lr "Math paired" i
+\\left\\$1 $2\\right\\$1$0
+endsnippet
+context "in_mathenv()"
+snippet \tlr "Math paired with self name" i
+\\l$1 $2\\r$1$0
 endsnippet
 
 # {{{ Differential, integrate, sum, etc.

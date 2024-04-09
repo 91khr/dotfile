@@ -142,6 +142,8 @@ nmap \k <Plug>(coc-diagnostic-prev)
 nmap \r <Plug>(coc-refactor)
 nmap \= <Plug>(coc-format)
 vmap \= <Plug>(coc-format-selected)
+nmap \u <Plug>(coc-references)
+nmap \d <Plug>(coc-implementation)
 " }}} End mappings
 
 " {{{ GUI and System settings
