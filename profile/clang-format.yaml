@@ -28,6 +28,7 @@ AlwaysBreakTemplateDeclarations: Yes
 AllowShortFunctionsOnASingleLine: All
 AllowShortLambdasOnASingleLine: All
 BreakBeforeConceptDeclarations: true
+AlignEscapedNewlines: Left
 
 SpaceBeforeCpp11BracedList: true
 SpacesBeforeTrailingComments: 2
