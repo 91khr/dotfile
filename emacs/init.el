@@ -26,7 +26,7 @@
 ;; tab bar mode
 (tab-bar-mode t)
 ;; company mode
-;;(global-company-mode)
+(global-company-mode 0)
 
 ;; Fuzzy completion
 (setq-default completion-styles '(flex orderless partial-completion))

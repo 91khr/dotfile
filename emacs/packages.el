@@ -37,6 +37,7 @@
   :defer t
   :hook (markdown-mode org-mode telega-load)
   :config
+  (add-hook 'markdown-mode-hook (lambda () (setq-local seni-meow-last-imstate "rime")))
   (add-hook 'telega-chat-mode-hook
             (lambda () (setq-local seni-meow-last-imstate "rime"))))
 
@@ -60,8 +61,8 @@
   :defer t
   :config
   (define-advice telega-chars-xheight
-      (:around (orig n &optional face) k)
-    (+ (funcall orig n face) (* n 10)))
+      (:around (orig n) k)
+    (+ (funcall orig n) (* n 10)))
   (telega-notifications-mode)
   (add-hook 'telega-chat-mode-hook (lambda ()
                                      (auto-fill-mode -1))))
