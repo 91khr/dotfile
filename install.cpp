@@ -3,7 +3,7 @@ dotpath=$(readlink -f $(dirname $0))
 cd $dotpath
 [ ! -z "$DEBUG" ] && \
         flags='-Wall -Wextra -Weffc++ -Wpedantic -O0 -DDEBUG -ggdb -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -lrt -fno-sanitize-recover -fstack-protector -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -std=c++23 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\"" -lstdc++_libbacktrace' \
-        || flags='-std=c++23 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\"" -lstdc++_libbacktrace'
+        || flags='-std=c++23 -o .install -DDOTPATH="\"'$dotpath'\"" -DHOMEPATH="\"'$HOME'\"" -lstdc++exp'
 CXXFLAGS="$flags" make -sf <(echo -e '.install:install.cpp; $(CXX) $< $(CXXFLAGS)') .install || exit $?
 exec ./.install $@
 #endif
@@ -17,11 +17,9 @@ exec ./.install $@
 #include <filesystem>
 #include <concepts>
 #include <list>
-#include <tuple>
 #include <algorithm>
 #include <numeric>
 #include <unordered_map>
-#include <unordered_set>
 #include <functional>
 #include <version>
 #if __cpp_lib_stacktrace >= 202011L
@@ -155,12 +153,11 @@ void Logger::log(Level lv, const char *fmt, const auto &...args)
     if (lv > curlv)
         return;
     auto target = lv == Error || lv == InternalError ? stderr : stdout;
-    string msg = format(fmt, args...);
+    string msg = ::format(fmt, args...);
     fprintf(target, "%s%s%s\n", string(depth * 2, ' ').c_str(), LevelMsg[lv], msg.c_str());
 #if __cpp_lib_stacktrace >= 202011L
     if (lv == Error || lv == InternalError)
-        //fprintf(stderr, "Trace: %s\n", std::to_string(std::stacktrace::current()).c_str());
-        throw;
+        fprintf(stderr, "Trace: %s\n", std::to_string(std::stacktrace::current()).c_str());
 #endif  // __cpp_lib_stacktrace
 }
 // }}}1 End general helpers
@@ -621,6 +618,8 @@ add_conf { "profile", ConfigInfo::UNIX, "Default user profiles",
                     R"(#include "%D/profile/Xresources")""\n"
                     R"(#include "%D/profile/Solarizedxterm/.Xdefaults")") } &
             InvokerConfig { ".ssh/config", "#", "ssh config", format("Include %D/profile/ssh_config") } &
+            InvokerConfig { ".gdbinit", "#", "gdb config", format("source %D/profile/gdbinit") } &
+            SymlinkConfig { "profile/rustfmt.toml", ".config/rustfmt/rustfmt.toml" } &
             SymlinkConfig { "profile/picom.conf", ".config/picom.conf" } &
             SymlinkConfig { "profile/clang-format.yaml", ".clang-format" } &
             SymlinkConfig { "profile/clangd.yaml", ".config/clangd/config.yaml" } &

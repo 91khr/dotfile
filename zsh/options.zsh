@@ -46,5 +46,5 @@ unset LVLPROMPT
 alias ls="ls --color=auto"
 alias grep="grep --color=auto --line-number"
 export EDITOR=vim
-export PATH="${PATH}"
+export PATH="${PATH}:$(realpath ~/.local/bin)"
 export GPG_TTY="$(tty)"

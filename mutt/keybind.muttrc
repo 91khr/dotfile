@@ -8,6 +8,7 @@ bind pager <Up> previous-line
 bind pager g noop
 bind pager gg top
 bind pager G bottom
+bind pager r group-chat-reply
 
 bind attach,index J next-page
 bind attach,index K previous-page

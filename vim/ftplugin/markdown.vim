@@ -6,7 +6,7 @@ def RenewCompiler()
     if getline(1) == "---" && getline(2) =~ "^compile_flags:"
         compile_flags = getline(2)["compile_flags:"->len() : ]
     else
-        compile_flags = "-s --mathml --template default.html -L assets.lua -L diagram.lua -o %:h/%:t:r.html "
+        compile_flags = "-s --embed-resources --mathml --template default.html -L assets.lua -L diagram.lua -o %:h/%:t:r.html "
     endif
 enddef
 RenewCompiler()
