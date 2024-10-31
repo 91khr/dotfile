@@ -11,12 +11,6 @@ setmetatable(chain_nil.var, {
 })
 
 local filters = {}
-local function Pandoc(doc)
-    for _, v in pairs(doc.meta.filter) do
-        doc = doc:walk(filters[v[1].text])
-    end
-    return doc
-end
 
 filters.linkinclude = {
     Block = function(elem)
@@ -46,4 +40,30 @@ filters.linkinclude = {
     end,
 }
 
-return { { Pandoc = Pandoc } }
+--- @param attr string
+local function trans_link(attr)
+    return function(elem)
+        if elem[attr]:sub(1, 2) == "@/" then
+            print(pandoc.path.directory(PANDOC_STATE.input_files[1]), elem[attr]:sub(2))
+            elem[attr] = pandoc.path.join({ pandoc.path.directory(PANDOC_STATE.input_files[1]), elem[attr]:sub(3) })
+        end
+        return elem
+    end
+end
+
+return {
+    -- Apply filters in meta
+    {
+        Pandoc = function(doc)
+            for _, v in pairs(doc.meta.filter or {}) do
+                doc = doc:walk(filters[v[1].text])
+            end
+            return doc
+        end
+    },
+    -- Translate the paths in links
+    {
+        Link = trans_link('target'),
+        Image = trans_link('src'),
+    },
+}
