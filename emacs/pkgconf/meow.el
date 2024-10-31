@@ -5,11 +5,12 @@
   (if smartparens-mode (meow-paren-mode) (meow-insert-exit)))
 (meow-define-keys 'insert
   '("C-[" . seni-meow-insert-exit)
-  '("C-h" . delete-backward-char))
+  '("<escape>" . seni-meow-insert-exit)
+  '("ESC" . seni-meow-insert-exit)
+  '("RET" . newline-and-indent))
 (meow-motion-overwrite-define-key
  '("j" . meow-next)
- '("k" . meow-prev)
- '("<escape>" . keyboard-quit))
+ '("k" . meow-prev))
 (meow-leader-define-key
  ;; SPC j/k will run the original command in MOTION state.
  '("j" . "H-j")
@@ -143,10 +144,13 @@
     (set-input-method seni-meow-last-imstate)))
 (add-hook 'meow-insert-enter-hook #'seni-meow-recover-im)
 
-;; Enable parens mode
-(add-hook 'meow-mode-hook
-          (lambda ()
-          (when (bound-and-true-p smartparens-mode) (meow-paren-mode))))
+;; Config for specified modes
+(defun seni-meow-major-dispatch ()
+  (pcase major-mode
+    ('debugger-mode (meow-mode -1))
+    ('sldb-mode (meow-insert-mode)))
+  (when (bound-and-true-p smartparens-mode) (meow-paren-mode)))
+(add-hook 'meow-mode-hook #'seni-meow-major-dispatch)
 
 ;; Enable
 (meow-global-mode 1)

@@ -5,7 +5,7 @@
 ;; Load local configs
 (setq dotdir (file-name-directory load-file-name))
 (dolist (f '("packages.el" "ftplugin.el"))
-         (load-file (concat dotdir f)))
+  (load-file (concat dotdir f)))
 (load-file (concat dotdir (if (display-graphic-p) "gui.el" "tui.el")))
 
 ;; Configs
@@ -25,8 +25,6 @@
 (require 'switch-window)
 ;; tab bar mode
 (tab-bar-mode t)
-;; company mode
-(global-company-mode 0)
 
 ;; Fuzzy completion
 (setq-default completion-styles '(flex orderless partial-completion))
