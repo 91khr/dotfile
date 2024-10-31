@@ -21,7 +21,7 @@ local battery_widget = require("awesome-wm-widgets.batteryarc-widget.batteryarc"
 local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
 local touchpad_widget = require("widgets.touchpad")
-local notification_widget = require("widgets.notification")
+--local notification_widget = require("widgets.notification")
 local prompt_widget = require("widgets.prompt")
 -- }}}
 
@@ -146,9 +146,9 @@ local mybattery_widget = battery_widget({
 local mytouchpad_widget = touchpad_widget({
     icon_dir = confpath .. "/widgets/icons/",
 })
-local mynotification_widget = notification_widget({
+--[[local mynotification_widget = notification_widget({
     icon_dir = confpath .. "/widgets/icons/",
-})
+})]]
 -- Create the widget
 prompt_widget({})
 mycalendar:attach(mytextclock, 'tr')
@@ -225,7 +225,7 @@ awful.screen.connect_for_each_screen(function(s)
             myvolume_widget,
             mybattery_widget,
             mytextclock,
-            mynotification_widget,
+            --mynotification_widget,
             s.mylayoutbox,
         },
     }
@@ -236,17 +236,17 @@ end)
 loadfile(confpath .. "/bindings.lua")()
 
 -- Grab notifications
-function naughty.config.notify_callback(args)
+--[[function naughty.config.notify_callback(args)
     return notification_widget:on_notification(args)
-end
+end]]
 
 -- {{{ Post tasks
 -- Start some programs
 -- Transparency, maybe not needed currently><
-awful.spawn("picom")
+awful.spawn.single_instance("picom")
 if not argv.nospawn then
     -- Input method and key binding
-    awful.spawn("fcitx5")
+    awful.spawn.single_instance("fcitx5")
     --awful.spawn("xmodmap " .. confpath .. "/../.Xmodmap")
 end
 -- }}}

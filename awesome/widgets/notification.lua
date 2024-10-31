@@ -55,8 +55,7 @@ local function worker(args)
                         layout = wibox.layout.fixed.vertical,
                     },
                     id = "mynotiview",
-                    fps = 0.00001,
-                    layout = wibox.container.scroll.vertical,
+                    widget = wibox.container.scroll.vertical,
                 },
                 spacing = 1,
                 spacing_widget = {
@@ -70,10 +69,12 @@ local function worker(args)
         },
         ontop = true,
         visible = false,
-        maximum_height = awful.screen.focused().workarea.height * 0.8,
-        minimum_width = awful.screen.focused().workarea.width * 0.2,
-        maximum_width = awful.screen.focused().workarea.width * 0.3,
-        placement = function(c)
+        placement = function (c)
+            local wa = awful.screen.focused().workarea
+            local geo = c:geometry()
+            geo.width = math.min(wa.width * 0.3, math.max(wa.width * 0.2, geo.width))
+            geo.height = math.min(wa.height * 0.8, geo.height)
+            c:geometry(geo)
             awful.placement.top_right(c, { honor_workarea = true })
         end,
         shape = gears.shape.rounded_rect,
@@ -82,15 +83,15 @@ local function worker(args)
     notification_widget.count = 0
     notification_widget.cached = {}
     function notification_widget:add_notification(noti)
-        table.insert(self.cached, { noti, id = #self.cached })
-        local widget
+        local elem = { noti }
         if noti.box then
-            widget = noti.box
+            elem.widget = noti.box
         elseif noti.icon then
-            widget = wibox.widget {
+            elem.widget = wibox.widget {
                 {
                     image = noti.icon,
                     resize = true,
+                    auto_dpi = true,
                     widget = wibox.widget.imagebox,
                 },
                 {
@@ -99,22 +100,23 @@ local function worker(args)
                 },
                 forced_width = awful.screen.focused().workarea.height * 0.05,
                 forced_height = awful.screen.focused().workarea.width * 0.05,
-                layout = wibox.layout.fixed.horizontal
+                layout = wibox.layout.fixed.horizontal,
             }
         else
-            widget = wibox.widget {
+            elem.widget = wibox.widget {
                 markup = (noti.title and "<b>" .. noti.title .. "</b>\n" or "") .. (noti.text or ""),
                 widget = wibox.widget.textbox,
             }
         end
-        self.popup.widget:get_children_by_id("mynotilist")[1]:add(widget)
+        self.popup.widget:get_children_by_id("mynotilist")[1]:add(elem.widget)
+        table.insert(self.cached, elem)
         self.count = self.count + 1
         self.systray:get_children_by_id("mycount")[1].text = tostring(self.count)
     end
     function notification_widget:clear_notification()
         self.scrollvol = 0
-        self.count = 0
         self.cached = {}
+        self.count = 0
         self.systray:get_children_by_id("mycount")[1].text = "0"
         self.popup.widget:get_children_by_id("mynotilist")[1]:set_children({})
         collectgarbage()
@@ -156,9 +158,24 @@ local function worker(args)
         )
     )
 
+    notification_widget.traffic = 0
+    notification_widget.traffic_timer = gears.timer {
+        timeout = 1,
+        callback = function ()
+            notification_widget.traffic = math.max(0, notification_widget.traffic * 0.7 - 3)
+            if notification_widget.traffic <= 0 then
+                notification_widget.traffic_timer:stop()
+            end
+        end
+    }
     function notification_widget:on_notification(noti)
         if noti.freedesktop_hints then
             self:add_notification(noti)
+            self.traffic = self.traffic + 1
+            if not self.traffic_timer.started then self.traffic_timer:start() end
+            if self.traffic >= 3 then
+                return nil
+            end
         end
         return noti
     end

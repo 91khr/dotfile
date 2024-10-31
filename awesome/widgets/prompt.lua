@@ -6,6 +6,7 @@ local wibox = require("wibox")
 local lgi = require("lgi")
 local Pango = lgi.Pango
 local PangoCairo = lgi.PangoCairo
+local wm_lua_completion = require('lib.complete').wm_lua_completion
 
 local prompt_widget = {}
 
@@ -35,28 +36,11 @@ local default_modes = {
             awful.util.eval(args)
         end,
         completion_callback = function (cmd, pos, ncomp)
-            local pre, final = cmd:sub(1, pos):match("([%w_.:]-)([%w_]*)$")
-            if not pre and not final then return cmd, pos, {} end
-            local env = _ENV
-            for cur in (pre or ""):gmatch("([%w_]+)[.:]") do
-                if type(env[cur]) ~= "table" then
-                    return cmd, pos, {}
-                else
-                    env = env[cur]
-                end
-            end
-            local res = {}
-            for k, _ in pairs(env) do
-                if type(k) == "string" and k:sub(1, final:len()) == final then
-                    res[#res + 1] = k
-                end
-            end
-            table.sort(res, function (a, b) return a < b end)
+            local prepos, res = wm_lua_completion(cmd, pos)
             prompt_widget:set_complist(res, ncomp)
             if #res > 0 then
                 ncomp = (ncomp - 1) % #res + 1
-                return cmd:sub(1, pos - final:len() - 1) .. res[ncomp] .. cmd:sub(pos + 1),
-                    pos + res[ncomp]:len(), res
+                return cmd:sub(1, prepos) .. res[ncomp] .. cmd:sub(pos + 1), pos + res[ncomp]:len(), res
             else
                 return cmd, pos, res
             end
