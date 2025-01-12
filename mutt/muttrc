@@ -2,12 +2,16 @@
 source "$my_muttrc_path/detect_localrc.sh|"
 source "$my_muttrc_path/keybind.muttrc"
 
+# Auth methods
+set imap_authenticators="xoauth2:login"
+set smtp_authenticators="xoauth2:login"
+
 # Receiving options
 set mbox_type = Maildir
 
-set imap_check_subscribed
-set imap_keepalive = 300
-set mail_check = 120
+set imap_check_subscribed imap_idle
+set imap_keepalive = 3000
+set mail_check = 1200
 
 set header_cache = ~/.cache/mutt
 set message_cachedir = ~/.cache/mutt
