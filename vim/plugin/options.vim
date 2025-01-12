@@ -59,6 +59,8 @@ if executable("rg")
 endif
 " Better spliting
 let &fillchars .= ",vert:\u2502,fold:\u2500"
+" 'Solider' foldings
+set foldopen=hor,mark,quickfix,search,tag,undo
 
 " Color scheme
 import "plgext.vim"
