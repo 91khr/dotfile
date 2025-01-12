@@ -39,6 +39,7 @@ $endif$
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
   <script type="module">
+    window.noAutoReload = false;
     let left = false;
     window.addEventListener("focus", () => { if (left && !window.noAutoReload) { location.reload(); left = false; } });
     window.addEventListener("blur", () => { left = true; });
