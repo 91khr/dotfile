@@ -133,6 +133,8 @@ local clientkeys = gears.table.join(
         { description = "move to screen", group = "client" }),
     awful.key({ modkey, }, "t", function(c) c.ontop = not c.ontop end,
         { description = "toggle keep on top", group = "client" }),
+    awful.key({ modkey, "Shift" }, "s", function(c) c.sticky = not c.sticky end,
+        { description = "toggle sticky", group = "client" }),
     awful.key({ modkey, }, "m", function(c)
             c.maximized = not c.maximized; c:raise()
         end,
@@ -250,17 +252,26 @@ awful.rules.rules = {
 
     -- Disable titlebars to all
     {
-        rule_any = { type = { "normal", "dialog" }
-        },
+        rule_any = { type = { "normal", "dialog" } },
         properties = { titlebars_enabled = false }
     },
 
     -- Specified configuration to some programs
+    {
+        rule = { class = "Waylyrics" },
+        properties = {
+            border_width = 0,
+            ontop = true,
+            sticky = true,
+            floating = true,
+            skip_taskbar = true,
+            placement = awful.placement.top_right,
+        },
+    },
     -- I'm not a good student :)
     {
         rule = { class = "mpv" },
         properties = {
-            sticky = true,
             ontop = true,
             floating = true,
             width = function() return 0.3 * awful.screen.focused().workarea.width end
@@ -272,18 +283,7 @@ awful.rules.rules = {
     },
     -- Terminal
     {
-        rule = { class = "XTerm" },
-        callback = function(c)
-            c:connect_signal("focus", function()
-                c.opacity = 0.9
-            end)
-            c:connect_signal("unfocus", function()
-                c.opacity = 0.7
-            end)
-        end,
-    },
-    {
-        rule = { class = "kitty" },
+        rule_any = { class = { "XTerm", "kitty" } },
         callback = function(c)
             c:connect_signal("focus", function() c.opacity = 0.9 end)
             c:connect_signal("unfocus", function() c.opacity = 0.7 end)
