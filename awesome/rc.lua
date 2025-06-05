@@ -139,7 +139,7 @@ local myvolume_widget = volume_widget({
 })
 local mybattery_widget = battery_widget({
     show_current_level = true,
-    font = "Monaco 5",
+    font = "Iosevka Custom 5",
     arc_thickness = 1,
     --timeout = 10,  -- This is the default value
 })

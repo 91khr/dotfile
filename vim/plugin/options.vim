@@ -176,7 +176,8 @@ else  | " Linux
     " Why not use zsh?
     set shell=/bin/zsh
     " Font
-    set guifont=Monaco
+    " set guifont=Monaco
+    set guifont=Iosevka\ Custom
 endif
 " }}} End GUI and system settings
 
