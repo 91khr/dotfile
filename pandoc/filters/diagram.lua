@@ -16,6 +16,8 @@ PANDOC_VERSION:must_be_at_least '2.7.3'
 
 local system = require 'pandoc.system'
 local utils = require 'pandoc.utils'
+local mediabag = require 'pandoc.mediabag'
+local path = require 'pandoc.path'
 local stringify = function(s)
     return type(s) == 'string' and s or utils.stringify(s)
 end
@@ -78,13 +80,27 @@ elseif FORMAT == "pptx" then
 elseif FORMAT == "rtf" then
     filetype = "png"
     mimetype = "image/png"
+elseif FORMAT == "tex" or FORMAT == "latex" then
+    filetype = "pdf"
+    minetype = "application/pdf"
 end
+
+local cache_dir = nil
+local write_fname = {}
 
 -- Execute the meta data table to determine the paths. This function
 -- must be called first to get the desired path. If one of these
 -- meta options was set, it gets used instead of the corresponding
 -- environment variable:
 function Meta(meta)
+    cache_dir = meta.cache_dir or meta.cacheDir
+    if cache_dir then
+        cache_dir = stringify(cache_dir)
+        --[[if path.is_relative(cache_dir) then
+            cache_dir = path.join { system.get_working_directory(), cache_dir }
+        end]]
+        system.make_directory(cache_dir, true)
+    end
     plantuml_path = stringify(
         meta.plantuml_path or meta.plantumlPath or plantuml_path
     )
@@ -113,8 +129,13 @@ end
 
 -- Call plantuml.jar with some parameters (cf. PlantUML help):
 local function plantuml(puml, filetype)
+    local fext = filetype == "pdf" and "svg" or filetype
     local ok, res = pcall(pandoc.pipe, plantuml_path,
-        { "-t" .. filetype, "-pipe", "-charset", "UTF8" }, puml)
+        { "-t" .. fext, "-pipe", "-charset", "UTF8" }, puml)
+    if not ok then return res.output end
+    if filetype == "pdf" then
+        ok, res = pcall(pandoc.pipe, "rsvg-convert", { "--format=pdf", "-" }, res)
+    end
     if ok then return res else return res.output end
 end
 
@@ -122,11 +143,6 @@ end
 -- (thanks @muxueqz for this code):
 local function graphviz(code, filetype)
     return pandoc.pipe(dot_path, { "-T" .. filetype }, code)
-end
-
--- Translate the customized dot syntax, and generate the image with graphviz
-local function graphviz_ex(code, filetype)
-    print("Not impl yet")
 end
 
 --
@@ -312,6 +328,22 @@ local function asymptote(code, filetype)
         end)
 end
 
+local function read_cache(src, srcname, fname)
+    if not cache_dir then error() end
+    local srcf = io.open(srcname, "r+")
+    if srcf == nil then
+        io.open(srcname, "w"):write(src)
+        return
+    end
+    local cached = srcf:read("a")
+    if cached == src then
+        return io.open(fname):read("a")
+    else
+        srcf:seek("set", 0)
+        srcf:write(src)
+    end
+end
+
 -- Executes each document's code block to find matching code blocks:
 function CodeBlock(block)
     -- Using a table with all known generators i.e. converters:
@@ -319,10 +351,17 @@ function CodeBlock(block)
         plantuml = plantuml,
         graphviz = graphviz,
         dot = graphviz,
-        dotex = graphviz_ex,
         tikz = tikz2image,
         py2image = py2image,
         asymptote = asymptote,
+    }
+    local srcsuffixes = {
+        plantuml = "puml",
+        graphviz = "dot",
+        dot = "dot",
+        tikz = "tex",
+        py2image = "py",
+        asymptote = "asymp",
     }
 
     -- Check if a converter exists for this block. If not, return the block
@@ -332,28 +371,36 @@ function CodeBlock(block)
         return nil
     end
 
-    -- Call the correct converter which belongs to the used class:
-    local success, img = pcall(img_converter, block.text,
-        filetype, block.attributes)
+    -- Create figure name by hashing the image source
+    local srchash = pandoc.sha1(block.text)
+    local fname = srchash .. "." .. filetype
+    if cache_dir then fname = path.join { cache_dir, fname } end
 
-    -- Bail if an error occured; img contains the error message when that
-    -- happens.
-    if not (success and img) then
-        io.stderr:write(tostring(img or "no image data has been returned."))
-        io.stderr:write('\n')
-        error 'Image conversion failed. Aborting.'
+    local success, img
+    if cache_dir then
+        success, img = pcall(read_cache, block.text,
+            path.join { cache_dir, srchash .. "." .. srcsuffixes[block.classes[1]] }, fname)
+    end
+    if not success or not img then
+        -- Call the correct converter which belongs to the used class:
+        success, img = pcall(img_converter, block.text,
+            filetype, block.attributes)
+
+        -- Bail if an error occured; img contains the error message when that
+        -- happens.
+        if not (success and img) then
+            io.stderr:write(tostring(img or "no image data has been returned."))
+            io.stderr:write('\n')
+            error 'Image conversion failed. Aborting.'
+        end
     end
 
     -- If we got here, then the transformation went ok and `img` contains
     -- the image data.
 
-    -- Create figure name by hashing the image content
-    local fname = pandoc.sha1(img) .. "." .. filetype
-
     -- Store the data in the media bag:
     pandoc.mediabag.insert(fname, mimetype, img)
-
-    local enable_caption = nil
+    write_fname[#write_fname + 1] = fname
 
     -- If the user defines a caption, read it as Markdown.
     local caption = block.attributes.caption
@@ -374,24 +421,32 @@ function CodeBlock(block)
     -- with `pandoc-crossref`.
     local img_attr = {
         id = block.identifier,
-        name = block.attributes.name
+        name = block.attributes.name,
+        height = block.attributes.height,
+        width = block.attributes.width,
     }
 
-    -- Create a new image for the document's structure. Attach the user's
-    -- caption. Also use a hack (fig:) to enforce pandoc to create a
-    -- figure i.e. attach a caption to the image.
     local img_obj = pandoc.Image(caption, fname, title, img_attr)
 
     -- Finally, put the image inside an empty paragraph. By returning the
     -- resulting paragraph object, the source code block gets replaced by
     -- the image:
-    return pandoc.Para { img_obj }
+    return #caption > 0 and pandoc.Figure({ img_obj }, caption, img_attr) or pandoc.Para { img_obj }
+end
+
+function Pandoc()
+    if cache_dir then
+        for _, fname in pairs(write_fname) do
+            mediabag.write(".", fname)
+        end
+    end
 end
 
 -- Normally, pandoc will run the function in the built-in order Inlines ->
 -- Blocks -> Meta -> Pandoc. We instead want Meta -> Blocks. Thus, we must
--- define our custom order:
+-- define our custom order.
 return {
     { Meta = Meta },
     { CodeBlock = CodeBlock },
+    { Pandoc = Pandoc },
 }

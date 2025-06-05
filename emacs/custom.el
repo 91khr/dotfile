@@ -14,10 +14,11 @@
  '(markdown-fontify-code-blocks-natively t)
  '(markdown-header-scaling t)
  '(org-format-latex-options
-   '(:foreground default :background default :scale 2.0 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
-                 ("begin" "$1" "$" "$$" "\\(" "\\[")))
+   '(:foreground default :background default :scale 2.0 :html-foreground "Black" :html-background "Transparent" :html-scale
+                 1.0 :matchers ("begin" "$1" "$" "$$" "\\(" "\\[")))
  '(package-selected-packages
-   '(ein jupyter cape slime-company ement rime smartparens slime marginalia corfu orderless vertico telega switch-window magit-section lsp-mode flycheck f dash powerline neotree use-package markdown-mode solarized-theme evil racket-mode company meow))
+   '(cape company corfu ein ement f flycheck jupyter lsp-mode magit-section marginalia markdown-mode meow neotree orderless
+          powerline rime slime slime-company smartparens solarized-theme switch-window telega use-package vertico))
  '(smtpmail-smtp-server "localhost")
  '(smtpmail-smtp-service 1025)
  '(telega-server-libs-prefix "/usr")

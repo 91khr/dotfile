@@ -60,22 +60,26 @@ local globalkeys = gears.table.join(
     end, { description = "raise focused client", group = "client" }),
 
     awful.key({ modkey, }, "l", function()
-        awful.client.focus.byidx(1)
+        repeat awful.client.focus.byidx(1) until not client.focus or not client.focus.skip_taskbar
     end, { description = "focus next client", group = "client" }),
     awful.key({ modkey, }, "h", function()
-        awful.client.focus.byidx(-1)
+        repeat awful.client.focus.byidx(-1) until not client.focus or not client.focus.skip_taskbar
     end, { description = "focus previous client", group = "client" }),
     awful.key({ modkey, "Shift" }, "l", function()
-        awful.client.swap.byidx(1)
+        local i = 1
+        while awful.client.next(i).skip_taskbar do i = i + 1 end
+        awful.client.swap.byidx(i)
     end, { description = "swap client with next", group = "client" }),
     awful.key({ modkey, "Shift" }, "h", function()
-        awful.client.swap.byidx(-1)
+        local i = -1
+        while awful.client.next(i).skip_taskbar do i = i - 1 end
+        awful.client.swap.byidx(i)
     end, { description = "swap client with previous", group = "client" }),
     awful.key({ modkey, "Control" }, "l", function()
-        client.focus = awful.client.next(1)
+        repeat client.focus = awful.client.next(1) until not client.focus or not client.focus.skip_taskbar
     end, { description = "focus next client without raising", group = "client" }),
     awful.key({ modkey, "Control" }, "h", function()
-        client.focus = awful.client.next(-1)
+        repeat client.focus = awful.client.next(-1) until not client.focus or not client.focus.skip_taskbar
     end, { description = "focus previous client without raising", group = "client" }),
 
     awful.key({ modkey, }, "u", awful.client.urgent.jumpto,
@@ -267,6 +271,11 @@ awful.rules.rules = {
             skip_taskbar = true,
             placement = awful.placement.top_right,
         },
+        -- Minify it at startup
+        callback = function(c)
+            c.width = c.size_hints.min_width
+            c.height = c.size_hints.min_height
+        end,
     },
     -- I'm not a good student :)
     {

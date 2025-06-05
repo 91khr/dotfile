@@ -7,7 +7,7 @@
 (package-initialize)
 (setf package-selected-packages
       (append package-selected-packages
-              '(powerline neotree use-package markdown-mode solarized-theme racket-mode meow switch-window
+              '(powerline neotree use-package markdown-mode solarized-theme meow switch-window
                           org-fragtog vertico orderless corfu cape marginalia slime smartparens rime slime-company
                           lsp-mode)))
 

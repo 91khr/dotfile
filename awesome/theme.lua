@@ -13,7 +13,7 @@ local theme = {}
 -- Auto find wallpaper with specified suffixes
 theme.wallpaper = (function()
     basedir = homedir .. '/Pictures'
-    cmd_base = "find " .. basedir .. " -regex '" .. basedir .. "/wallpaper\\.\\("
+    local cmd_base = "find " .. basedir .. " -regex '" .. basedir .. "/wallpaper\\.\\("
     for _, i in pairs({ 'jpg', 'png' }) do
         cmd_base = cmd_base .. i .. "\\|"
     end
@@ -22,7 +22,7 @@ theme.wallpaper = (function()
 end)()
 -- }}}
 
-theme.font      = "Monaco 8"
+theme.font      = "Iosevka Custom 8"
 
 -- {{{ Color scheme
 
