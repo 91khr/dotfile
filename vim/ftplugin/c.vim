@@ -11,7 +11,7 @@ if has("win32")
     endif
 else
     ftext.CmdEngine.new("Compile",
-                \ "AsyncRun g++ % -std=c++2b -o %:h/a.out -Wall -Wextra -Weffc++ -Wpedantic -g {args}")
+                \ "AsyncRun g++ % -std=c++23 -o %:h/a.out -Wall -Wextra -Weffc++ -Wpedantic -g {args}")
                 .Do()
 endif
 

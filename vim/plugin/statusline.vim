@@ -73,7 +73,7 @@ conf.dispatch = DispatchWin
 const wordcounted_filetypes = ["markdown", "mail", "text"]
 var loaded_wordcount = false
 if has("perl")
-    cached_val.wordcount = () => " "..perleval("WordCount").." "
+    cached_val.wordcount = () => $" {perleval("WordCount")} "
     def LoadWordCount()
         perl <<EOF
         sub WordCount {

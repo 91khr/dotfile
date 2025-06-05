@@ -222,7 +222,7 @@ export def Sync(opts: dict<any> = { force: false, silent: false, packs: [] })
 
     def ProcPack(pack: dict<string>)
         if pack->get("status", "") == "missing"
-            ChainJob(pack.name, ["git", "clone", pack.url, pack.path], [(res): any => Helptags(pack, res)])
+            ChainJob(pack.name, ["git", "clone", "--depth=1", pack.url, pack.path], [(res): any => Helptags(pack, res)])
         else
             ChainJob(pack.name, ["git", "-C", pack.path, "remote", "-v", "update"], [
                 (res) => Status_Callback(pack, opts, res), (res): any => {

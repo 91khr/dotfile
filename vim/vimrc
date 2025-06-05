@@ -38,12 +38,13 @@ let g:packager_config = #{
             "\        Status line
             \         #{ name: '91khr/lines9', location: 'start' },
             "\        Color scheme
-            \         #{ name: 'lifepillar/vim-solarized8', location: 'start' },
             \         #{ name: 'sainnhe/everforest', location: 'start' },
             "\        Make quotes colorful, for lisp :)
             \         #{ name: '91khr/rainbow', location: 'start' },
             "\        Show the marks
             \         #{ name: 'kshenoy/vim-signature', location: 'start' },
+            "\        Copilot
+            \         'github/copilot.vim',
             \
             "\        File explorer
             \         'preservim/nerdtree',
@@ -65,12 +66,8 @@ let g:packager_config = #{
             "\         Latex
             "\          'lervag/vimtex',
             \          '91khr/vim-latex-live-preview',
-            "\         Slint
-            \          #{ name: 'slint-ui/vim-slint', location: 'start' },
             "\          Idris2
             \          #{ name: 'edwinb/idris2-vim', location: 'start' },
-            "\          QML
-            \          #{ name: 'peterhoeg/vim-qml', location: 'start' },
             \
             "\         Zen mode :)
             "\          'junegunn/goyo.vim',

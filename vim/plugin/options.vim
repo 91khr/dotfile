@@ -64,7 +64,7 @@ set foldopen=hor,mark,quickfix,search,tag,undo
 
 " Color scheme
 import "plgext.vim"
-if s:plgext.Installed("start/vim-solarized8")
+if s:plgext.Installed("start/everforest")
     colo everforest
     "colo solarized8_flat
 else
