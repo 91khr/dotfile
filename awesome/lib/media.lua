@@ -15,7 +15,7 @@ function players:compact_avail()
     if self.avail * 2 >= #self.stack then return end
     local fr = 1
     for i = 1, #self.stack do
-        if self.stack[i] ~= nil then
+        if self.stack[i] then
             self.stack[fr] = self.stack[i]
             fr = fr + 1
         end
@@ -33,7 +33,7 @@ function players:push(p)
     local loc = self.loc[p]
     if loc then
         if loc == #self.stack then return end
-        self.stack[loc] = nil
+        self.stack[loc] = false
         self.avail = self.avail - 1
         self:compact_avail()
     end
@@ -43,7 +43,7 @@ function players:push(p)
 end
 
 function players:remove(p)
-    self.stack[self.loc[p]] = nil
+    self.stack[self.loc[p]] = false
     self.loc[p] = nil
     self.avail = self.avail - 1
     self:compact_avail()
