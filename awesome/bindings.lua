@@ -3,7 +3,8 @@ local gears = require("gears")
 local awful = require("awful")
 local hotkeys_popup = require("awful.hotkeys_popup")
 local naughty = require("naughty")
-local cairo = require('lgi').cairo
+local cairo = require("lgi").cairo
+local media_control = require("lib.media")
 
 -- Shared widgets
 local prompt_widget = require("widgets.prompt")
@@ -17,34 +18,6 @@ root.buttons(gears.table.join(
     awful.button({}, 5, awful.tag.viewprev)
 ))
 -- }}}
-
--- {{{ local function control_media
-local function control_media(ctrl)
-    local cmd = "dbus-send --session --dest=org.freedesktop.DBus --type=method_call --print-reply " ..
-        "/org/freedesktop/DBus org.freedesktop.DBus.ListNames"
-    awful.spawn.easy_async(cmd, function(stdout)
-        local player
-        -- Split stdout by line to get each player
-        for pl in stdout:gmatch("[^\r\n]+") do
-            local name = pl:match("org%.mpris%.MediaPlayer2%.%w+")
-            if name and player then
-                naughty.notify({ title = "Media control error", text = "Multiple players found" })
-                player = false
-                break
-            end
-            if name then player = name end
-        end
-        if player == nil then
-            naughty.notify({ title = "Media control error", text = "No players found" })
-        end
-        if not player then return end
-
-        local cmd = "dbus-send --type=method_call --session --dest=" .. player ..
-            " /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player." .. ctrl
-        awful.spawn(cmd)
-    end)
-end
--- }}} end control_media
 
 -- {{{ Key bindings
 local globalkeys = gears.table.join(
@@ -114,11 +87,11 @@ local globalkeys = gears.table.join(
     awful.key({}, "XF86AudioMute", function() volume_widget:toggle() end,
         { description = "toggle mute", group = "media" }),
 
-    awful.key({}, "XF86AudioPlay", function() control_media("PlayPause") end,
+    awful.key({}, "XF86AudioPlay", function() media_control.call("PlayPause") end,
         { description = "play/pause media", group = "media" }),
-    awful.key({}, "XF86AudioNext", function() control_media("Next") end,
+    awful.key({}, "XF86AudioNext", function() media_control.call("Next") end,
         { description = "next track", group = "media" }),
-    awful.key({}, "XF86AudioPrev", function() control_media("Previous") end,
+    awful.key({}, "XF86AudioPrev", function() media_control.call("Previous") end,
         { description = "previous track", group = "media" })
 )
 
@@ -326,7 +299,11 @@ client.connect_signal("request::activate", function(c, ctxt, hint)
         awful.tag.viewtoggle(c.first_tag)
     end
 end)
-client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
+client.connect_signal("focus", function(c)
+    c.border_color = beautiful.border_focus
+    if c.above then c.above = false end
+    if c.below then c.below = false end
+end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
 

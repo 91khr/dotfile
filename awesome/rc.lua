@@ -23,6 +23,7 @@ local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightne
 local touchpad_widget = require("widgets.touchpad")
 --local notification_widget = require("widgets.notification")
 local prompt_widget = require("widgets.prompt")
+local media_control = require("lib.media")
 -- }}}
 
 -- {{{ Error handling
@@ -51,18 +52,35 @@ end
 -- }}}
 
 -- {{{ Helper functions
-function notify_info(ctnt)
-    local function table_tostring(t)
-        local res = "{\n"
-        for k, v in pairs(t) do
-            res = res .. tostring(k) .. " = " .. tostring(v) .. "\n"
-        end
-        return res .. "}"
+function pcall_notify(...)
+    local ok, res = pcall(...)
+    if ok then
+        return res
+    else
+        naughty.notify({ preset = naughty.config.presets.critical,
+                         title = "Error",
+                         text = tostring(res) })
     end
+    return res
+end
+
+function show_value(value, flags)
+    if type(value) == "table" then
+        local res = ""
+        for k, v in pairs(value) do res = res .. show_value(k, flags) .. " = " .. show_value(v, flags) .. ",\n" end
+        res = res:gsub("[^\n]-\n", function(s) return "  " .. s end)
+        return "{\n" .. res .. "}"
+    elseif type(value) == "string" and not (flags and flags:find("s")) then
+        return "\"" .. value:gsub("\n", "\\n") .. "\""
+    end
+    return tostring(value)
+end
+
+function notify_info(ctnt)
     naughty.notify({
         preset = naughty.config.presets.info,
         title = "Info",
-        text = type(ctnt) == "table" and table_tostring(ctnt) or tostring(ctnt)
+        text = show_value(ctnt, "s")
     })
 end
 -- }}}
@@ -249,6 +267,8 @@ if not argv.nospawn then
     awful.spawn.single_instance("fcitx5")
     --awful.spawn("xmodmap " .. confpath .. "/../.Xmodmap")
 end
+-- Enable media control
+media_control.init()
 -- }}}
 
 -- vim: fdm=marker
