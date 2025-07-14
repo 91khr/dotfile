@@ -87,8 +87,12 @@ local globalkeys = gears.table.join(
     awful.key({}, "XF86AudioMute", function() volume_widget:toggle() end,
         { description = "toggle mute", group = "media" }),
 
-    awful.key({}, "XF86AudioPlay", function() media_control.call("PlayPause") end,
+    awful.key({}, "#172", function() media_control.call("PlayPause") end,
         { description = "play/pause media", group = "media" }),
+    awful.key({}, "#208", function() media_control.call("Play") end,
+        { description = "play media", group = "media" }),
+    awful.key({}, "#209", function() media_control.call("Pause") end,
+        { description = "pause media", group = "media" }),
     awful.key({}, "XF86AudioNext", function() media_control.call("Next") end,
         { description = "next track", group = "media" }),
     awful.key({}, "XF86AudioPrev", function() media_control.call("Previous") end,

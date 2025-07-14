@@ -1,5 +1,7 @@
-local lgi = require('lgi')
+-- Media controls
+local lgi = require("lgi")
 local Gio = lgi.Gio
+local utils = require("lib.utils")
 
 local bus
 local players = {
@@ -99,7 +101,7 @@ local function do_init()
     -- Watch the players
     bus:signal_subscribe(
         nil, "org.freedesktop.DBus", "NameOwnerChanged", nil, nil, Gio.DBusSignalFlags.NONE,
-        function(...) Gio.Async.start(function(...) pcall_notify(on_name_owner_changed, ...) end)(...) end
+        utils.wrap_async_pcall(on_name_owner_changed)
     )
 end
 function res.init()

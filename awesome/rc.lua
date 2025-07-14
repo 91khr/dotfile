@@ -24,6 +24,7 @@ local touchpad_widget = require("widgets.touchpad")
 --local notification_widget = require("widgets.notification")
 local prompt_widget = require("widgets.prompt")
 local media_control = require("lib.media")
+local autobt = require("lib.autobt")
 -- }}}
 
 -- {{{ Error handling
@@ -58,7 +59,7 @@ function pcall_notify(...)
         return res
     else
         naughty.notify({ preset = naughty.config.presets.critical,
-                         title = "Error",
+                         title = "Error in function call",
                          text = tostring(res) })
     end
     return res
@@ -269,6 +270,7 @@ if not argv.nospawn then
 end
 -- Enable media control
 media_control.init()
+autobt.init()
 -- }}}
 
 -- vim: fdm=marker
