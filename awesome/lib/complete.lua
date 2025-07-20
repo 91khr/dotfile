@@ -3,7 +3,6 @@ local function wm_lua_completion(cmd, pos)
     local pre, final = cmd:sub(1, pos):match("([%w_.:]-)([%w_]*)$")
     if not pre and not final then return {} end
     local env = _ENV
-    print('env:', env, 'cmd', cmd, 'pos', pos)
     for cur in (pre or ""):gmatch("([%w_]+)[.:]") do
         if type(env[cur]) ~= "table" then
             return {}

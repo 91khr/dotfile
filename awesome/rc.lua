@@ -7,7 +7,6 @@ package.path = package.path .. ';' .. confpath .. '/?.lua'
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
---require("awful.spawn")
 require("awful.autofocus")
 -- Widget and layout library
 local wibox = require("wibox")
@@ -21,7 +20,7 @@ local battery_widget = require("awesome-wm-widgets.batteryarc-widget.batteryarc"
 local volume_widget = require("awesome-wm-widgets.volume-widget.volume")
 local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
 local touchpad_widget = require("widgets.touchpad")
---local notification_widget = require("widgets.notification")
+local notification_widget = require("widgets.notification")
 local prompt_widget = require("widgets.prompt")
 local media_control = require("lib.media")
 local autobt = require("lib.autobt")
@@ -165,9 +164,9 @@ local mybattery_widget = battery_widget({
 local mytouchpad_widget = touchpad_widget({
     icon_dir = confpath .. "/widgets/icons/",
 })
---[[local mynotification_widget = notification_widget({
+local mynotification_widget = notification_widget({
     icon_dir = confpath .. "/widgets/icons/",
-})]]
+})
 -- Create the widget
 prompt_widget({})
 mycalendar:attach(mytextclock, 'tr')
@@ -244,7 +243,7 @@ awful.screen.connect_for_each_screen(function(s)
             myvolume_widget,
             mybattery_widget,
             mytextclock,
-            --mynotification_widget,
+            mynotification_widget,
             s.mylayoutbox,
         },
     }
@@ -255,9 +254,9 @@ end)
 loadfile(confpath .. "/bindings.lua")()
 
 -- Grab notifications
---[[function naughty.config.notify_callback(args)
+function naughty.config.notify_callback(args)
     return notification_widget:on_notification(args)
-end]]
+end
 
 -- {{{ Post tasks
 -- Start some programs
